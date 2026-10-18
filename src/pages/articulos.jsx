@@ -7,6 +7,7 @@ import BottomNav from "../components/BottomNav";
 import AddArticleSheet from "../components/AddArticleSheet";
 
 import { getArticles } from "../lib/articles";
+import { getClients } from "../lib/clients";
 
 
 
@@ -23,6 +24,8 @@ export default function Articulos({
 
 
   const [articulos, setArticulos] = useState([]);
+  const [clientes, setClientes] = useState([]);
+const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
   const [busqueda, setBusqueda] = useState("");
 
@@ -41,6 +44,7 @@ export default function Articulos({
   useEffect(()=>{
 
     cargarArticulos();
+    cargarClientes();
 
   },[categoria]);
 
@@ -48,7 +52,10 @@ export default function Articulos({
 
 
 
-
+async function cargarClientes() {
+  const data = await getClients();
+  setClientes(data || []);
+}
 
   async function cargarArticulos(){
 
@@ -74,15 +81,21 @@ export default function Articulos({
 
 
 
-    lista.sort((a,b)=>
+      const prioridadEstado = (estado) => {
+      const valor = (estado || "").trim().toLowerCase();
+      if (valor === "disponible") return 0;
+      if (valor === "vendido" || valor === "liquidado") return 2;
+      return 1;
+    };
 
-      a.descripcion.localeCompare(
+    lista.sort((a, b) => {
+      const diferenciaEstado =
+        prioridadEstado(a.estado) - prioridadEstado(b.estado);
 
-        b.descripcion
+      if (diferenciaEstado !== 0) return diferenciaEstado;
 
-      )
-
-    );
+      return (a.descripcion || "").localeCompare(b.descripcion || "");
+    });
 
 
 
@@ -115,40 +128,33 @@ export default function Articulos({
 
 
 
-  if(filtro === "Disponibles"){
-
-
-    filtrados = filtrados.filter(
-
-      item => item.estado === "Disponible"
-
+    if (clienteSeleccionado) {
+    const cliente = clientes.find(
+      item => String(item.id) === String(clienteSeleccionado)
     );
 
+    if (cliente) {
+      const nombreCliente = (cliente.nombre || "").trim().toLowerCase();
 
+      filtrados = filtrados.filter(item => {
+        const asignado = item.cliente;
+        const valoresCliente = [
+          item.cliente_id,
+          typeof asignado === "object" ? asignado?.id : asignado,
+          typeof asignado === "object" ? asignado?.nombre : null,
+        ]
+          .filter(Boolean)
+          .map(String);
+
+        return (
+          valoresCliente.includes(String(cliente.id)) ||
+          valoresCliente.some(
+            valor => valor.trim().toLowerCase() === nombreCliente
+          )
+        );
+      });
+    }
   }
-
-
-
-
-
-  if(filtro === "Vendidos"){
-
-
-    filtrados = filtrados.filter(
-
-      item => item.estado === "Vendido"
-
-    );
-
-
-  }
-
-
-
-
-
-
-
 
 
   if(articuloSeleccionado){
@@ -339,6 +345,7 @@ export default function Articulos({
           display:"flex",
 
           gap:"10px",
+          overflowX: "auto",
 
           marginBottom:"20px",
 
@@ -349,63 +356,35 @@ export default function Articulos({
 
         {
 
-          [
-
-            "Todos",
-
-            "Disponibles",
-
-            "Vendidos"
-
-          ].map((item)=>(
-
-
-            <button
-
-              key={item}
-
-              onClick={()=>setFiltro(item)}
-
-              style={{
-
-                flex:1,
-
-                height:"40px",
-
-                borderRadius:"20px",
-
-                border:"none",
-
-                background:
-
-                  filtro === item
-
-                  ? "#7C5CFC"
-
-                  : "#FFFFFF",
-
-                color:
-
-                  filtro === item
-
-                  ? "#FFFFFF"
-
-                  : "#7B7B88",
-
-                fontWeight:"600",
-
-                fontSize:"14px",
-
-              }}
-
-            >
-
-              {item}
-
-            </button>
-
-
-          ))
+          clientes.map((cliente) => (
+  <button
+    key={cliente.id}
+    onClick={() =>
+      setClienteSeleccionado(actual =>
+        String(actual) === String(cliente.id) ? "" : String(cliente.id)
+      )
+    }
+    style={{
+      flex: "0 0 auto",
+      padding: "0 18px",
+      height: "40px",
+      borderRadius: "20px",
+      border: "none",
+      background:
+        String(clienteSeleccionado) === String(cliente.id)
+          ? "#7C5CFC"
+          : "#FFFFFF",
+      color:
+        String(clienteSeleccionado) === String(cliente.id)
+          ? "#FFFFFF"
+          : "#7B7B88",
+      fontWeight: "600",
+      fontSize: "14px",
+    }}
+  >
+    {cliente.nombre}
+  </button>
+))
 
         }
 

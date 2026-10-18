@@ -153,6 +153,23 @@ export default function ProductCard({ articulo, onClick }) {
 
 
 
+        { ["Vendido", "Liquidado"].includes(articulo.estado) && (
+          <span
+            style={{
+              display: "inline-block",
+              marginTop: "6px",
+              padding: "3px 8px",
+              borderRadius: "999px",
+              background: "#FFF1F1",
+              color: "#C62828",
+              fontSize: "11px",
+              fontWeight: "700",
+            }}
+          >
+            {articulo.estado.toUpperCase()}
+          </span>
+        )}
+
         {
           articulo.categoria && (
 
