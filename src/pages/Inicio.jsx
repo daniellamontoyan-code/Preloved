@@ -6,6 +6,7 @@ export default function Inicio({ onDemo }) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [recoveryMessage, setRecoveryMessage] = useState("");
+  const [recoveryError, setRecoveryError] = useState(false);
 
   async function ingresar(event) {
     event.preventDefault();
@@ -21,12 +22,18 @@ export default function Inicio({ onDemo }) {
     if (!normalizedEmail) return alert("Escribe tu correo para enviarte el enlace.");
     setLoading(true);
     setRecoveryMessage("");
+    setRecoveryError(false);
     const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: window.location.origin,
     });
     setLoading(false);
     if (error) {
-      alert("No se pudo enviar el enlace. Revisa el correo e inténtalo más tarde.");
+      setRecoveryError(true);
+      setRecoveryMessage(
+        error.status === 429 || /rate limit|too many requests/i.test(error.message || "")
+          ? "Supabase alcanzó el límite de correos de autenticación. No se envió el enlace; espera una hora desde el último envío e inténtalo una sola vez."
+          : "No se pudo enviar el enlace. Revisa tu correo e inténtalo más tarde.",
+      );
       return;
     }
     setRecoveryMessage("Si el correo está registrado, recibirás un enlace para crear tu contraseña.");
@@ -39,9 +46,9 @@ export default function Inicio({ onDemo }) {
       <input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} placeholder="Correo" style={fieldStyle}/>
       <input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Contraseña" style={{ ...fieldStyle, marginBottom:20 }}/>
       <button type="submit" disabled={loading} style={{ width:"100%", height:58, border:0, borderRadius:20, background:"#C0003B", color:"white", fontSize:19, fontWeight:700 }}>{loading ? "Ingresando…" : "Ingresar"}</button>
-      <button type="button" onClick={onDemo} style={{ width:"100%", height:54, marginTop:12, border:"1px solid #C0003B", borderRadius:20, background:"white", color:"#A00031", fontSize:16, fontWeight:750 }}>Ver vista de prueba</button>
+      {import.meta.env.DEV && <button type="button" onClick={onDemo} style={{ width:"100%", height:54, marginTop:12, border:"1px solid #C0003B", borderRadius:20, background:"white", color:"#A00031", fontSize:16, fontWeight:750 }}>Ver vista de prueba</button>}
       <button type="button" onClick={recuperarContrasena} disabled={loading} style={{ display:"block", margin:"16px auto 0", border:0, background:"transparent", color:"#A00031", fontSize:14, fontWeight:700, textDecoration:"underline" }}>Olvidé mi contraseña</button>
-      {recoveryMessage && <p role="status" style={{ color:"#177245", fontSize:13, lineHeight:1.5, marginTop:12 }}>{recoveryMessage}</p>}
+      {recoveryMessage && <p role="status" style={{ color:recoveryError ? "#B42318" : "#177245", fontSize:13, lineHeight:1.5, marginTop:12 }}>{recoveryMessage}</p>}
       <p style={{ color:"#777", fontSize:13, lineHeight:1.5, marginTop:18 }}>Usa el correo y la contraseña configurados para tu cuenta Cherry Club.</p>
     </form>
   </div>;
