@@ -283,7 +283,7 @@ export default function Clientes({
 
             border:"none",
 
-            background:"#7C5CFC",
+            background:"#C0003B",
 
             color:"#FFFFFF",
 
@@ -437,7 +437,7 @@ export default function Clientes({
 
                       gap:"5px",
 
-                      background:"#F8F6FF",
+                      background:"#FFF0F3",
 
                       padding:"6px 10px",
 

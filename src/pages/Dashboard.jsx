@@ -223,7 +223,7 @@ export default function Dashboard(){
 
     {
       nombre:"Ropa",
-      color:"linear-gradient(135deg,#C084FC,#8B5CF6)"
+      color:"linear-gradient(135deg,#9D001E,#C0003B)"
     },
 
     {
@@ -393,7 +393,7 @@ export default function Dashboard(){
 
             fontWeight:"900",
 
-            background:"linear-gradient(90deg,#8B5CF6,#EC4899,#F97316)",
+            background:"linear-gradient(90deg,#9D001E,#C0003B,#F43F5E)",
 
             WebkitBackgroundClip:"text",
 
@@ -403,7 +403,7 @@ export default function Dashboard(){
 
         >
 
-          Preloved
+          Cherry
 
         </h1>
 
@@ -560,7 +560,7 @@ export default function Dashboard(){
 
                   <span>{metodo}</span>
 
-                  <span style={{color:"#7C5CFC"}}>
+                  <span style={{color:"#C0003B"}}>
 
                     S/. {monto.toFixed(2)}
 

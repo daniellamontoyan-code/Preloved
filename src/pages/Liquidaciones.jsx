@@ -79,7 +79,7 @@ export default function Liquidaciones({
     const porcentaje = Number(cliente.porcentaje || 0);
 
 
-    const comisionPreloved =
+    const comisionCherry =
 
       total * (porcentaje / 100);
 
@@ -87,7 +87,7 @@ export default function Liquidaciones({
 
     const montoCliente =
 
-      total - comisionPreloved;
+      total - comisionCherry;
 
 
 
@@ -95,7 +95,7 @@ export default function Liquidaciones({
 
       total,
 
-      comisionPreloved,
+      comisionCherry,
 
       montoCliente,
 
@@ -263,7 +263,7 @@ export default function Liquidaciones({
 
         style={{
 
-          background:"#7C5CFC",
+          background:"#C0003B",
 
           color:"#FFFFFF",
 
@@ -448,7 +448,7 @@ export default function Liquidaciones({
 
             >
 
-              {cliente.articulos} artículo(s) vendido · Comisión Preloved {cliente.porcentaje}%
+              {cliente.articulos} artículo(s) vendido · Comisión Cherry {cliente.porcentaje}%
 
             </p>
 
@@ -471,9 +471,9 @@ export default function Liquidaciones({
 
             <Fila
 
-              titulo="Comisión Preloved"
+              titulo="Comisión Cherry"
 
-              valor={`- S/. ${formato(calculo.comisionPreloved)}`}
+              valor={`- S/. ${formato(calculo.comisionCherry)}`}
 
             />
 
@@ -770,7 +770,7 @@ export default function Liquidaciones({
 
               borderRadius:"22px",
 
-              background:"#7C5CFC",
+              background:"#C0003B",
 
               color:"#FFFFFF",
 

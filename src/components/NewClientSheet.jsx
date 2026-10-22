@@ -257,7 +257,7 @@ const saveButton = {
   height:"60px",
   border:"none",
   borderRadius:"22px",
-  background:"#7C5CFC",
+  background:"#C0003B",
   color:"#fff",
   fontSize:"18px",
   fontWeight:"700",

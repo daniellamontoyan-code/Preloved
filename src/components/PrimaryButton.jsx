@@ -7,7 +7,7 @@ export default function PrimaryButton({ text, onClick }) {
         height: "64px",
         border: "none",
         borderRadius: "22px",
-        background: "#7C5CFC",
+        background: "#C0003B",
         color: "white",
         fontSize: "20px",
         fontWeight: "600",

@@ -344,7 +344,7 @@ const save={
 
   borderRadius:"22px",
 
-  background:"#7C5CFC",
+  background:"#C0003B",
 
   color:"#FFFFFF",
 

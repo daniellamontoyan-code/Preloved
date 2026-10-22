@@ -102,6 +102,16 @@ export default function AddArticleSheet({ onClose }) {
 
       urlFoto = await uploadArticleImage(foto);
 
+      if(!urlFoto){
+
+        alert("No se pudo preparar o subir la foto. Inténtalo nuevamente.");
+
+        setLoading(false);
+
+        return;
+
+      }
+
     }
 
 
@@ -237,12 +247,12 @@ export default function AddArticleSheet({ onClose }) {
           style={{
             height:"150px",
             borderRadius:"24px",
-            background:"#F8F6FF",
+            background:"#FFF0F3",
             display:"flex",
             flexDirection:"column",
             justifyContent:"center",
             alignItems:"center",
-            color:"#7C5CFC",
+            color:"#C0003B",
             marginBottom:"20px",
             cursor:"pointer",
             overflow:"hidden",
@@ -403,7 +413,7 @@ export default function AddArticleSheet({ onClose }) {
 
           <span>Código</span>
 
-          <strong style={{color:"#7C5CFC"}}>
+          <strong style={{color:"#C0003B"}}>
             {codigo}
           </strong>
 
@@ -528,7 +538,7 @@ const createButton = {
 
   border:"none",
   background:"transparent",
-  color:"#7C5CFC",
+  color:"#C0003B",
   fontWeight:"600",
   display:"flex",
   alignItems:"center",
@@ -543,7 +553,7 @@ const infoBox = {
 
   display:"flex",
   justifyContent:"space-between",
-  background:"#F8F6FF",
+  background:"#FFF0F3",
   borderRadius:"18px",
   padding:"16px 18px",
   marginBottom:"12px",
@@ -572,7 +582,7 @@ const saveButton = {
   height:"60px",
   border:"none",
   borderRadius:"22px",
-  background:"#7C5CFC",
+  background:"#C0003B",
   color:"#fff",
   fontSize:"18px",
   fontWeight:"700",

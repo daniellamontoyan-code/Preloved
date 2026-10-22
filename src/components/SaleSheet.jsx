@@ -274,7 +274,7 @@ const inputStyle={
 
 const boxStyle={
 
-  background:"#F8F6FF",
+  background:"#FFF0F3",
   borderRadius:"20px",
   padding:"16px",
   marginBottom:"16px",
@@ -290,7 +290,7 @@ const buttonStyle={
   height:"60px",
   border:"none",
   borderRadius:"22px",
-  background:"#7C5CFC",
+  background:"#C0003B",
   color:"#FFFFFF",
   fontSize:"18px",
   fontWeight:"700",

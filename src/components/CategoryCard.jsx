@@ -55,7 +55,7 @@ export default function CategoryCard({ title, onClick }) {
 
         <ChevronRight
           size={20}
-          color="#7C5CFC"
+          color="#C0003B"
           strokeWidth={1.8}
         />
 

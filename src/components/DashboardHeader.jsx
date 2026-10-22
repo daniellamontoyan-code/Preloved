@@ -41,7 +41,7 @@ export default function DashboardHeader({ nombre }) {
           height: "54px",
           borderRadius: "50%",
           background: "#EFE8FF",
-          color: "#7C5CFC",
+          color: "#C0003B",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",

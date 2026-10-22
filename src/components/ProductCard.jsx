@@ -89,7 +89,7 @@ export default function ProductCard({ articulo, onClick }) {
 
               borderRadius:"16px",
 
-              background:"#F8F6FF",
+              background:"#FFF0F3",
 
               flexShrink:0,
 
@@ -211,7 +211,7 @@ export default function ProductCard({ articulo, onClick }) {
 
         style={{
 
-          color:"#7C5CFC",
+          color:"#C0003B",
 
           fontSize:"16px",
 

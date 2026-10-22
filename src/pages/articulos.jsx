@@ -372,7 +372,7 @@ async function cargarClientes() {
       border: "none",
       background:
         String(clienteSeleccionado) === String(cliente.id)
-          ? "#7C5CFC"
+          ? "#C0003B"
           : "#FFFFFF",
       color:
         String(clienteSeleccionado) === String(cliente.id)

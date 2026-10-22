@@ -163,7 +163,7 @@ export default function DetalleArticulo({ articulo, onBack }) {
             height:"300px",
             borderRadius:"28px",
             overflow:"hidden",
-            background:"#F8F6FF",
+            background:"#FFF0F3",
             marginBottom:"22px",
           }}
         >
@@ -189,7 +189,7 @@ export default function DetalleArticulo({ articulo, onBack }) {
                   display:"flex",
                   alignItems:"center",
                   justifyContent:"center",
-                  color:"#7C5CFC",
+                  color:"#C0003B",
                   fontWeight:"600",
                 }}
               >
@@ -364,7 +364,7 @@ export default function DetalleArticulo({ articulo, onBack }) {
                 height:"60px",
                 border:"none",
                 borderRadius:"22px",
-                background:"#7C5CFC",
+                background:"#C0003B",
                 color:"#FFFFFF",
                 fontSize:"18px",
                 fontWeight:"700",

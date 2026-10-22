@@ -240,7 +240,7 @@ export default function DetalleCliente({
 
             background:"#EDE9FE",
 
-            color:"#7C5CFC",
+            color:"#C0003B",
 
             display:"flex",
 
@@ -357,7 +357,7 @@ export default function DetalleCliente({
 
           size={24}
 
-          color="#7C5CFC"
+          color="#C0003B"
 
         />
 
@@ -606,7 +606,7 @@ export default function DetalleCliente({
 
                   fontSize:"20px",
 
-                  color:"#7C5CFC",
+                  color:"#C0003B",
 
                 }}
 
@@ -795,7 +795,7 @@ borderRadius:"18px",
 
 background:"#F3E8FF",
 
-color:"#7C5CFC",
+color:"#C0003B",
 
 fontSize:"18px",
 

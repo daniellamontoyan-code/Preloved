@@ -120,7 +120,7 @@ fontSize:"64px",
 
 fontWeight:"800",
 
-background:"linear-gradient(90deg,#8B5CF6,#EC4899,#F97316)",
+background:"linear-gradient(90deg,#9D001E,#C0003B,#F43F5E)",
 
 WebkitBackgroundClip:"text",
 
@@ -130,7 +130,7 @@ WebkitTextFillColor:"transparent",
 
 >
 
-Preloved
+Cherry
 
 </h1>
 
@@ -245,7 +245,7 @@ border:"none",
 
 borderRadius:"20px",
 
-background:"#7C5CFC",
+background:"#C0003B",
 
 color:"#FFFFFF",
 
