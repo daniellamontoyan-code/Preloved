@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Wifi, WifiOff } from "lucide-react";
 
 import ProductCard from "../components/ProductCard";
 import DetalleArticulo from "./DetalleArticulo";
 import BottomNav from "../components/BottomNav";
 import AddArticleSheet from "../components/AddArticleSheet";
+import SaleSheet from "../components/SaleSheet";
 
-import { getArticles } from "../lib/articles";
+import { getArticles, getPendingSales, syncPendingSales } from "../lib/articles";
 import { getClients } from "../lib/clients";
 
 
@@ -14,6 +15,8 @@ import { getClients } from "../lib/clients";
 export default function Articulos({ 
 
   categoria, 
+  ownerId,
+  paymentQrSrc,
   onBack,
   onHome,
   onArticulos,
@@ -34,6 +37,10 @@ const [clienteSeleccionado, setClienteSeleccionado] = useState("");
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
 
   const [showAddArticle, setShowAddArticle] = useState(false);
+  const [showSale, setShowSale] = useState(null);
+  const [modoFeria, setModoFeria] = useState(false);
+  const [online, setOnline] = useState(navigator.onLine);
+  const [pendientes, setPendientes] = useState(getPendingSales(ownerId).length);
 
 
 
@@ -47,6 +54,28 @@ const [clienteSeleccionado, setClienteSeleccionado] = useState("");
     cargarClientes();
 
   },[categoria]);
+
+  useEffect(() => {
+    const updateNetwork = async () => {
+      setOnline(navigator.onLine);
+      if (navigator.onLine) {
+        const result = await syncPendingSales();
+        if (result.conflicts > 0) alert(`${result.conflicts} venta(s) quedó(aron) sin confirmar porque la prenda ya no estaba disponible. Revisa esa venta con la persona antes de cerrar el cobro.`);
+        setPendientes(getPendingSales(ownerId).length);
+        cargarArticulos();
+      }
+    };
+    const updatePending = () => setPendientes(getPendingSales(ownerId).length);
+    window.addEventListener("online", updateNetwork);
+    window.addEventListener("offline", updateNetwork);
+    window.addEventListener("cherry-pending-sales", updatePending);
+    if (navigator.onLine && getPendingSales(ownerId).length > 0) updateNetwork();
+    return () => {
+      window.removeEventListener("online", updateNetwork);
+      window.removeEventListener("offline", updateNetwork);
+      window.removeEventListener("cherry-pending-sales", updatePending);
+    };
+  }, [ownerId]);
 
 
 
@@ -123,6 +152,8 @@ async function cargarClientes() {
       )
 
   );
+
+  if (modoFeria) filtrados = filtrados.filter(item => item.estado === "Disponible");
 
 
 
@@ -291,6 +322,17 @@ async function cargarClientes() {
 
       </div>
 
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, marginBottom:16 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:6, color: online ? "#177245" : "#A45B00", fontSize:13, fontWeight:700 }}>
+          {online ? <Wifi size={17}/> : <WifiOff size={17}/>}
+          {online ? "Con internet" : "Sin internet · catálogo guardado"}
+        </div>
+        {pendientes > 0 && <span style={{ fontSize:12, color:"#A45B00", fontWeight:700 }}>{pendientes} venta{pendientes === 1 ? "" : "s"} por sincronizar</span>}
+      </div>
+      <button onClick={() => setModoFeria(value => !value)} style={{ width:"100%", height:48, marginBottom:18, border:0, borderRadius:15, background: modoFeria ? "#C0003B" : "#FFF0F3", color: modoFeria ? "white" : "#7B1730", fontSize:15, fontWeight:800 }}>
+        {modoFeria ? "✓ Modo feria · solo disponibles" : "Activar modo feria"}
+      </button>
+
 
 
 
@@ -428,6 +470,8 @@ async function cargarClientes() {
                 key={item.id}
 
                 articulo={item}
+                feria={modoFeria}
+                onQuickSale={setShowSale}
 
                 onClick={(producto)=>{
 
@@ -561,6 +605,12 @@ async function cargarClientes() {
 
         )
       }
+
+      {showSale && <SaleSheet articulo={showSale} paymentQrSrc={paymentQrSrc} onClose={() => setShowSale(null)} onSold={(updated) => {
+        setShowSale(null);
+        setArticulos(current => current.map(item => String(item.id) === String(updated.id) ? { ...item, ...updated } : item));
+        setPendientes(getPendingSales(ownerId).length);
+      }} />}
 
 
 

@@ -1,4 +1,29 @@
-import { supabase } from "./supabase";
+import { getCurrentUserId, supabase } from "./supabase";
+import { signArticleImages } from "./storage";
+
+const CATALOG_CACHE_KEY = "cherry_catalog_cache";
+const PENDING_SALES_KEY = "cherry_pending_sales";
+
+function readPendingSales(ownerId) {
+  if (!ownerId) return [];
+  try { return JSON.parse(localStorage.getItem(`${PENDING_SALES_KEY}_${ownerId}`) || "[]"); }
+  catch { return []; }
+}
+
+function writePendingSales(ownerId, sales) {
+  if (!ownerId) return;
+  localStorage.setItem(`${PENDING_SALES_KEY}_${ownerId}`, JSON.stringify(sales));
+  window.dispatchEvent(new Event("cherry-pending-sales"));
+}
+
+export function getPendingSales(ownerId) { return readPendingSales(ownerId); }
+
+function withPendingSales(articles, ownerId) {
+  const ids = new Set(readPendingSales(ownerId).map((sale) => String(sale.id)));
+  return (articles || []).map((article) => ids.has(String(article.id))
+    ? { ...article, estado: "Vendido", pendiente_sync: true }
+    : article);
+}
 
 
 
@@ -6,6 +31,10 @@ import { supabase } from "./supabase";
 // Obtener artículos
 
 export async function getArticles() {
+
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return [];
+  const catalogCacheKey = `${CATALOG_CACHE_KEY}_${ownerId}`;
 
 
   const { data, error } = await supabase
@@ -30,13 +59,16 @@ export async function getArticles() {
       error
     );
 
-    return [];
+    try { return withPendingSales(JSON.parse(localStorage.getItem(catalogCacheKey) || "[]"), ownerId); }
+    catch { return []; }
 
   }
 
 
 
-  return data;
+  const withSignedImages = await signArticleImages(data || []);
+  localStorage.setItem(catalogCacheKey, JSON.stringify(withSignedImages));
+  return withPendingSales(withSignedImages, ownerId);
 
 
 }
@@ -368,6 +400,8 @@ export async function generateArticleCode(){
 
 export async function createArticle(article){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
 
 
   const codigo = await generateArticleCode();
@@ -396,6 +430,7 @@ export async function createArticle(article){
         estado:"Disponible",
 
         cliente:article.cliente || null,
+        owner_id:ownerId,
 
       }
 
@@ -436,6 +471,19 @@ export async function createArticle(article){
 
 export async function confirmSale(venta){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
+  if (!navigator.onLine) {
+    const pending = readPendingSales(ownerId);
+    if (pending.some((sale) => String(sale.id) === String(venta.id))) {
+      return { ...venta, estado: "Vendido", pendiente_sync: true };
+    }
+    pending.push({ ...venta, owner_id:ownerId, fecha_venta: new Date().toISOString(), queued_at: Date.now() });
+    writePendingSales(ownerId, pending);
+    return { ...venta, estado: "Vendido", pendiente_sync: true };
+  }
+
 
   const { data,error } = await supabase
 
@@ -459,21 +507,24 @@ export async function confirmSale(venta){
       "id",
       venta.id
     )
+    .eq("estado", "Disponible")
+    .eq("owner_id", ownerId)
 
     .select("*")
 
-    .single();
+    .maybeSingle();
 
 
 
 
 
-  if(error){
+  if(error || !data){
 
     console.error(
       error
     );
 
+    alert("Esta prenda ya no aparece como disponible o no se pudo guardar. Actualiza la lista y vuelve a revisar la venta.");
     return null;
 
   }
@@ -483,6 +534,28 @@ export async function confirmSale(venta){
   return data;
 
 
+}
+
+export async function syncPendingSales() {
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return { synced: 0, failed: 0, conflicts: 0 };
+  if (!navigator.onLine) return { synced: 0, failed: getPendingSales(ownerId).length };
+  const pending = readPendingSales(ownerId);
+  let synced = 0;
+  let conflicts = 0;
+  const remaining = [];
+  for (const sale of pending) {
+    const { data, error } = await supabase.from("articulos").update({
+      estado: "Vendido", precio_venta: Number(sale.precio_venta),
+      metodo_pago: sale.metodo_pago, fecha_venta: sale.fecha_venta,
+    }).eq("id", sale.id).eq("owner_id", ownerId).eq("estado", "Disponible").select("id").maybeSingle();
+    if (!error && data) synced += 1;
+    else if (error) remaining.push(sale);
+    else conflicts += 1;
+    // Si ya figura vendida, no se reintenta: evita duplicar la venta entre dispositivos.
+  }
+  writePendingSales(ownerId, remaining);
+  return { synced, failed: remaining.length, conflicts };
 }
 
 
@@ -495,6 +568,9 @@ export async function confirmSale(venta){
 
 export async function deleteArticle(id){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return false;
+
 
   const { error } = await supabase
 
@@ -505,7 +581,8 @@ export async function deleteArticle(id){
     .eq(
       "id",
       id
-    );
+    )
+    .eq("owner_id", ownerId);
 
 
 
@@ -530,6 +607,9 @@ export async function deleteArticle(id){
 
 export async function liquidarArticulosCliente(clienteId){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return [];
+
 
   const { data, error } = await supabase
 
@@ -545,6 +625,7 @@ export async function liquidarArticulosCliente(clienteId){
       "cliente",
       clienteId
     )
+    .eq("owner_id", ownerId)
 
     .eq(
       "estado",

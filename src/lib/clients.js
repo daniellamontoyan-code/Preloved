@@ -1,14 +1,18 @@
-import { supabase } from "./supabase";
+import { getCurrentUserId, supabase } from "./supabase";
 
 
 
 // Obtener clientes
 export async function getClients() {
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return [];
+
 
   const { data, error } = await supabase
     .from("clientes")
     .select("*")
+    .eq("owner_id", ownerId)
     .order("created_at", {
       ascending:false
     });
@@ -41,6 +45,9 @@ export async function getClients() {
 // Crear cliente
 export async function createClient(cliente) {
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
 
   console.log(
     "DATOS QUE ENVÍO A SUPABASE:",
@@ -59,6 +66,7 @@ export async function createClient(cliente) {
 
         porcentaje_comision:
           Number(cliente.porcentaje_comision),
+        owner_id:ownerId,
 
       }
     ])
@@ -103,6 +111,9 @@ export async function createClient(cliente) {
 // Actualizar cliente
 export async function updateClient(id, cliente){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
 
   const { data, error } = await supabase
     .from("clientes")
@@ -120,6 +131,7 @@ export async function updateClient(id, cliente){
       "id",
       id
     )
+    .eq("owner_id", ownerId)
     .select()
     .single();
 
@@ -153,6 +165,9 @@ export async function updateClient(id, cliente){
 // Eliminar cliente
 export async function deleteClient(id){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return false;
+
 
   const { error } = await supabase
     .from("clientes")
@@ -160,7 +175,8 @@ export async function deleteClient(id){
     .eq(
       "id",
       id
-    );
+    )
+    .eq("owner_id", ownerId);
 
 
 

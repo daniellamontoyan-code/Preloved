@@ -1,4 +1,4 @@
-export default function ProductCard({ articulo, onClick }) {
+export default function ProductCard({ articulo, onClick, onQuickSale, feria = false }) {
 
 
   function abrirDetalle(){
@@ -15,7 +15,9 @@ export default function ProductCard({ articulo, onClick }) {
 
   return (
 
-    <button
+    <div
+      role="button"
+      tabIndex={0}
 
       onClick={abrirDetalle}
 
@@ -45,6 +47,7 @@ export default function ProductCard({ articulo, onClick }) {
 
       }}
 
+      onKeyDown={(event) => { if (event.key === "Enter") abrirDetalle(); }}
     >
 
 
@@ -228,12 +231,17 @@ export default function ProductCard({ articulo, onClick }) {
 
       </strong>
 
+      {feria && articulo.estado === "Disponible" && <button
+        onClick={(event) => { event.stopPropagation(); onQuickSale?.(articulo); }}
+        style={{ border:0, borderRadius:13, padding:"11px 13px", background:"#C0003B", color:"white", fontWeight:800, whiteSpace:"nowrap" }}
+      >Vender</button>}
 
 
 
 
 
-    </button>
+
+    </div>
 
   );
 

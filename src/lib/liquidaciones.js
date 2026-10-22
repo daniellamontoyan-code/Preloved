@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getCurrentUserId, supabase } from "./supabase";
 
 import { getClients } from "./clients";
 import { getArticles } from "./articles";
@@ -225,6 +225,9 @@ export async function getLiquidaciones(){
 
 export async function crearLiquidacion(cliente){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
 
 
   const { data, error } = await supabase
@@ -242,6 +245,7 @@ export async function crearLiquidacion(cliente){
         cantidad_articulos:cliente.articulos,
 
         fecha_liquidacion:new Date(),
+        owner_id:ownerId,
 
       }
 
@@ -283,6 +287,9 @@ export async function crearLiquidacion(cliente){
 
 export async function getLastLiquidacion(clienteId){
 
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
 
   const { data, error } = await supabase
 
@@ -294,6 +301,7 @@ export async function getLastLiquidacion(clienteId){
       "cliente_id",
       clienteId
     )
+    .eq("owner_id", ownerId)
 
     .order(
       "fecha_liquidacion",

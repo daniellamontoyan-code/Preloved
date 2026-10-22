@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getCurrentUserId, supabase } from "./supabase";
 
 
 async function compressArticleImage(file) {
@@ -69,7 +69,9 @@ export async function uploadArticleImage(file) {
   }
 
 
-  const fileName = compressedFile.name;
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+  const fileName = `${userId}/${compressedFile.name}`;
 
 
   const { error } = await supabase
@@ -92,13 +94,28 @@ export async function uploadArticleImage(file) {
 
 
 
-  const { data } = supabase
-    .storage
-    .from("articulos")
-    .getPublicUrl(fileName);
+  return fileName;
 
+}
 
+export async function signArticleImages(articles) {
+  const paths = [...new Set((articles || []).map(item => item.foto).filter(Boolean).filter(path => !/^https?:\/\//i.test(path)))];
+  if (!paths.length) return articles || [];
+  const { data, error } = await supabase.storage.from("articulos").createSignedUrls(paths, 86400);
+  if (error) {
+    console.error("No se pudieron cargar algunas fotos de prendas.", error);
+    return articles || [];
+  }
+  const signedByPath = new Map((data || []).map(item => [item.path, item.signedUrl]));
+  return (articles || []).map(item => item.foto && signedByPath.has(item.foto)
+    ? { ...item, foto_path: item.foto, foto: signedByPath.get(item.foto) }
+    : item);
+}
 
-  return data.publicUrl;
-
+export async function clearPrivatePhotoCache() {
+  if (navigator.serviceWorker?.controller) {
+    navigator.serviceWorker.controller.postMessage({ type:"CLEAR_CHERRY_PRIVATE_PHOTOS" });
+  } else if ("caches" in window) {
+    await caches.delete("cherry-product-photos-v1");
+  }
 }

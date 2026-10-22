@@ -17,8 +17,19 @@ import {
   getSalesTotal,
   getPaymentSummary,
 } from "../lib/articles";
+import { supabase } from "../lib/supabase";
+import { getCurrentAppUser } from "../lib/usuarios";
+import { clearPrivatePhotoCache } from "../lib/storage";
 
-export default function Dashboard(){
+export default function Dashboard({ user }){
+
+  const [nombreUsuario, setNombreUsuario] = useState(user?.user_metadata?.nombre || user?.email?.split("@")[0] || "Cherry Club");
+
+  async function cerrarSesion(){
+    if (user?.id) localStorage.removeItem(`cherry_catalog_cache_${user.id}`);
+    await clearPrivatePhotoCache();
+    await supabase.auth.signOut();
+  }
 
   const [totalArticulos,setTotalArticulos] = useState(0);
   const [vendidos,setVendidos] = useState(0);
@@ -52,6 +63,10 @@ export default function Dashboard(){
 
   useEffect(()=>{
 
+    getCurrentAppUser().then(appUser => {
+      if (appUser?.nombre) setNombreUsuario(appUser.nombre);
+    });
+
     cargarDatos();
 
     window.addEventListener(
@@ -77,11 +92,17 @@ export default function Dashboard(){
 
   if(showArticulos){
 
+    const paymentQrSrc = user?.email?.toLowerCase() === "daniellamontoyan@gmail.com"
+      ? "/yape-daniela.jpeg"
+      : null;
+
     return (
 
       <Articulos
 
         categoria={categoriaSeleccionada}
+        ownerId={user?.id}
+        paymentQrSrc={paymentQrSrc}
 
         onBack={()=>{
 
@@ -228,22 +249,22 @@ export default function Dashboard(){
 
     {
       nombre:"Calzado",
-      color:"linear-gradient(135deg,#60A5FA,#38BDF8)"
+      color:"linear-gradient(135deg,#C0003B,#F43F5E)"
     },
 
     {
       nombre:"Bolsos",
-      color:"linear-gradient(135deg,#F9A8D4,#EC4899)"
+      color:"linear-gradient(135deg,#F43F5E,#FB7185)"
     },
 
     {
       nombre:"Accesorios",
-      color:"linear-gradient(135deg,#FDBA74,#F97316)"
+      color:"linear-gradient(135deg,#9D001E,#E11D48)"
     },
 
     {
       nombre:"Otros",
-      color:"linear-gradient(135deg,#86EFAC,#22C55E)"
+      color:"linear-gradient(135deg,#B42348,#F43F5E)"
     }
 
   ];
@@ -289,7 +310,7 @@ export default function Dashboard(){
 
           borderRadius:"50%",
 
-          background:"#C4B5FD",
+          background:"#F43F5E",
 
           filter:"blur(80px)",
 
@@ -343,7 +364,7 @@ export default function Dashboard(){
 
           borderRadius:"50%",
 
-          background:"#BBF7D0",
+          background:"#FFE1E7",
 
           filter:"blur(80px)",
 
@@ -403,7 +424,7 @@ export default function Dashboard(){
 
         >
 
-          Cherry
+          Cherry Club
 
         </h1>
 
@@ -427,8 +448,8 @@ export default function Dashboard(){
 
 
         <DashboardHeader
-
-          nombre={localStorage.getItem("usuario") || "Dani"}
+          nombre={nombreUsuario}
+          onLogout={cerrarSesion}
 
         />
 

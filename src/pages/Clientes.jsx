@@ -43,23 +43,23 @@ export default function Clientes({
     },
 
     {
-      fondo:"#E0F2FE",
-      texto:"#0284C7"
+      fondo:"#FFE1E7",
+      texto:"#C0003B"
     },
 
     {
-      fondo:"#EDE9FE",
-      texto:"#7C3AED"
+      fondo:"#FFE1E7",
+      texto:"#C0003B"
     },
 
     {
-      fondo:"#DCFCE7",
-      texto:"#16A34A"
+      fondo:"#FFD6DF",
+      texto:"#9D001E"
     },
 
     {
-      fondo:"#FFEDD5",
-      texto:"#EA580C"
+      fondo:"#FFE4E6",
+      texto:"#BE123C"
     }
 
   ];

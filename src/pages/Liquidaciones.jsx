@@ -402,7 +402,7 @@ export default function Liquidaciones({
 
             style={{
 
-              background:"#F5F3FF",
+              background:"#FFF0F3",
 
               borderRadius:"30px",
 
@@ -448,7 +448,7 @@ export default function Liquidaciones({
 
             >
 
-              {cliente.articulos} artículo(s) vendido · Comisión Cherry {cliente.porcentaje}%
+              {cliente.articulos} artículo(s) vendido · Comisión Cherry Club {cliente.porcentaje}%
 
             </p>
 
@@ -471,7 +471,7 @@ export default function Liquidaciones({
 
             <Fila
 
-              titulo="Comisión Cherry"
+              titulo="Comisión Cherry Club"
 
               valor={`- S/. ${formato(calculo.comisionCherry)}`}
 
@@ -489,7 +489,7 @@ export default function Liquidaciones({
 
                 height:"1px",
 
-                background:"#E5E1F5",
+                background:"#FFD6DF",
 
                 margin:"22px 0",
 
@@ -719,7 +719,7 @@ export default function Liquidaciones({
 
             style={{
 
-              background:"#F5F3FF",
+              background:"#FFF0F3",
 
               borderRadius:"22px",
 

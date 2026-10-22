@@ -1,4 +1,6 @@
-export default function DashboardHeader({ nombre }) {
+import { LogOut } from "lucide-react";
+
+export default function DashboardHeader({ nombre, onLogout }) {
   const inicial = nombre ? nombre.charAt(0).toUpperCase() : "U";
 
   return (
@@ -35,12 +37,13 @@ export default function DashboardHeader({ nombre }) {
         </h1>
       </div>
 
+      <div style={{ display:"flex", alignItems:"center", gap:10 }}>
       <div
         style={{
           width: "54px",
           height: "54px",
           borderRadius: "50%",
-          background: "#EFE8FF",
+          background: "#FFE1E7",
           color: "#C0003B",
           display: "flex",
           justifyContent: "center",
@@ -50,6 +53,10 @@ export default function DashboardHeader({ nombre }) {
         }}
       >
         {inicial}
+      </div>
+      <button onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión" style={{ width:42, height:42, borderRadius:"50%", border:"none", background:"#FFF0F3", color:"#C0003B", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        <LogOut size={19}/>
+      </button>
       </div>
     </div>
   );

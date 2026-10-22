@@ -238,7 +238,7 @@ export default function DetalleCliente({
 
             border:"none",
 
-            background:"#EDE9FE",
+            background:"#FFE1E7",
 
             color:"#C0003B",
 
@@ -501,7 +501,7 @@ export default function DetalleCliente({
 
                   borderRadius:"18px",
 
-                  background:"#F5F3FF",
+                  background:"#FFF0F3",
 
                   overflow:"hidden",
 
@@ -793,7 +793,7 @@ padding:"10px 16px",
 
 borderRadius:"18px",
 
-background:"#F3E8FF",
+background:"#FFE1E7",
 
 color:"#C0003B",
 
