@@ -27,12 +27,13 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold }) {
   }
 
   return <>
-    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.35)", zIndex:200 }} />
-    <div style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, maxHeight:"90vh", overflowY:"auto", background:"white", borderRadius:"28px 28px 0 0", padding:"22px 20px 34px", zIndex:201 }}>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:14 }}>
-        <h2 style={{ margin:0, fontSize:23 }}>Cobrar venta</h2>
+    <div onClick={onClose} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.35)", zIndex:1200 }} />
+    <div role="dialog" aria-modal="true" aria-labelledby="sale-sheet-title" style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, height:"min(90dvh, 820px)", display:"flex", flexDirection:"column", overflow:"hidden", background:"white", borderRadius:"28px 28px 0 0", zIndex:1201 }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"18px 20px 12px", flexShrink:0 }}>
+        <h2 id="sale-sheet-title" style={{ margin:0, fontSize:23 }}>Cobrar venta</h2>
         <button onClick={onClose} aria-label="Cerrar" style={closeStyle}><X size={20}/></button>
       </div>
+      <div style={{ overflowY:"auto", minHeight:0, padding:"0 20px 18px", WebkitOverflowScrolling:"touch", overscrollBehavior:"contain" }}>
       <div style={{ background:"#FFF0F3", borderRadius:16, padding:14, marginBottom:14, fontWeight:650 }}>{articulo.descripcion}</div>
       <label style={labelStyle}>Precio cobrado</label>
       <div style={{ display:"flex", gap:8, marginBottom:12 }}>
@@ -55,7 +56,10 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold }) {
       </div>}
       {metodoPago === "Yape" && !paymentQrSrc && <div style={{ background:"#F8F8FA", borderRadius:14, padding:12, marginBottom:14, color:"#686875", fontSize:13 }}>Esta cuenta aún no tiene un QR de Yape configurado. Confirma el pago manualmente.</div>}
       {metodoPago === "Plin" && <div style={{ background:"#F8F8FA", borderRadius:14, padding:12, marginBottom:14, color:"#686875", fontSize:13 }}>Confirma el pago recibido por Plin antes de registrar la venta.</div>}
-      <button onClick={guardarVenta} disabled={loading} style={submitStyle}>{loading ? "Guardando…" : "Confirmar venta"}</button>
+      </div>
+      <div style={{ flexShrink:0, padding:"12px 20px calc(14px + env(safe-area-inset-bottom))", background:"white", borderTop:"1px solid #F1F1F3" }}>
+        <button onClick={guardarVenta} disabled={loading} style={submitStyle}>{loading ? "Guardando…" : "Confirmar venta"}</button>
+      </div>
     </div>
   </>;
 }
