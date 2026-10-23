@@ -1,4 +1,4 @@
-import { X, Camera, Plus } from "lucide-react";
+import { X, Camera, Plus, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import NewClientSheet from "./NewClientSheet";
@@ -35,6 +35,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [subcategoriaOtra, setSubcategoriaOtra] = useState(hasSuggestedSubcategory ? "" : existingSubcategory);
   const [talla, setTalla] = useState(article?.talla || "");
   const [publicoObjetivo, setPublicoObjetivo] = useState(article?.publico_objetivo || "");
+  const [generoMenuOpen, setGeneroMenuOpen] = useState(false);
   const [cliente, setCliente] = useState(String(article?.cliente?.id || article?.cliente || ""));
   const [precio, setPrecio] = useState(article?.precio ?? "");
   const [precioWeb, setPrecioWeb] = useState(article?.precio_web ?? article?.precio ?? "");
@@ -420,16 +421,34 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           style={inputStyle}
         />
 
-        <select
-          value={publicoObjetivo}
-          onChange={(e)=>setPublicoObjetivo(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="">¿Para quién? (opcional)</option>
-          <option value="Mujer">Mujer</option>
-          <option value="Hombre">Hombre</option>
-          <option value="Unisex">Unisex</option>
-        </select>
+        <div style={{ position: "relative", marginBottom: "14px" }}>
+          <button
+            type="button"
+            aria-label="Elegir género"
+            aria-expanded={generoMenuOpen}
+            onClick={() => setGeneroMenuOpen(open => !open)}
+            style={{ ...inputStyle, display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 0, background: "#fff", color: publicoObjetivo ? "#222" : "#777", textAlign: "left" }}
+          >
+            <span>{publicoObjetivo || "Género (opcional)"}</span>
+            <ChevronDown size={18} />
+          </button>
+          {generoMenuOpen && (
+            <div role="group" aria-label="Opciones de género" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 40, display: "flex", flexWrap: "wrap", gap: "8px", padding: "12px", border: "1px solid #F2D9DF", borderRadius: "16px", background: "#fff", boxShadow: "0 10px 25px rgba(50, 20, 30, .14)" }}>
+              {["Mujer", "Hombre", "Unisex"].map(genero => (
+                <button
+                  key={genero}
+                  type="button"
+                  aria-pressed={publicoObjetivo === genero}
+                  onClick={() => { setPublicoObjetivo(genero); setGeneroMenuOpen(false); }}
+                  style={{ flex: "1 1 auto", minHeight: "40px", padding: "0 13px", border: `1px solid ${publicoObjetivo === genero ? "#C0003B" : "#E5E7EB"}`, borderRadius: "12px", color: publicoObjetivo === genero ? "#C0003B" : "#5F2433", background: publicoObjetivo === genero ? "#FFF1F4" : "#fff", fontWeight: 700 }}
+                >
+                  {genero}
+                </button>
+              ))}
+              {publicoObjetivo && <button type="button" onClick={() => { setPublicoObjetivo(""); setGeneroMenuOpen(false); }} style={{ width: "100%", minHeight: "34px", border: 0, color: "#777", background: "transparent" }}>Quitar género</button>}
+            </div>
+          )}
+        </div>
 
 
 

@@ -231,6 +231,12 @@ export default function CatalogoPublico() {
           {mobileFiltersOpen && <button className="catalog-mobile-filter-backdrop" aria-label="Cerrar filtros" onClick={() => setMobileFiltersOpen(false)} />}
           <aside className={`catalog-sidebar${mobileFiltersOpen ? " open" : ""}`} aria-label="Filtros del catálogo">
             <div className="catalog-sidebar-heading"><h3>Filtrar por</h3><button className="catalog-mobile-filter-close" onClick={() => setMobileFiltersOpen(false)} aria-label="Cerrar filtros"><X size={19}/></button></div>
+            {audiences.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por género">
+              <h4>Género</h4>
+              <div className="catalog-filter-options">
+                {["Todos", ...audiences].map(value => <button key={value} className={audience === value ? "selected" : ""} onClick={() => { setAudience(value); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{audience === value ? "✓" : ""}</span></button>)}
+              </div>
+            </section>}
             <section className="catalog-filter-group" aria-label="Filtrar por categoría">
               <h4>Categoría</h4>
               <div className="catalog-filter-options">
@@ -241,12 +247,6 @@ export default function CatalogoPublico() {
               <h4>Subcategoría</h4>
               <div className="catalog-filter-options">
                 {["Todas", ...subcategories].map(value => <button key={value} className={subcategory === value ? "selected" : ""} onClick={() => { setSubcategory(value); setAudience("Todos"); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{subcategory === value ? "✓" : ""}</span></button>)}
-              </div>
-            </section>}
-            {audiences.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por público">
-              <h4>Para quién</h4>
-              <div className="catalog-filter-options">
-                {["Todos", ...audiences].map(value => <button key={value} className={audience === value ? "selected" : ""} onClick={() => { setAudience(value); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{audience === value ? "✓" : ""}</span></button>)}
               </div>
             </section>}
             <section className="catalog-filter-group" aria-label="Filtrar por talla">
