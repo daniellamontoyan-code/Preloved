@@ -357,37 +357,12 @@ export async function getPaymentSummary(){
 // Generar código
 
 export async function generateArticleCode(){
-
-
-  const { count, error } = await supabase
-
-    .from("articulos")
-
-    .select(
-      "*",
-      {
-        count:"exact",
-        head:true
-      }
-    );
-
-
-
-  if(error){
-
-    return "PR-0001";
-
+  const { data, error } = await supabase.rpc("generate_article_code");
+  if (error) {
+    console.error("No se pudo reservar un código único para el artículo:", error);
+    return null;
   }
-
-
-
-  const numero = (count || 0)+1;
-
-
-
-  return `PR-${String(numero).padStart(4,"0")}`;
-
-
+  return data || null;
 }
 
 
@@ -404,7 +379,8 @@ export async function createArticle(article){
   if (!ownerId) return null;
 
 
-  const codigo = await generateArticleCode();
+  const codigo = article.codigo || await generateArticleCode();
+  if (!codigo) return null;
 
 
 

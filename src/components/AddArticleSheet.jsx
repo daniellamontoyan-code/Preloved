@@ -152,6 +152,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
     const datosArticulo = {
 
+      codigo,
       descripcion,
 
       categoria,
