@@ -55,3 +55,18 @@ create policy "public catalog photos for available articles"
     bucket_id = 'articulos'
     and public.is_catalog_image_available(name)
   );
+
+-- The existing per-user restrictive policy also needs to allow this narrowly
+-- scoped public SELECT; write checks remain restricted to the owner's folder.
+drop policy if exists "Cherry users can access only their item photo folder" on storage.objects;
+create policy "Cherry users can access only their item photo folder"
+  on storage.objects as restrictive for all to public
+  using (
+    bucket_id <> 'articulos'
+    or (storage.foldername(name))[1] = (select auth.uid())::text
+    or public.is_catalog_image_available(name)
+  )
+  with check (
+    bucket_id <> 'articulos'
+    or (storage.foldername(name))[1] = (select auth.uid())::text
+  );
