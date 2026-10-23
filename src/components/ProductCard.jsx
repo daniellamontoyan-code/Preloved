@@ -1,4 +1,4 @@
-export default function ProductCard({ articulo, onClick, onQuickSale, feria = false }) {
+export default function ProductCard({ articulo, onClick, onQuickSale, feria = false, canal = null }) {
 
 
   function abrirDetalle(){
@@ -12,7 +12,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
   }
 
   const feriaPrice = articulo.precio || articulo.precio_venta || 0;
-  const primaryChannel = feria || articulo.publicar_feria !== false ? "Feria" : "Web";
+  const primaryChannel = canal || (feria || articulo.publicar_feria !== false ? "Feria" : "Web");
   const primaryPrice = primaryChannel === "Web" ? articulo.precio_web || 0 : feriaPrice;
 
 
@@ -235,7 +235,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
 
       </strong>
-      {!feria && articulo.publicar_feria !== false && articulo.publicar_web !== false && Number(articulo.precio_web) !== Number(feriaPrice) && <span style={{ color:"#7B7B88", fontSize:12, fontWeight:700 }}>Web: S/. {articulo.precio_web || 0}</span>}
+      {!feria && canal !== "Web" && articulo.publicar_feria !== false && articulo.publicar_web !== false && Number(articulo.precio_web) !== Number(feriaPrice) && <span style={{ color:"#7B7B88", fontSize:12, fontWeight:700 }}>Web: S/. {articulo.precio_web || 0}</span>}
       </div>
 
       {feria && articulo.estado === "Disponible" && <button

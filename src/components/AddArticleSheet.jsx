@@ -1,5 +1,5 @@
-import { X, Camera, Plus, ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { X, Camera, ImagePlus, Plus, ChevronDown } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 import NewClientSheet from "./NewClientSheet";
 import { generateArticleCode, createArticle, updateArticle } from "../lib/articles";
@@ -28,6 +28,8 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
   const [foto, setFoto] = useState(null);
   const [preview, setPreview] = useState(article?.foto || null);
+  const cameraInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
   const [descripcion, setDescripcion] = useState(article?.descripcion || "");
   const [categoria, setCategoria] = useState(article?.categoria || "");
@@ -289,7 +291,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
 
 
-        <label
+          <div
           style={{
             height:"150px",
             borderRadius:"24px",
@@ -300,7 +302,6 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
             alignItems:"center",
             color:"#C0003B",
             marginBottom:"20px",
-            cursor:"pointer",
             overflow:"hidden",
           }}
         >
@@ -322,11 +323,8 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
             ) : (
 
               <>
-                <Camera size={35}/>
-
-                <p style={{color:"#777"}}>
-                  Tomar foto
-                </p>
+                <ImagePlus size={35}/>
+                <p style={{color:"#777"}}>Agrega una foto</p>
               </>
 
             )
@@ -335,18 +333,18 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
 
 
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={seleccionarFoto}
-            style={{
-              display:"none",
-            }}
-          />
+          </div>
 
-
-        </label>
+          <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={seleccionarFoto} style={{ display:"none" }} />
+          <input ref={galleryInputRef} type="file" accept="image/*" onChange={seleccionarFoto} style={{ display:"none" }} />
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+            <button type="button" onClick={() => cameraInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFF0F3", color:"#9D001E", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+              <Camera size={18}/> Tomar foto
+            </button>
+            <button type="button" onClick={() => galleryInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFF0F3", color:"#9D001E", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+              <ImagePlus size={18}/> Elegir de galería
+            </button>
+          </div>
 
 
 

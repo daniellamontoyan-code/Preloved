@@ -16,6 +16,7 @@ import {
   getSoldArticlesCount,
   getSalesTotal,
   getPaymentSummary,
+  getArticles,
 } from "../lib/articles";
 import { supabase } from "../lib/supabase";
 import { getCurrentAppUser } from "../lib/usuarios";
@@ -35,6 +36,7 @@ export default function Dashboard({ user }){
   const [vendidos,setVendidos] = useState(0);
   const [ventas,setVentas] = useState(0);
   const [pagos,setPagos] = useState({});
+  const [articulos,setArticulos] = useState([]);
 
   const [showAddArticle,setShowAddArticle] = useState(false);
   const [showArticulos,setShowArticulos] = useState(false);
@@ -42,6 +44,8 @@ export default function Dashboard({ user }){
   const [showLiquidaciones,setShowLiquidaciones] = useState(false);
 
   const [categoriaSeleccionada,setCategoriaSeleccionada] = useState("");
+  const [canalSeleccionado,setCanalSeleccionado] = useState("Todos");
+  const [subcategoriaSeleccionada,setSubcategoriaSeleccionada] = useState("");
 
 
 
@@ -51,11 +55,13 @@ export default function Dashboard({ user }){
     const vendidosData = await getSoldArticlesCount();
     const ventasData = await getSalesTotal();
     const pagosData = await getPaymentSummary();
+    const articulosData = await getArticles();
 
     setTotalArticulos(total);
     setVendidos(vendidosData);
     setVentas(ventasData);
     setPagos(pagosData);
+    setArticulos(articulosData || []);
 
   }
 
@@ -101,12 +107,17 @@ export default function Dashboard({ user }){
       <Articulos
 
         categoria={categoriaSeleccionada}
+        canalInicial={canalSeleccionado}
+        subcategoriaInicial={subcategoriaSeleccionada}
         ownerId={user?.id}
         paymentQrSrc={paymentQrSrc}
 
         onBack={()=>{
 
           setShowArticulos(false);
+          setCategoriaSeleccionada("");
+          setCanalSeleccionado("Todos");
+          setSubcategoriaSeleccionada("");
           cargarDatos();
 
         }}
@@ -116,6 +127,9 @@ export default function Dashboard({ user }){
           setShowArticulos(false);
           setShowClientes(false);
           setShowLiquidaciones(false);
+          setCategoriaSeleccionada("");
+          setCanalSeleccionado("Todos");
+          setSubcategoriaSeleccionada("");
 
         }}
 
@@ -268,6 +282,19 @@ export default function Dashboard({ user }){
     }
 
   ];
+
+  const tiposArticulo = [...new Map(articulos
+    .filter(item => item.subcategoria)
+    .map(item => [`${item.categoria || ""}:${item.subcategoria}`, { categoria: item.categoria || "", subcategoria: item.subcategoria }]))
+    .values()]
+    .sort((a, b) => a.subcategoria.localeCompare(b.subcategoria, "es"));
+
+  function abrirArticulos({ canal = "Todos", categoria = "", subcategoria = "" } = {}) {
+    setCanalSeleccionado(canal);
+    setCategoriaSeleccionada(categoria);
+    setSubcategoriaSeleccionada(subcategoria);
+    setShowArticulos(true);
+  }
 
 
 
@@ -601,7 +628,29 @@ export default function Dashboard({ user }){
 
 
 
-        <div style={{marginTop:"40px"}}>
+        <div style={{marginTop:"34px"}}>
+          <SectionTitle title="Explorar artículos" />
+          <p style={{ margin:"8px 0 12px", color:"#777783", fontSize:13, fontWeight:600 }}>Filtra por dónde los ofreces</p>
+          <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
+            {["Todos", "Feria", "Web"].map(canal => (
+              <button key={canal} onClick={() => abrirArticulos({ canal })} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"11px 17px", background:canalSeleccionado === canal ? "#C0003B" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800, boxShadow:"0 5px 16px rgba(0,0,0,.05)" }}>
+                {canal === "Web" ? "Página web" : canal}
+              </button>
+            ))}
+          </div>
+          {tiposArticulo.length > 0 && <>
+            <p style={{ margin:"18px 0 10px", color:"#777783", fontSize:13, fontWeight:600 }}>Tipos de prenda, accesorio o calzado</p>
+            <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
+              {tiposArticulo.map(tipo => (
+                <button key={`${tipo.categoria}:${tipo.subcategoria}`} onClick={() => abrirArticulos({ canal:canalSeleccionado, categoria:tipo.categoria, subcategoria:tipo.subcategoria })} style={{ flex:"0 0 auto", border:"1px solid #F2DCE2", borderRadius:15, padding:"11px 14px", background:"#FFFFFF", color:"#77152B", fontWeight:700, boxShadow:"0 5px 16px rgba(0,0,0,.04)" }}>
+                  {tipo.subcategoria}{tipo.categoria ? <span style={{ color:"#999", fontSize:11, marginLeft:5 }}>{tipo.categoria}</span> : null}
+                </button>
+              ))}
+            </div>
+          </>}
+        </div>
+
+        <div style={{marginTop:"32px"}}>
 
           <SectionTitle
 

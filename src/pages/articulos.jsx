@@ -8,13 +8,14 @@ import AddArticleSheet from "../components/AddArticleSheet";
 import SaleSheet from "../components/SaleSheet";
 
 import { getArticles, getPendingSales, syncPendingSales } from "../lib/articles";
-import { getClients } from "../lib/clients";
 
 
 
 export default function Articulos({ 
 
-  categoria, 
+  categoria,
+  canalInicial = "Todos",
+  subcategoriaInicial = "",
   ownerId,
   paymentQrSrc,
   onBack,
@@ -27,12 +28,10 @@ export default function Articulos({
 
 
   const [articulos, setArticulos] = useState([]);
-  const [clientes, setClientes] = useState([]);
-const [clienteSeleccionado, setClienteSeleccionado] = useState("");
-
   const [busqueda, setBusqueda] = useState("");
-
-  const [filtro, setFiltro] = useState("Todos");
+  const [canalSeleccionado, setCanalSeleccionado] = useState(canalInicial);
+  const [categoriaFiltro, setCategoriaFiltro] = useState(categoria || "Todos");
+  const [subcategoriaFiltro, setSubcategoriaFiltro] = useState(subcategoriaInicial);
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
 
@@ -51,8 +50,6 @@ const [clienteSeleccionado, setClienteSeleccionado] = useState("");
   useEffect(()=>{
 
     cargarArticulos();
-    cargarClientes();
-
   },[categoria]);
 
   useEffect(() => {
@@ -80,11 +77,6 @@ const [clienteSeleccionado, setClienteSeleccionado] = useState("");
 
 
 
-
-async function cargarClientes() {
-  const data = await getClients();
-  setClientes(data || []);
-}
 
   async function cargarArticulos(){
 
@@ -139,54 +131,25 @@ async function cargarClientes() {
 
 
 
-  let filtrados = articulos.filter(item =>
-
-    item.descripcion
-
-      .toLowerCase()
-
-      .includes(
-
-        busqueda.toLowerCase()
-
-      )
-
-  );
+  const textoBusqueda = busqueda.trim().toLowerCase();
+  const categoriasDisponibles = [...new Set(articulos.map(item => item.categoria).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "es"));
+  let filtrados = articulos.filter(item => {
+    const coincideBusqueda = !textoBusqueda || [item.descripcion, item.codigo, item.categoria, item.subcategoria, item.talla]
+      .some(valor => String(valor || "").toLowerCase().includes(textoBusqueda));
+    const coincideCategoria = categoriaFiltro === "Todos" || item.categoria === categoriaFiltro;
+    const coincideSubcategoria = !subcategoriaFiltro || item.subcategoria === subcategoriaFiltro;
+    const coincideCanal = canalSeleccionado === "Todos"
+      || (canalSeleccionado === "Feria" ? item.publicar_feria !== false : item.publicar_web !== false);
+    return coincideBusqueda && coincideCategoria && coincideSubcategoria && coincideCanal;
+  });
 
   if (modoFeria) filtrados = filtrados.filter(item => item.estado === "Disponible" && item.publicar_feria !== false);
 
-
-
-
-
-    if (clienteSeleccionado) {
-    const cliente = clientes.find(
-      item => String(item.id) === String(clienteSeleccionado)
-    );
-
-    if (cliente) {
-      const nombreCliente = (cliente.nombre || "").trim().toLowerCase();
-
-      filtrados = filtrados.filter(item => {
-        const asignado = item.cliente;
-        const valoresCliente = [
-          item.cliente_id,
-          typeof asignado === "object" ? asignado?.id : asignado,
-          typeof asignado === "object" ? asignado?.nombre : null,
-        ]
-          .filter(Boolean)
-          .map(String);
-
-        return (
-          valoresCliente.includes(String(cliente.id)) ||
-          valoresCliente.some(
-            valor => valor.trim().toLowerCase() === nombreCliente
-          )
-        );
-      });
-    }
-  }
-
+  const subcategoriasDisponibles = [...new Set(articulos
+    .filter(item => categoriaFiltro === "Todos" || item.categoria === categoriaFiltro)
+    .map(item => item.subcategoria)
+    .filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
 
   if(articuloSeleccionado){
 
@@ -320,7 +283,7 @@ async function cargarClientes() {
 
         >
 
-          {categoria || "Artículos"}
+          {categoriaFiltro === "Todos" ? "Artículos" : categoriaFiltro}
 
         </h1>
 
@@ -335,8 +298,18 @@ async function cargarClientes() {
         </div>
         {pendientes > 0 && <span style={{ fontSize:12, color:"#A45B00", fontWeight:700 }}>{pendientes} venta{pendientes === 1 ? "" : "s"} por sincronizar</span>}
       </div>
-      <button onClick={() => setModoFeria(value => !value)} style={{ width:"100%", height:48, marginBottom:18, border:0, borderRadius:15, background: modoFeria ? "#C0003B" : "#FFF0F3", color: modoFeria ? "white" : "#7B1730", fontSize:15, fontWeight:800 }}>
-        {modoFeria ? "✓ Modo feria · solo disponibles" : "Activar modo feria"}
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Ver artículos de</div>
+        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
+          {["Todos", "Feria", "Web"].map(canal => (
+            <button key={canal} onClick={() => { setCanalSeleccionado(canal); if (canal !== "Feria") setModoFeria(false); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 16px", background:canalSeleccionado === canal ? "#C0003B" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800 }}>
+              {canal === "Web" ? "Página web" : canal}
+            </button>
+          ))}
+        </div>
+      </div>
+      <button onClick={() => setModoFeria(value => { const next = !value; if (next) setCanalSeleccionado("Feria"); return next; })} style={{ width:"100%", height:46, marginBottom:16, border:0, borderRadius:15, background: modoFeria ? "#C0003B" : "#FFF0F3", color: modoFeria ? "white" : "#7B1730", fontSize:14, fontWeight:800 }}>
+        {modoFeria ? "✓ Modo venta feria activo" : "Activar modo venta feria"}
       </button>
 
 
@@ -386,58 +359,27 @@ async function cargarClientes() {
 
 
 
-      <div
-
-        style={{
-
-          display:"flex",
-
-          gap:"10px",
-          overflowX: "auto",
-
-          marginBottom:"20px",
-
-        }}
-
-      >
-
-
-        {
-
-          clientes.map((cliente) => (
-  <button
-    key={cliente.id}
-    onClick={() =>
-      setClienteSeleccionado(actual =>
-        String(actual) === String(cliente.id) ? "" : String(cliente.id)
-      )
-    }
-    style={{
-      flex: "0 0 auto",
-      padding: "0 18px",
-      height: "40px",
-      borderRadius: "20px",
-      border: "none",
-      background:
-        String(clienteSeleccionado) === String(cliente.id)
-          ? "#C0003B"
-          : "#FFFFFF",
-      color:
-        String(clienteSeleccionado) === String(cliente.id)
-          ? "#FFFFFF"
-          : "#7B7B88",
-      fontWeight: "600",
-      fontSize: "14px",
-    }}
-  >
-    {cliente.nombre}
-  </button>
-))
-
-        }
-
-
+      <div style={{ marginBottom:14 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Categoría</div>
+        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
+          {["Todos", ...categoriasDisponibles].map(nombre => (
+            <button key={nombre} onClick={() => { setCategoriaFiltro(nombre); setSubcategoriaFiltro(""); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:categoriaFiltro === nombre ? "#C0003B" : "#FFFFFF", color:categoriaFiltro === nombre ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
+              {nombre === "Todos" ? "Todas" : nombre}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {subcategoriasDisponibles.length > 0 && <div style={{ marginBottom:20 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Tipo de artículo</div>
+        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
+          {["", ...subcategoriasDisponibles].map(tipo => (
+            <button key={tipo || "todas-subcategorias"} onClick={() => setSubcategoriaFiltro(tipo)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:subcategoriaFiltro === tipo ? "#FFE8ED" : "#FFFFFF", color:subcategoriaFiltro === tipo ? "#9D001E" : "#555563", fontWeight:700, fontSize:13 }}>
+              {tipo || "Todos los tipos"}
+            </button>
+          ))}
+        </div>
+      </div>}
 
 
 
@@ -477,6 +419,7 @@ async function cargarClientes() {
 
                 articulo={item}
                 feria={modoFeria}
+                canal={canalSeleccionado === "Todos" ? null : canalSeleccionado}
                 onQuickSale={setShowSale}
 
                 onClick={(producto)=>{
