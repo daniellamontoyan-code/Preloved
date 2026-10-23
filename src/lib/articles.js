@@ -420,6 +420,8 @@ export async function createArticle(article){
         descripcion:article.descripcion,
 
         categoria:article.categoria,
+        subcategoria:article.subcategoria || null,
+        talla:article.talla?.trim() || null,
 
         precio:article.precio,
 

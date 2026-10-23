@@ -192,7 +192,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
             >
 
-              {articulo.categoria}
+              {[articulo.categoria, articulo.subcategoria, articulo.talla && `Talla ${articulo.talla}`].filter(Boolean).join(" · ")}
 
             </span>
 

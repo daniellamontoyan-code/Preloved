@@ -252,6 +252,14 @@ export default function DetalleArticulo({ articulo, onBack }) {
 
           />
 
+          {articuloActual.talla && (
+            <InfoRow titulo="Talla:" valor={articuloActual.talla} />
+          )}
+
+          {articuloActual.subcategoria && (
+            <InfoRow titulo="Subcategoría:" valor={articuloActual.subcategoria} />
+          )}
+
 
 
 

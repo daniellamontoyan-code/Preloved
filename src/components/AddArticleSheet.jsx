@@ -6,6 +6,14 @@ import { generateArticleCode, createArticle } from "../lib/articles";
 import { getClients } from "../lib/clients";
 import { uploadArticleImage } from "../lib/storage";
 
+const subcategories = {
+  Ropa: ["Polos y tops", "Shorts", "Pantalones", "Faldas", "Vestidos", "Casacas", "Chompas"],
+  Calzado: ["Zapatillas", "Tenis", "Sandalias", "Tacos", "Botas", "Mocasines"],
+  Bolsos: ["Carteras", "Mochilas", "Bolsos de mano", "Canguros"],
+  Accesorios: ["Joyas", "Gorros", "Cinturones", "Lentes", "Pañuelos"],
+  Otros: [],
+};
+
 
 export default function AddArticleSheet({ onClose }) {
 
@@ -20,6 +28,9 @@ export default function AddArticleSheet({ onClose }) {
 
   const [descripcion, setDescripcion] = useState("");
   const [categoria, setCategoria] = useState("");
+  const [subcategoria, setSubcategoria] = useState("");
+  const [subcategoriaOtra, setSubcategoriaOtra] = useState("");
+  const [talla, setTalla] = useState("");
   const [cliente, setCliente] = useState("");
   const [precio, setPrecio] = useState("");
 
@@ -121,6 +132,8 @@ export default function AddArticleSheet({ onClose }) {
       descripcion,
 
       categoria,
+      subcategoria: subcategoria === "Otra" ? subcategoriaOtra.trim() : subcategoria,
+      talla,
 
       cliente,
 
@@ -322,7 +335,11 @@ export default function AddArticleSheet({ onClose }) {
 
         <select
           value={categoria}
-          onChange={(e)=>setCategoria(e.target.value)}
+          onChange={(e)=>{
+            setCategoria(e.target.value);
+            setSubcategoria("");
+            setSubcategoriaOtra("");
+          }}
           style={inputStyle}
         >
 
@@ -337,6 +354,40 @@ export default function AddArticleSheet({ onClose }) {
           <option>Otros</option>
 
         </select>
+
+        {categoria && (
+          <>
+            <select
+              value={subcategoria}
+              onChange={(e)=>{
+                setSubcategoria(e.target.value);
+                setSubcategoriaOtra("");
+              }}
+              style={inputStyle}
+            >
+              <option value="">Subcategoría (opcional)</option>
+              {(subcategories[categoria] || []).map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+              <option value="Otra">Otra</option>
+            </select>
+            {subcategoria === "Otra" && (
+              <input
+                placeholder="Escribe la subcategoría"
+                value={subcategoriaOtra}
+                onChange={(e)=>setSubcategoriaOtra(e.target.value)}
+                style={inputStyle}
+              />
+            )}
+          </>
+        )}
+
+        <input
+          placeholder="Talla (S, M, 38, única) · opcional"
+          value={talla}
+          onChange={(e)=>setTalla(e.target.value)}
+          style={inputStyle}
+        />
 
 
 
