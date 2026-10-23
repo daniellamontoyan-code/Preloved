@@ -422,6 +422,7 @@ export async function createArticle(article){
         categoria:article.categoria,
         subcategoria:article.subcategoria || null,
         talla:article.talla?.trim() || null,
+        publico_objetivo:article.publico_objetivo || null,
 
         precio:article.precio,
         precio_web:article.precio_web,
@@ -477,6 +478,7 @@ export async function updateArticle(id, article) {
       categoria: article.categoria || null,
       subcategoria: article.subcategoria || null,
       talla: article.talla?.trim() || null,
+      publico_objetivo: article.publico_objetivo || null,
       cliente: article.cliente || null,
       precio: Number(article.precio) || 0,
       precio_web: Number(article.precio_web) || 0,

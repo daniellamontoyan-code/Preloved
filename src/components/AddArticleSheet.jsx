@@ -34,6 +34,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [subcategoria, setSubcategoria] = useState(!existingSubcategory ? "" : hasSuggestedSubcategory ? existingSubcategory : "Otra");
   const [subcategoriaOtra, setSubcategoriaOtra] = useState(hasSuggestedSubcategory ? "" : existingSubcategory);
   const [talla, setTalla] = useState(article?.talla || "");
+  const [publicoObjetivo, setPublicoObjetivo] = useState(article?.publico_objetivo || "");
   const [cliente, setCliente] = useState(String(article?.cliente?.id || article?.cliente || ""));
   const [precio, setPrecio] = useState(article?.precio ?? "");
   const [precioWeb, setPrecioWeb] = useState(article?.precio_web ?? article?.precio ?? "");
@@ -155,6 +156,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       categoria,
       subcategoria: subcategoria === "Otra" ? subcategoriaOtra.trim() : subcategoria,
       talla,
+      publico_objetivo: publicoObjetivo,
 
       cliente,
 
@@ -417,6 +419,17 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           onChange={(e)=>setTalla(e.target.value)}
           style={inputStyle}
         />
+
+        <select
+          value={publicoObjetivo}
+          onChange={(e)=>setPublicoObjetivo(e.target.value)}
+          style={inputStyle}
+        >
+          <option value="">¿Para quién? (opcional)</option>
+          <option value="Mujer">Mujer</option>
+          <option value="Hombre">Hombre</option>
+          <option value="Unisex">Unisex</option>
+        </select>
 
 
 

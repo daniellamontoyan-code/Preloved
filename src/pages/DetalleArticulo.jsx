@@ -264,6 +264,10 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
             <InfoRow titulo="Talla:" valor={articuloActual.talla} />
           )}
 
+          {articuloActual.publico_objetivo && (
+            <InfoRow titulo="Público:" valor={articuloActual.publico_objetivo} />
+          )}
+
           {articuloActual.subcategoria && (
             <InfoRow titulo="Subcategoría:" valor={articuloActual.subcategoria} />
           )}

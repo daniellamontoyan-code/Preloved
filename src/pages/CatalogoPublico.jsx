@@ -14,10 +14,10 @@ function isTuesdayInLima(date) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", weekday: "short" }).format(date) === "Tue";
 }
 const previewArticles = [
-  { id:"demo-1", descripcion:"Top tejido cereza", categoria:"Ropa", subcategoria:"Polos y tops", talla:"S", precio:35, codigo:"PR-0001", estado:"Disponible" },
-  { id:"demo-2", descripcion:"Jean recto azul", categoria:"Ropa", subcategoria:"Pantalones", talla:"28", precio:55, codigo:"PR-0002", estado:"Disponible" },
-  { id:"demo-3", descripcion:"Vestido floreado", categoria:"Ropa", subcategoria:"Vestidos", talla:"M", precio:48, codigo:"PR-0003", estado:"Disponible" },
-  { id:"demo-4", descripcion:"Zapatillas urbanas", categoria:"Calzado", subcategoria:"Zapatillas", talla:"38", precio:70, codigo:"PR-0004", estado:"Disponible" },
+  { id:"demo-1", descripcion:"Top tejido cereza", categoria:"Ropa", subcategoria:"Polos y tops", talla:"S", publico_objetivo:"Mujer", precio:35, codigo:"PR-0001", estado:"Disponible" },
+  { id:"demo-2", descripcion:"Jean recto azul", categoria:"Ropa", subcategoria:"Pantalones", talla:"28", publico_objetivo:"Unisex", precio:55, codigo:"PR-0002", estado:"Disponible" },
+  { id:"demo-3", descripcion:"Vestido floreado", categoria:"Ropa", subcategoria:"Vestidos", talla:"M", publico_objetivo:"Mujer", precio:48, codigo:"PR-0003", estado:"Disponible" },
+  { id:"demo-4", descripcion:"Zapatillas urbanas", categoria:"Calzado", subcategoria:"Zapatillas", talla:"38", publico_objetivo:"Unisex", precio:70, codigo:"PR-0004", estado:"Disponible" },
   { id:"demo-5", descripcion:"Cartera vino", categoria:"Bolsos", subcategoria:"Carteras", talla:"Única", precio:42, codigo:"PR-0005", estado:"Disponible" },
   { id:"demo-6", descripcion:"Short de verano", categoria:"Ropa", subcategoria:"Shorts", talla:"S", precio:32, codigo:"PR-0006", estado:"Disponible" },
 ];
@@ -31,6 +31,7 @@ export default function CatalogoPublico() {
   const [category, setCategory] = useState("Todo");
   const [subcategory, setSubcategory] = useState("Todas");
   const [size, setSize] = useState("Todas");
+  const [audience, setAudience] = useState("Todos");
   const [priceMin, setPriceMin] = useState("");
   const [priceMax, setPriceMax] = useState("");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
@@ -81,12 +82,20 @@ export default function CatalogoPublico() {
     "Todo",
     ...new Set(articles.map(item => item.categoria).filter(Boolean)),
   ], [articles]);
-  const subcategories = useMemo(() => [...new Set(articles
-    .filter(item => category === "Todo" || item.categoria === category)
+  const categoryArticles = useMemo(() => articles
+    .filter(item => category === "Todo" || item.categoria === category), [articles, category]);
+  const subcategories = useMemo(() => [...new Set(categoryArticles
     .map(item => item.subcategoria)
-    .filter(Boolean))].sort((a, b) => a.localeCompare(b, "es")), [articles, category]);
-  const sizes = useMemo(() => [...new Set(articles.map(item => item.talla).filter(Boolean))].sort(), [articles]);
-  const activeFilterCount = Number(category !== "Todo") + Number(subcategory !== "Todas") + Number(size !== "Todas") + Number(priceMin !== "" || priceMax !== "");
+    .filter(Boolean))].sort((a, b) => a.localeCompare(b, "es")), [categoryArticles]);
+  const audienceArticles = useMemo(() => categoryArticles
+    .filter(item => subcategory === "Todas" || item.subcategoria === subcategory), [categoryArticles, subcategory]);
+  const audiences = useMemo(() => [...new Set(audienceArticles.map(item => item.publico_objetivo).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "es")), [audienceArticles]);
+  const sizeSource = useMemo(() => audienceArticles
+    .filter(item => audience === "Todos" || item.publico_objetivo === audience), [audienceArticles, audience]);
+  const sizes = useMemo(() => [...new Set(sizeSource.map(item => item.talla).filter(Boolean))]
+    .sort((a, b) => String(a).localeCompare(String(b), "es", { numeric: true })), [sizeSource]);
+  const activeFilterCount = Number(category !== "Todo") + Number(subcategory !== "Todas") + Number(size !== "Todas") + Number(audience !== "Todos") + Number(priceMin !== "" || priceMax !== "");
   const limaToday = limaDateKey(new Date());
   const tuesdayItems = articles.filter(item => {
     if (!item.created_at) return false;
@@ -105,6 +114,7 @@ export default function CatalogoPublico() {
     setCategory("Todo");
     setSubcategory("Todas");
     setSize("Todas");
+    setAudience("Todos");
     setPriceMin("");
     setPriceMax("");
   }
@@ -116,16 +126,17 @@ export default function CatalogoPublico() {
 
   const visibleArticles = useMemo(() => articles.filter((item) => {
     const term = search.trim().toLocaleLowerCase("es");
-    const matchesSearch = !term || [item.descripcion, item.codigo, item.categoria, item.subcategoria, item.talla]
+    const matchesSearch = !term || [item.descripcion, item.codigo, item.categoria, item.subcategoria, item.talla, item.publico_objetivo]
       .filter(Boolean).some(value => String(value).toLocaleLowerCase("es").includes(term));
     const matchesCategory = category === "Todo" || item.categoria === category;
     const matchesSubcategory = subcategory === "Todas" || item.subcategoria === subcategory;
     const matchesSize = size === "Todas" || item.talla === size;
+    const matchesAudience = audience === "Todos" || item.publico_objetivo === audience;
     const price = Number(item.precio || 0);
     const matchesMinPrice = priceMin === "" || price >= Number(priceMin);
     const matchesMaxPrice = priceMax === "" || price <= Number(priceMax);
-    return matchesSearch && matchesCategory && matchesSubcategory && matchesSize && matchesMinPrice && matchesMaxPrice;
-  }), [articles, search, category, subcategory, size, priceMin, priceMax]);
+    return matchesSearch && matchesCategory && matchesSubcategory && matchesSize && matchesAudience && matchesMinPrice && matchesMaxPrice;
+  }), [articles, search, category, subcategory, size, audience, priceMin, priceMax]);
   const displayedArticles = useMemo(() => visibleArticles.slice(0, displayCount), [visibleArticles, displayCount]);
 
   useEffect(() => {
@@ -160,7 +171,7 @@ export default function CatalogoPublico() {
   const total = cart.reduce((sum, item) => sum + Number(item.precio || 0), 0);
   const inquiryMessage = [
     "Hola Cherry Club 🍒, quisiera consultar disponibilidad de:",
-    ...cart.map(item => `• ${item.descripcion}${item.talla ? ` (talla ${item.talla})` : ""}${item.codigo ? ` · ${item.codigo}` : ""} — S/ ${Number(item.precio || 0).toFixed(2)}`),
+    ...cart.map(item => `• ${item.descripcion}${item.talla ? ` (talla ${item.talla})` : ""}${item.publico_objetivo ? ` · ${item.publico_objetivo}` : ""}${item.codigo ? ` · ${item.codigo}` : ""} — S/ ${Number(item.precio || 0).toFixed(2)}`),
     `Total referencial: S/ ${total.toFixed(2)}`,
   ].join("\n");
 
@@ -223,13 +234,19 @@ export default function CatalogoPublico() {
             <section className="catalog-filter-group" aria-label="Filtrar por categoría">
               <h4>Categoría</h4>
               <div className="catalog-filter-options">
-                {categories.map(value => <button key={value} className={category === value ? "selected" : ""} onClick={() => { setCategory(value); setSubcategory("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{category === value ? "✓" : ""}</span></button>)}
+                {categories.map(value => <button key={value} className={category === value ? "selected" : ""} onClick={() => { setCategory(value); setSubcategory("Todas"); setAudience("Todos"); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{category === value ? "✓" : ""}</span></button>)}
               </div>
             </section>
             {subcategories.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por subcategoría">
               <h4>Subcategoría</h4>
               <div className="catalog-filter-options">
-                {["Todas", ...subcategories].map(value => <button key={value} className={subcategory === value ? "selected" : ""} onClick={() => setSubcategory(value)}><span>{value}</span><span className="catalog-filter-check">{subcategory === value ? "✓" : ""}</span></button>)}
+                {["Todas", ...subcategories].map(value => <button key={value} className={subcategory === value ? "selected" : ""} onClick={() => { setSubcategory(value); setAudience("Todos"); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{subcategory === value ? "✓" : ""}</span></button>)}
+              </div>
+            </section>}
+            {audiences.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por público">
+              <h4>Para quién</h4>
+              <div className="catalog-filter-options">
+                {["Todos", ...audiences].map(value => <button key={value} className={audience === value ? "selected" : ""} onClick={() => { setAudience(value); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{audience === value ? "✓" : ""}</span></button>)}
               </div>
             </section>}
             <section className="catalog-filter-group" aria-label="Filtrar por talla">
@@ -275,7 +292,7 @@ export default function CatalogoPublico() {
                       {article.talla && <span className="catalog-size-tag">Talla {article.talla}</span>}
                     </div>
                     <div className="catalog-product-info">
-                      <p className="catalog-product-category">{[article.categoria, article.subcategoria].filter(Boolean).join(" · ") || "Pieza única"}</p>
+                      <p className="catalog-product-category">{[article.categoria, article.subcategoria, article.publico_objetivo].filter(Boolean).join(" · ") || "Pieza única"}</p>
                       <h3>{article.descripcion}</h3>
                       {article.codigo && <span className="catalog-product-code">{article.codigo}</span>}
                     </div>
@@ -301,7 +318,7 @@ export default function CatalogoPublico() {
             {selectedArticle.talla && <span className="catalog-size-tag">Talla {selectedArticle.talla}</span>}
           </div>
           <div className="catalog-detail-copy">
-            <p className="catalog-product-category">{[selectedArticle.categoria, selectedArticle.subcategoria].filter(Boolean).join(" · ") || "Pieza única"}</p>
+            <p className="catalog-product-category">{[selectedArticle.categoria, selectedArticle.subcategoria, selectedArticle.publico_objetivo].filter(Boolean).join(" · ") || "Pieza única"}</p>
             <h2 id="catalog-detail-title">{selectedArticle.descripcion}</h2>
             {selectedArticle.codigo && <p className="catalog-detail-code">Código {selectedArticle.codigo}</p>}
             {selectedArticle.talla && <p className="catalog-detail-size">Talla <strong>{selectedArticle.talla}</strong></p>}
