@@ -252,13 +252,12 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated }) {
         >
 
 
-          <InfoRow
-
-            titulo="Precio:"
-
-            valor={`S/. ${precioMostrar}`}
-
-          />
+          {articuloActual.publicar_feria !== false && <InfoRow titulo="Precio de feria:" valor={`S/. ${precioMostrar}`} />}
+          {articuloActual.publicar_web !== false && <InfoRow titulo="Precio del catálogo web:" valor={`S/. ${articuloActual.precio_web ?? precioMostrar}`} />}
+          <InfoRow titulo="Se publica en:" valor={[
+            articuloActual.publicar_feria !== false && "Feria",
+            articuloActual.publicar_web !== false && "Catálogo web",
+          ].filter(Boolean).join(" y ")} />
 
           {articuloActual.talla && (
             <InfoRow titulo="Talla:" valor={articuloActual.talla} />

@@ -11,6 +11,10 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
   }
 
+  const feriaPrice = articulo.precio || articulo.precio_venta || 0;
+  const primaryChannel = feria || articulo.publicar_feria !== false ? "Feria" : "Web";
+  const primaryPrice = primaryChannel === "Web" ? articulo.precio_web || 0 : feriaPrice;
+
 
 
   return (
@@ -210,6 +214,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
 
 
+      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
       <strong
 
         style={{
@@ -226,10 +231,12 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
       >
 
-        S/. {articulo.precio || articulo.precio_venta || 0}
+        {primaryChannel}: S/. {primaryPrice}
 
 
       </strong>
+      {!feria && articulo.publicar_feria !== false && articulo.publicar_web !== false && Number(articulo.precio_web) !== Number(feriaPrice) && <span style={{ color:"#7B7B88", fontSize:12, fontWeight:700 }}>Web: S/. {articulo.precio_web || 0}</span>}
+      </div>
 
       {feria && articulo.estado === "Disponible" && <button
         onClick={(event) => { event.stopPropagation(); onQuickSale?.(articulo); }}

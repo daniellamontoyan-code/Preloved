@@ -153,7 +153,7 @@ async function cargarClientes() {
 
   );
 
-  if (modoFeria) filtrados = filtrados.filter(item => item.estado === "Disponible");
+  if (modoFeria) filtrados = filtrados.filter(item => item.estado === "Disponible" && item.publicar_feria !== false);
 
 
 

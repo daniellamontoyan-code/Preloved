@@ -36,6 +36,9 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [talla, setTalla] = useState(article?.talla || "");
   const [cliente, setCliente] = useState(String(article?.cliente?.id || article?.cliente || ""));
   const [precio, setPrecio] = useState(article?.precio ?? "");
+  const [precioWeb, setPrecioWeb] = useState(article?.precio_web ?? article?.precio ?? "");
+  const [publicarFeria, setPublicarFeria] = useState(article?.publicar_feria ?? true);
+  const [publicarWeb, setPublicarWeb] = useState(article?.publicar_web ?? true);
 
   const [loading, setLoading] = useState(false);
 
@@ -102,6 +105,21 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
     }
 
+    if (!publicarFeria && !publicarWeb) {
+      alert("Elige al menos un canal: feria o catálogo web.");
+      return;
+    }
+
+    if (publicarFeria && (!Number(precio) || Number(precio) <= 0)) {
+      alert("Ingresa un precio válido para la feria.");
+      return;
+    }
+
+    if (publicarWeb && (!Number(precioWeb) || Number(precioWeb) <= 0)) {
+      alert("Ingresa un precio válido para el catálogo web.");
+      return;
+    }
+
 
 
     setLoading(true);
@@ -141,6 +159,9 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       cliente,
 
       precio:Number(precio),
+      precio_web:Number(precioWeb),
+      publicar_feria:publicarFeria,
+      publicar_web:publicarWeb,
 
       foto:urlFoto,
 
@@ -454,13 +475,37 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
 
 
-        <input
-          placeholder="Precio"
+        <div style={channelBox}>
+          <strong style={{display:"block", marginBottom:8}}>¿Dónde estará disponible?</strong>
+          <label style={channelOption}>
+            <input type="checkbox" checked={publicarFeria} onChange={e=>setPublicarFeria(e.target.checked)} />
+            Feria
+          </label>
+          <label style={channelOption}>
+            <input type="checkbox" checked={publicarWeb} onChange={e=>setPublicarWeb(e.target.checked)} />
+            Catálogo web
+          </label>
+        </div>
+
+        {publicarFeria && <input
+          aria-label="Precio de feria"
+          placeholder="Precio de feria"
           type="number"
+          step="0.01"
           value={precio}
           onChange={(e)=>setPrecio(e.target.value)}
           style={inputStyle}
-        />
+        />}
+
+        {publicarWeb && <input
+          aria-label="Precio del catálogo web"
+          placeholder="Precio del catálogo web"
+          type="number"
+          step="0.01"
+          value={precioWeb}
+          onChange={(e)=>setPrecioWeb(e.target.value)}
+          style={inputStyle}
+        />}
 
 
 
@@ -589,6 +634,23 @@ const inputStyle = {
   fontSize:"16px",
   marginBottom:"14px",
 
+};
+
+const channelBox = {
+  background:"#FFF7F8",
+  border:"1px solid #F2D9DF",
+  borderRadius:"18px",
+  padding:"14px 16px",
+  marginBottom:"14px",
+  color:"#5F2433",
+};
+
+const channelOption = {
+  display:"flex",
+  alignItems:"center",
+  gap:"9px",
+  minHeight:"34px",
+  fontWeight:600,
 };
 
 

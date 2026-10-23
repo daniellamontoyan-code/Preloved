@@ -19,7 +19,9 @@ async function compressArticleImage(file) {
     element.src = objectUrl;
   });
 
-  const maxSide = 1600;
+  // Enough resolution for the catalog grid and a full-screen phone detail view,
+  // while keeping uploads much smaller than the phone's original image.
+  const maxSide = 1200;
   const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(image.naturalWidth * scale);
@@ -36,7 +38,7 @@ async function compressArticleImage(file) {
         ? resolve(result)
         : reject(new Error("No se pudo comprimir la foto.")),
       "image/jpeg",
-      0.82,
+      0.72,
     );
   });
 

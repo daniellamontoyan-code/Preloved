@@ -36,6 +36,7 @@ export default function CatalogoPublico() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
   const [termsOpen, setTermsOpen] = useState(false);
   const [dismissedDropKey, setDismissedDropKey] = useState("");
   const [copied, setCopied] = useState(false);
@@ -43,6 +44,24 @@ export default function CatalogoPublico() {
   const [displayCount, setDisplayCount] = useState(24);
 
   useEffect(() => { loadCatalog(); }, []);
+
+  useEffect(() => {
+    if (!selectedArticle && !cartOpen && !termsOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = event => {
+      if (event.key === "Escape") {
+        setSelectedArticle(null);
+        setCartOpen(false);
+        setTermsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [selectedArticle, cartOpen, termsOpen]);
 
   async function loadCatalog() {
     setLoading(true);
@@ -250,16 +269,18 @@ export default function CatalogoPublico() {
               const inCart = cart.some(item => String(item.id) === String(article.id));
               return (
                 <article className="catalog-product" key={article.id}>
-                  <div className="catalog-product-photo">
-                    {photoUrls[article.id] ? <img src={photoUrls[article.id]} alt={article.descripcion} loading="lazy"/> : <div className="catalog-photo-placeholder">🍒</div>}
-                    {article.talla && <span className="catalog-size-tag">Talla {article.talla}</span>}
-                  </div>
-                  <div className="catalog-product-info">
-                    <p className="catalog-product-category">{[article.categoria, article.subcategoria].filter(Boolean).join(" · ") || "Pieza única"}</p>
-                    <h3>{article.descripcion}</h3>
-                    {article.codigo && <span className="catalog-product-code">{article.codigo}</span>}
-                    <div className="catalog-product-bottom"><strong>S/ {Number(article.precio || 0).toFixed(2)}</strong><button className={inCart ? "added" : ""} onClick={() => inCart ? removeFromCart(article.id) : addToCart(article)} aria-label={inCart ? `Quitar ${article.descripcion} del carrito` : `Agregar ${article.descripcion} al carrito`}>{inCart ? <Check size={17}/> : <Plus size={18}/>}</button></div>
-                  </div>
+                  <button className="catalog-product-open" type="button" onClick={() => setSelectedArticle(article)} aria-label={`Ver detalles de ${article.descripcion}`}>
+                    <div className="catalog-product-photo">
+                      {photoUrls[article.id] ? <img src={photoUrls[article.id]} alt={article.descripcion} loading="lazy"/> : <div className="catalog-photo-placeholder">🍒</div>}
+                      {article.talla && <span className="catalog-size-tag">Talla {article.talla}</span>}
+                    </div>
+                    <div className="catalog-product-info">
+                      <p className="catalog-product-category">{[article.categoria, article.subcategoria].filter(Boolean).join(" · ") || "Pieza única"}</p>
+                      <h3>{article.descripcion}</h3>
+                      {article.codigo && <span className="catalog-product-code">{article.codigo}</span>}
+                    </div>
+                  </button>
+                  <div className="catalog-product-bottom"><strong>S/ {Number(article.precio || 0).toFixed(2)}</strong><button className={inCart ? "added" : ""} onClick={() => inCart ? removeFromCart(article.id) : addToCart(article)} aria-label={inCart ? `Quitar ${article.descripcion} del carrito` : `Agregar ${article.descripcion} al carrito`}>{inCart ? <Check size={17}/> : <Plus size={18}/>}</button></div>
                 </article>
               );
             })}
@@ -271,6 +292,25 @@ export default function CatalogoPublico() {
       </section>
 
       <footer className="catalog-footer"><span>Cherry Club 🍒</span><span>Una segunda vida para piezas especiales</span><button className="catalog-terms-link" onClick={() => setTermsOpen(true)}>Términos y condiciones</button><a href={instagramUrl} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a></footer>
+
+      {selectedArticle && <div className="catalog-detail-overlay" onClick={() => setSelectedArticle(null)}>
+        <section className="catalog-detail-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-detail-title" onClick={event => event.stopPropagation()}>
+          <button className="catalog-close catalog-detail-close" onClick={() => setSelectedArticle(null)} aria-label="Cerrar detalles"><X size={21}/></button>
+          <div className="catalog-detail-photo">
+            {photoUrls[selectedArticle.id] ? <img src={photoUrls[selectedArticle.id]} alt={selectedArticle.descripcion}/> : <div className="catalog-photo-placeholder">🍒</div>}
+            {selectedArticle.talla && <span className="catalog-size-tag">Talla {selectedArticle.talla}</span>}
+          </div>
+          <div className="catalog-detail-copy">
+            <p className="catalog-product-category">{[selectedArticle.categoria, selectedArticle.subcategoria].filter(Boolean).join(" · ") || "Pieza única"}</p>
+            <h2 id="catalog-detail-title">{selectedArticle.descripcion}</h2>
+            {selectedArticle.codigo && <p className="catalog-detail-code">Código {selectedArticle.codigo}</p>}
+            {selectedArticle.talla && <p className="catalog-detail-size">Talla <strong>{selectedArticle.talla}</strong></p>}
+            <strong className="catalog-detail-price">S/ {Number(selectedArticle.precio || 0).toFixed(2)}</strong>
+            <button className="catalog-detail-add" onClick={() => { addToCart(selectedArticle); setSelectedArticle(null); }}><ShoppingBag size={18}/> Agregar al carrito</button>
+            <p className="catalog-detail-note">Pieza única de segunda mano. La disponibilidad y el precio se confirman por Instagram.</p>
+          </div>
+        </section>
+      </div>}
 
       {termsOpen && <div className="catalog-terms-overlay" onClick={() => setTermsOpen(false)}>
         <section className="catalog-terms-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-terms-title" onClick={event => event.stopPropagation()}>

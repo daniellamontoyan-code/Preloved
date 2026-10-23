@@ -424,6 +424,9 @@ export async function createArticle(article){
         talla:article.talla?.trim() || null,
 
         precio:article.precio,
+        precio_web:article.precio_web,
+        publicar_feria:article.publicar_feria,
+        publicar_web:article.publicar_web,
 
         codigo,
 
@@ -476,6 +479,9 @@ export async function updateArticle(id, article) {
       talla: article.talla?.trim() || null,
       cliente: article.cliente || null,
       precio: Number(article.precio) || 0,
+      precio_web: Number(article.precio_web) || 0,
+      publicar_feria: article.publicar_feria !== false,
+      publicar_web: article.publicar_web !== false,
       foto: article.foto || null,
     })
     .eq("id", id)
