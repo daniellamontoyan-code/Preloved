@@ -4,8 +4,11 @@ import { confirmSale } from "../lib/articles";
 
 const metodos = ["Yape", "Plin", "Efectivo", "Transferencia"];
 
-export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold }) {
-  const [precioVenta, setPrecioVenta] = useState(String(articulo.precio || ""));
+export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold, modoFeria = false }) {
+  const canalInicial = modoFeria || articulo.publicar_feria !== false ? "Feria" : "Web";
+  const [canalVenta, setCanalVenta] = useState(canalInicial);
+  const precioInicial = canalInicial === "Web" ? articulo.precio_web ?? articulo.precio : articulo.precio;
+  const [precioVenta, setPrecioVenta] = useState(String(precioInicial || ""));
   const [metodoPago, setMetodoPago] = useState("");
   const [recibido, setRecibido] = useState("");
   const [loading, setLoading] = useState(false);
@@ -15,7 +18,7 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold }) {
     if (!metodoPago) return alert("Elige cómo te pagaron.");
     if (!Number(precioVenta) || Number(precioVenta) <= 0) return alert("Ingresa un precio válido.");
     setLoading(true);
-    const actualizado = await confirmSale({ id: articulo.id, precio_venta: Number(precioVenta), metodo_pago: metodoPago });
+    const actualizado = await confirmSale({ id: articulo.id, precio_venta: Number(precioVenta), canal_venta: canalVenta, metodo_pago: metodoPago });
     if (actualizado) {
       onSold(actualizado);
       if (actualizado.pendiente_sync) alert("Venta guardada en este teléfono. Se sincronizará cuando vuelva el internet.");
@@ -35,9 +38,23 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold }) {
       </div>
       <div style={{ overflowY:"auto", minHeight:0, padding:"0 20px 18px", WebkitOverflowScrolling:"touch", overscrollBehavior:"contain" }}>
       <div style={{ background:"#FFF0F3", borderRadius:16, padding:14, marginBottom:14, fontWeight:650 }}>{articulo.descripcion}</div>
-      <label style={labelStyle}>Precio cobrado</label>
+      {modoFeria ? (
+        <div style={channelNotice}>Modo feria · se registra con el canal y precio de feria.</div>
+      ) : <>
+        <label style={labelStyle}>¿Dónde se vendió?</label>
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:14 }}>
+          {["Feria", "Web"].map(canal => {
+            const precioCanal = canal === "Web" ? articulo.precio_web ?? articulo.precio : articulo.precio;
+            const selected = canalVenta === canal;
+            return <button key={canal} onClick={() => { setCanalVenta(canal); setPrecioVenta(String(precioCanal || "")); }} style={{ ...channelStyle, background:selected ? "#C0003B" : "#FFF0F3", color:selected ? "white" : "#7B1730" }}>
+              {canal}<small style={{ display:"block", marginTop:3, opacity:.85 }}>S/ {Number(precioCanal || 0).toFixed(2)}</small>
+            </button>;
+          })}
+        </div>
+      </>}
+      <label style={labelStyle}>{modoFeria ? "Precio de feria cobrado" : `Precio cobrado · ${canalVenta}`}</label>
       <div style={{ display:"flex", gap:8, marginBottom:12 }}>
-        {[Number(articulo.precio || 0), 5, 10].filter((v, i, a) => v > 0 && a.indexOf(v) === i).map((v) => <button key={v} onClick={() => setPrecioVenta(String(v))} style={chipStyle}>S/ {v}</button>)}
+        {[Number(canalVenta === "Web" ? articulo.precio_web ?? articulo.precio : articulo.precio || 0), 5, 10].filter((v, i, a) => v > 0 && a.indexOf(v) === i).map((v) => <button key={v} onClick={() => setPrecioVenta(String(v))} style={chipStyle}>S/ {v}</button>)}
       </div>
       <input type="number" inputMode="decimal" value={precioVenta} onChange={e => setPrecioVenta(e.target.value)} style={inputStyle} placeholder="Monto en soles" />
       <label style={labelStyle}>¿Cómo te pagaron?</label>
@@ -68,5 +85,7 @@ const labelStyle = { display:"block", fontSize:13, fontWeight:700, color:"#58586
 const inputStyle = { width:"100%", height:52, borderRadius:15, border:"1px solid #E5E7EB", padding:"0 14px", fontSize:18, marginBottom:12 };
 const chipStyle = { border:0, borderRadius:20, padding:"8px 13px", background:"#F5F5F7", color:"#555", fontWeight:700 };
 const methodStyle = { border:0, borderRadius:15, height:48, fontSize:15, fontWeight:700 };
+const channelStyle = { border:0, borderRadius:15, minHeight:58, padding:"8px 10px", fontSize:15, fontWeight:800 };
+const channelNotice = { borderRadius:13, padding:"12px 14px", marginBottom:14, background:"#FFF0F3", color:"#7B1730", fontSize:13, fontWeight:750 };
 const closeStyle = { width:40, height:40, borderRadius:"50%", border:0, background:"#F3F3F7" };
 const submitStyle = { width:"100%", height:56, border:0, borderRadius:17, background:"#C0003B", color:"white", fontSize:17, fontWeight:800 };

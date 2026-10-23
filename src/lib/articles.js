@@ -533,6 +533,8 @@ export async function confirmSale(venta){
         venta.precio_venta
       ),
 
+      canal_venta:venta.canal_venta,
+
       metodo_pago:venta.metodo_pago,
 
       fecha_venta:new Date(),
@@ -583,7 +585,7 @@ export async function syncPendingSales() {
   for (const sale of pending) {
     const { data, error } = await supabase.from("articulos").update({
       estado: "Vendido", precio_venta: Number(sale.precio_venta),
-      metodo_pago: sale.metodo_pago, fecha_venta: sale.fecha_venta,
+      canal_venta: sale.canal_venta, metodo_pago: sale.metodo_pago, fecha_venta: sale.fecha_venta,
     }).eq("id", sale.id).eq("owner_id", ownerId).eq("estado", "Disponible").select("id").maybeSingle();
     if (!error && data) synced += 1;
     else if (error) remaining.push(sale);

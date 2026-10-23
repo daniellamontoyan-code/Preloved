@@ -196,6 +196,7 @@ async function cargarClientes() {
       <DetalleArticulo
 
         articulo={articuloSeleccionado}
+        modoFeria={modoFeria}
 
         onUpdated={(updated)=>{
           setArticuloSeleccionado(updated);
@@ -611,7 +612,7 @@ async function cargarClientes() {
         )
       }
 
-      {showSale && <SaleSheet articulo={showSale} paymentQrSrc={paymentQrSrc} onClose={() => setShowSale(null)} onSold={(updated) => {
+      {showSale && <SaleSheet articulo={showSale} paymentQrSrc={paymentQrSrc} modoFeria={modoFeria} onClose={() => setShowSale(null)} onSold={(updated) => {
         setShowSale(null);
         setArticulos(current => current.map(item => String(item.id) === String(updated.id) ? { ...item, ...updated } : item));
         setPendientes(getPendingSales(ownerId).length);

@@ -8,7 +8,7 @@ import { deleteArticle } from "../lib/articles";
 
 
 
-export default function DetalleArticulo({ articulo, onBack, onUpdated }) {
+export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria = false }) {
 
 
   const [showSale, setShowSale] = useState(false);
@@ -258,6 +258,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated }) {
             articuloActual.publicar_feria !== false && "Feria",
             articuloActual.publicar_web !== false && "Catálogo web",
           ].filter(Boolean).join(" y ")} />
+          {articuloActual.estado === "Vendido" && articuloActual.canal_venta && <InfoRow titulo="Canal de venta:" valor={articuloActual.canal_venta} />}
 
           {articuloActual.talla && (
             <InfoRow titulo="Talla:" valor={articuloActual.talla} />
@@ -412,6 +413,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated }) {
           <SaleSheet
 
             articulo={articuloActual}
+            modoFeria={modoFeria}
 
             onClose={()=>setShowSale(false)}
 
