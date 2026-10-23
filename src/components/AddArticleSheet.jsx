@@ -2,7 +2,7 @@ import { X, Camera, Plus } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import NewClientSheet from "./NewClientSheet";
-import { generateArticleCode, createArticle } from "../lib/articles";
+import { generateArticleCode, createArticle, updateArticle } from "../lib/articles";
 import { getClients } from "../lib/clients";
 import { uploadArticleImage } from "../lib/storage";
 
@@ -15,7 +15,10 @@ const subcategories = {
 };
 
 
-export default function AddArticleSheet({ onClose }) {
+export default function AddArticleSheet({ onClose, article = null, onSaved }) {
+
+  const existingSubcategory = article?.subcategoria || "";
+  const hasSuggestedSubcategory = (subcategories[article?.categoria] || []).includes(existingSubcategory);
 
   const [showNewClient, setShowNewClient] = useState(false);
 
@@ -24,15 +27,15 @@ export default function AddArticleSheet({ onClose }) {
   const [clientes, setClientes] = useState([]);
 
   const [foto, setFoto] = useState(null);
-  const [preview, setPreview] = useState(null);
+  const [preview, setPreview] = useState(article?.foto || null);
 
-  const [descripcion, setDescripcion] = useState("");
-  const [categoria, setCategoria] = useState("");
-  const [subcategoria, setSubcategoria] = useState("");
-  const [subcategoriaOtra, setSubcategoriaOtra] = useState("");
-  const [talla, setTalla] = useState("");
-  const [cliente, setCliente] = useState("");
-  const [precio, setPrecio] = useState("");
+  const [descripcion, setDescripcion] = useState(article?.descripcion || "");
+  const [categoria, setCategoria] = useState(article?.categoria || "");
+  const [subcategoria, setSubcategoria] = useState(!existingSubcategory ? "" : hasSuggestedSubcategory ? existingSubcategory : "Otra");
+  const [subcategoriaOtra, setSubcategoriaOtra] = useState(hasSuggestedSubcategory ? "" : existingSubcategory);
+  const [talla, setTalla] = useState(article?.talla || "");
+  const [cliente, setCliente] = useState(String(article?.cliente?.id || article?.cliente || ""));
+  const [precio, setPrecio] = useState(article?.precio ?? "");
 
   const [loading, setLoading] = useState(false);
 
@@ -40,7 +43,7 @@ export default function AddArticleSheet({ onClose }) {
 
   useEffect(() => {
 
-    cargarCodigo();
+    if (!article) cargarCodigo();
     cargarClientes();
 
   }, []);
@@ -127,7 +130,7 @@ export default function AddArticleSheet({ onClose }) {
 
 
 
-    const articulo = await createArticle({
+    const datosArticulo = {
 
       descripcion,
 
@@ -141,7 +144,11 @@ export default function AddArticleSheet({ onClose }) {
 
       foto:urlFoto,
 
-    });
+    };
+
+    const articulo = article
+      ? await updateArticle(article.id, { ...datosArticulo, foto: urlFoto || article.foto })
+      : await createArticle(datosArticulo);
 
 
 
@@ -149,6 +156,7 @@ export default function AddArticleSheet({ onClose }) {
 
     if(articulo){
 
+      onSaved?.(articulo);
       onClose();
 
     }
@@ -235,7 +243,7 @@ export default function AddArticleSheet({ onClose }) {
               fontSize:"26px",
             }}
           >
-            Nuevo artículo
+            {article ? "Editar artículo" : "Nuevo artículo"}
           </h2>
 
 
@@ -462,10 +470,10 @@ export default function AddArticleSheet({ onClose }) {
 
         <div style={infoBox}>
 
-          <span>Código</span>
+            <span>Código</span>
 
           <strong style={{color:"#C0003B"}}>
-            {codigo}
+            {article?.codigo || codigo}
           </strong>
 
         </div>
@@ -522,7 +530,7 @@ export default function AddArticleSheet({ onClose }) {
           {
             loading
             ? "Guardando..."
-            : "Guardar artículo"
+            : article ? "Guardar cambios" : "Guardar artículo"
           }
 
         </button>

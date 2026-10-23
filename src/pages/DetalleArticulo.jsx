@@ -1,18 +1,20 @@
 import { useState } from "react";
-import { ChevronLeft, Trash2 } from "lucide-react";
+import { ChevronLeft, Pencil, Trash2 } from "lucide-react";
 
 import SaleSheet from "../components/SaleSheet";
+import AddArticleSheet from "../components/AddArticleSheet";
 
 import { deleteArticle } from "../lib/articles";
 
 
 
-export default function DetalleArticulo({ articulo, onBack }) {
+export default function DetalleArticulo({ articulo, onBack, onUpdated }) {
 
 
   const [showSale, setShowSale] = useState(false);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
 
   const [articuloActual, setArticuloActual] = useState(articulo);
 
@@ -129,24 +131,30 @@ export default function DetalleArticulo({ articulo, onBack }) {
 
 
 
-          <button
-            onClick={()=>setShowDeleteModal(true)}
-            style={{
-              width:"40px",
-              height:"40px",
-              borderRadius:"50%",
-              border:"none",
-              background:"#FEF2F2",
-              color:"#DC2626",
-              display:"flex",
-              alignItems:"center",
-              justifyContent:"center",
-            }}
-          >
-
-            <Trash2 size={20}/>
-
-          </button>
+          <div style={{ display:"flex", gap:8 }}>
+            <button
+              aria-label="Editar artículo"
+              onClick={()=>setShowEdit(true)}
+              style={{
+                width:"40px", height:"40px", borderRadius:"50%", border:"none",
+                background:"#FFF0F3", color:"#C0003B", display:"flex",
+                alignItems:"center", justifyContent:"center",
+              }}
+            >
+              <Pencil size={19}/>
+            </button>
+            <button
+              aria-label="Eliminar artículo"
+              onClick={()=>setShowDeleteModal(true)}
+              style={{
+                width:"40px", height:"40px", borderRadius:"50%", border:"none",
+                background:"#FEF2F2", color:"#DC2626", display:"flex",
+                alignItems:"center", justifyContent:"center",
+              }}
+            >
+              <Trash2 size={20}/>
+            </button>
+          </div>
 
 
         </div>
@@ -418,6 +426,17 @@ export default function DetalleArticulo({ articulo, onBack }) {
 
         )
       }
+
+      {showEdit && (
+        <AddArticleSheet
+          article={articuloActual}
+          onClose={()=>setShowEdit(false)}
+          onSaved={(updated)=>{
+            setArticuloActual(updated);
+            onUpdated?.(updated);
+          }}
+        />
+      )}
 
 
 

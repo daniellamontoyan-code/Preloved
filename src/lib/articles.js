@@ -463,6 +463,34 @@ export async function createArticle(article){
 
 }
 
+export async function updateArticle(id, article) {
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
+  const { data, error } = await supabase
+    .from("articulos")
+    .update({
+      descripcion: article.descripcion,
+      categoria: article.categoria || null,
+      subcategoria: article.subcategoria || null,
+      talla: article.talla?.trim() || null,
+      cliente: article.cliente || null,
+      precio: Number(article.precio) || 0,
+      foto: article.foto || null,
+    })
+    .eq("id", id)
+    .eq("owner_id", ownerId)
+    .select("*")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("ERROR ACTUALIZANDO ARTÍCULO:", error);
+    return null;
+  }
+
+  return data;
+}
+
 
 
 

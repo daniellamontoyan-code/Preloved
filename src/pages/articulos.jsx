@@ -197,6 +197,11 @@ async function cargarClientes() {
 
         articulo={articuloSeleccionado}
 
+        onUpdated={(updated)=>{
+          setArticuloSeleccionado(updated);
+          setArticulos(current => current.map(item => String(item.id) === String(updated.id) ? { ...item, ...updated } : item));
+        }}
+
         onBack={()=>{
 
           setArticuloSeleccionado(null);
