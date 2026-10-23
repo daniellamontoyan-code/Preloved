@@ -3,6 +3,7 @@ import Inicio from "./pages/Inicio";
 import Dashboard from "./pages/Dashboard";
 import EstablecerContrasena from "./pages/EstablecerContrasena";
 import VistaDemo from "./pages/VistaDemo";
+import CatalogoPublico from "./pages/CatalogoPublico";
 import { supabase } from "./lib/supabase";
 
 const authLinkType = new URLSearchParams(window.location.hash.slice(1)).get("type");
@@ -30,6 +31,10 @@ function App() {
       subscription.unsubscribe();
     };
   }, []);
+
+  if (window.location.pathname.replace(/\/+$/, "") === "/catalogo") {
+    return <CatalogoPublico />;
+  }
 
   if (session === undefined) return <div style={{ padding:40, textAlign:"center" }}>Abriendo Cherry Club…</div>;
   if (demoMode) return <VistaDemo onExit={() => setDemoMode(false)} />;
