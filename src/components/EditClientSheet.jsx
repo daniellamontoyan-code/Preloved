@@ -21,6 +21,8 @@ export default function EditClientSheet({
     cliente.porcentaje_comision
   );
 
+  const [compartido,setCompartido] = useState(Boolean(cliente.compartido));
+
   const [loading,setLoading] = useState(false);
 
 
@@ -44,7 +46,9 @@ export default function EditClientSheet({
 
         nombre,
 
-        porcentaje_comision:comision
+        porcentaje_comision:comision,
+
+        compartido,
 
       }
 
@@ -251,6 +255,11 @@ export default function EditClientSheet({
           style={input}
 
         />
+
+        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"2px 0 22px", color:"#42424D", fontSize:14, lineHeight:1.4, fontWeight:650 }}>
+          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#C0003B", flexShrink:0, marginTop:1 }} />
+          <span>Cliente de ambas (Dani y Mafer)</span>
+        </label>
 
 
 

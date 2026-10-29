@@ -126,6 +126,8 @@ export async function updateClient(id, cliente){
       porcentaje_comision:
         Number(cliente.porcentaje_comision),
 
+      compartido: cliente.compartido === true,
+
     })
     .eq(
       "id",
