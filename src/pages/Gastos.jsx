@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Camera, ChevronLeft, ImagePlus, ReceiptText, X } from "lucide-react";
 import BottomNav from "../components/BottomNav";
-import { createExpense, getExpenses } from "../lib/gastos";
+import { createExpense, getExpenseMembers, getExpenses } from "../lib/gastos";
+import { getCurrentUserId } from "../lib/supabase";
 
 const today = () => {
   const date = new Date();
@@ -15,6 +16,10 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   const [descripcion, setDescripcion] = useState("");
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(today());
+  const [compartido, setCompartido] = useState(false);
+  const [miembros, setMiembros] = useState([]);
+  const [pagadoPor, setPagadoPor] = useState("");
+  const [usuarioActual, setUsuarioActual] = useState("");
   const [evidencia, setEvidencia] = useState(null);
   const [preview, setPreview] = useState(null);
   const [evidenciaAbierta, setEvidenciaAbierta] = useState(null);
@@ -27,6 +32,11 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
 
   useEffect(() => {
     cargarGastos();
+    Promise.all([getExpenseMembers(), getCurrentUserId()]).then(([equipo, currentId]) => {
+      setMiembros(equipo);
+      setUsuarioActual(currentId || "");
+      setPagadoPor(currentId || equipo[0]?.id || "");
+    });
     const actualizar = () => cargarGastos();
     window.addEventListener("focus", actualizar);
     return () => window.removeEventListener("focus", actualizar);
@@ -48,6 +58,8 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
     setDescripcion("");
     setMonto("");
     setFecha(today());
+    setCompartido(false);
+    setPagadoPor(usuarioActual || miembros[0]?.id || "");
     setEvidencia(null);
     setPreview(null);
   }
@@ -55,8 +67,9 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   async function guardarGasto() {
     if (!descripcion.trim()) return alert("Escribe para qué fue el gasto.");
     if (!Number(monto) || Number(monto) <= 0) return alert("Ingresa un monto válido.");
+    if (!pagadoPor) return alert("Selecciona quién pagó o asumió el gasto.");
     setLoading(true);
-    const gasto = await createExpense({ descripcion, monto, fecha, evidencia });
+    const gasto = await createExpense({ descripcion, monto, fecha, evidencia, compartido, pagado_por: pagadoPor });
     setLoading(false);
     if (!gasto) return alert(evidencia ? "No se pudo guardar el gasto o subir la evidencia. Revisa tu conexión e inténtalo otra vez." : "No se pudo guardar el gasto. Revisa tu conexión e inténtalo otra vez.");
     cerrarFormulario();
@@ -65,13 +78,18 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
 
   const total = gastos.reduce((sum, gasto) => sum + Number(gasto.monto || 0), 0);
   const formato = value => Number(value || 0).toFixed(2);
+  const dani = miembros.find(persona => persona.nombre.trim().toLowerCase() === "dani");
+  const mafer = miembros.find(persona => persona.nombre.trim().toLowerCase() === "mafer");
+  const pagadoDani = gastos.reduce((sum, gasto) => sum + (gasto.compartido && (gasto.pagado_por || gasto.owner_id) === dani?.id ? Number(gasto.monto || 0) : 0), 0);
+  const pagadoMafer = gastos.reduce((sum, gasto) => sum + (gasto.compartido && (gasto.pagado_por || gasto.owner_id) === mafer?.id ? Number(gasto.monto || 0) : 0), 0);
+  const saldo = (pagadoDani - pagadoMafer) / 2;
 
   return <div style={{ minHeight:"100vh", background:"#FAFAFC", padding:"60px 20px 125px", maxWidth:430, margin:"0 auto" }}>
     <header style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
       <button onClick={onBack} aria-label="Volver" style={iconButton}><ChevronLeft size={22}/></button>
       <div style={{ flex:1 }}>
         <h1 style={{ margin:0, color:"#1F1F28", fontSize:27 }}>Gastos</h1>
-        <div style={{ marginTop:3, color:"#777783", fontSize:13 }}>Registro compartido · Dani y Mafer</div>
+        <div style={{ marginTop:3, color:"#777783", fontSize:13 }}>Visible para Dani y Mafer</div>
       </div>
       <ReceiptText size={25} color="#C0003B"/>
     </header>
@@ -79,7 +97,17 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
     <div style={{ background:"linear-gradient(135deg,#9D001E,#C0003B)", color:"white", borderRadius:22, padding:19, marginBottom:20 }}>
       <div style={{ fontSize:13, opacity:.85, fontWeight:700 }}>Total registrado</div>
       <strong style={{ display:"block", marginTop:5, fontSize:27 }}>S/ {formato(total)}</strong>
-      <div style={{ marginTop:3, fontSize:12, opacity:.85 }}>{gastos.length} gasto{gastos.length === 1 ? "" : "s"} compartido{gastos.length === 1 ? "" : "s"}</div>
+      <div style={{ marginTop:3, fontSize:12, opacity:.85 }}>{gastos.length} gasto{gastos.length === 1 ? "" : "s"} registrado{gastos.length === 1 ? "" : "s"}</div>
+    </div>
+
+    <div style={{ background:"white", borderRadius:20, padding:17, marginBottom:18, boxShadow:"0 8px 24px rgba(0,0,0,.045)" }}>
+      <div style={{ color:"#777783", fontSize:13, fontWeight:750 }}>Saldo de gastos compartidos (mitad para cada una)</div>
+      {!dani || !mafer
+        ? <strong style={{ display:"block", marginTop:8, color:"#777783", fontSize:15 }}>No se pudo cargar el saldo entre ambas.</strong>
+        : Math.abs(saldo) < 0.005
+          ? <strong style={{ display:"block", marginTop:8, color:"#28733B", fontSize:17 }}>Están al día entre ustedes</strong>
+          : <strong style={{ display:"block", marginTop:8, color:"#9D001E", fontSize:17 }}>{saldo > 0 ? "Mafer le debe a Dani" : "Dani le debe a Mafer"} S/ {formato(Math.abs(saldo))}</strong>}
+      <div style={{ marginTop:5, color:"#777783", fontSize:12 }}>Solo cuenta gastos marcados como compartidos y quién los pagó.</div>
     </div>
 
     <button onClick={() => setShowForm(true)} style={{ width:"100%", height:54, border:0, borderRadius:17, background:"#FFF0F3", color:"#9D001E", fontSize:16, fontWeight:800, marginBottom:18 }}>+ Registrar gasto</button>
@@ -90,6 +118,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
           <div style={{ minWidth:0 }}>
             <strong style={{ display:"block", color:"#272731", fontSize:15, overflowWrap:"anywhere" }}>{gasto.descripcion}</strong>
             <div style={{ marginTop:5, color:"#777783", fontSize:12 }}>{new Date(`${gasto.fecha}T12:00:00`).toLocaleDateString("es-PE")} · {gasto.registrado_por}</div>
+            <div style={{ marginTop:5, color:gasto.compartido ? "#9D001E" : "#777783", fontSize:12, fontWeight:750 }}>{gasto.compartido ? `Compartido 50/50 · Lo pagó ${gasto.pagado_por_nombre}` : `Gasto personal · Lo asumió ${gasto.pagado_por_nombre}`}</div>
           </div>
           <strong style={{ whiteSpace:"nowrap", color:"#C0003B", fontSize:17 }}>S/ {formato(gasto.monto)}</strong>
         </div>
@@ -115,6 +144,16 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
         <input type="number" inputMode="decimal" min="0.01" step="0.01" value={monto} onChange={event => setMonto(event.target.value)} placeholder="S/ 0.00" style={inputStyle}/>
         <label style={labelStyle}>Fecha</label>
         <input type="date" value={fecha} onChange={event => setFecha(event.target.value)} style={inputStyle}/>
+        <label style={labelStyle}>¿Quién pagó o asumió el gasto?</label>
+        <select value={pagadoPor} onChange={event => setPagadoPor(event.target.value)} style={inputStyle}>
+          <option value="" disabled>Selecciona una persona</option>
+          {miembros.map(persona => <option key={persona.id} value={persona.id}>{persona.nombre}</option>)}
+        </select>
+        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"15px 0 7px", color:"#42424D", fontSize:14, lineHeight:1.4, fontWeight:750 }}>
+          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#C0003B", flexShrink:0, marginTop:1 }}/>
+          <span>Este gasto se comparte entre Dani y Mafer</span>
+        </label>
+        {compartido && <div style={{ margin:"0 0 8px 30px", color:"#777783", fontSize:12 }}>Se dividirá 50/50 para calcular el saldo entre ustedes.</div>}
         <label style={labelStyle}>Foto de evidencia (opcional)</label>
         <input id="expense-camera" type="file" accept="image/*" capture="environment" onChange={elegirEvidencia} style={{ display:"none" }}/>
         <input id="expense-gallery" type="file" accept="image/*" onChange={elegirEvidencia} style={{ display:"none" }}/>

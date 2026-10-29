@@ -1,6 +1,23 @@
 import { getCurrentUserId, supabase } from "./supabase";
 import { deleteExpenseEvidence, signExpenseEvidence, uploadExpenseEvidence } from "./storage";
 
+export async function getExpenseMembers() {
+  const { data, error } = await supabase
+    .from("usuarios")
+    .select("auth_user_id,nombre")
+    .not("auth_user_id", "is", null)
+    .order("nombre");
+
+  if (error) {
+    console.error("ERROR OBTENIENDO INTEGRANTES:", error);
+    return [];
+  }
+
+  return (data || [])
+    .filter(user => ["dani", "mafer"].includes(String(user.nombre || "").trim().toLowerCase()))
+    .map(user => ({ id: user.auth_user_id, nombre: user.nombre }));
+}
+
 export async function getExpenses() {
   const { data, error } = await supabase
     .from("gastos")
@@ -21,6 +38,7 @@ export async function getExpenses() {
   return withEvidence.map(expense => ({
     ...expense,
     registrado_por: names.get(expense.owner_id) || "Cherry Club",
+    pagado_por_nombre: names.get(expense.pagado_por || expense.owner_id) || "Sin indicar",
   }));
 }
 
@@ -42,6 +60,8 @@ export async function createExpense(expense) {
       monto: Number(expense.monto),
       fecha: expense.fecha,
       evidencia_path: evidencePath,
+      compartido: expense.compartido === true,
+      pagado_por: expense.pagado_por,
     })
     .select("*")
     .single();
