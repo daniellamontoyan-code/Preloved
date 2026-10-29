@@ -4,6 +4,7 @@ import {
   Plus,
   Users,
   Wallet,
+  ReceiptText,
 } from "lucide-react";
 
 
@@ -18,6 +19,7 @@ export default function BottomNav({
   onClientes,
   
   onLiquidaciones,
+  onGastos,
 
 }) {
 
@@ -151,6 +153,15 @@ export default function BottomNav({
   <Wallet size={24} strokeWidth={2.2} />
 
 </button>
+
+      <button
+        onClick={onGastos}
+        aria-label="Gastos compartidos"
+        title="Gastos"
+        style={buttonStyle}
+      >
+        <ReceiptText size={23} strokeWidth={2.2}/>
+      </button>
 
 
 

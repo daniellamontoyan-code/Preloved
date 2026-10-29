@@ -12,8 +12,12 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
   }
 
   const feriaPrice = articulo.precio || articulo.precio_venta || 0;
+  const vendido = ["vendido", "liquidado"].includes(String(articulo.estado || "").trim().toLowerCase());
   const primaryChannel = canal || (feria || articulo.publicar_feria !== false ? "Feria" : "Web");
-  const primaryPrice = primaryChannel === "Web" ? articulo.precio_web || 0 : feriaPrice;
+  const primaryPrice = vendido && articulo.precio_venta != null
+    ? articulo.precio_venta
+    : primaryChannel === "Web" ? articulo.precio_web || 0 : feriaPrice;
+  const priceLabel = vendido ? "Vendido por" : primaryChannel;
 
 
 
@@ -231,7 +235,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
       >
 
-        {primaryChannel}: S/. {primaryPrice}
+        {priceLabel}: S/. {primaryPrice}
 
 
       </strong>

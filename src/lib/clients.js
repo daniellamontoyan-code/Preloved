@@ -12,7 +12,6 @@ export async function getClients() {
   const { data, error } = await supabase
     .from("clientes")
     .select("*")
-    .eq("owner_id", ownerId)
     .order("created_at", {
       ascending:false
     });
@@ -66,6 +65,7 @@ export async function createClient(cliente) {
 
         porcentaje_comision:
           Number(cliente.porcentaje_comision),
+        compartido: cliente.compartido === true,
         owner_id:ownerId,
 
       }

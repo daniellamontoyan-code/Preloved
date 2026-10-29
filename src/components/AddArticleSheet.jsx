@@ -303,7 +303,13 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
             color:"#C0003B",
             marginBottom:"20px",
             overflow:"hidden",
+            cursor:"pointer",
           }}
+          role="button"
+          tabIndex={0}
+          aria-label="Elegir una foto de la galería"
+          onClick={() => galleryInputRef.current?.click()}
+          onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") galleryInputRef.current?.click(); }}
         >
 
 
@@ -474,7 +480,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
                 value={item.id}
               >
 
-                {item.nombre}
+                {item.nombre}{item.compartido ? " · Ambas" : ""}
 
               </option>
 

@@ -23,6 +23,7 @@ export default function Articulos({
   onArticulos,
   onClientes,
   onLiquidaciones,
+  onGastos,
 
 }) {
 
@@ -150,6 +151,17 @@ export default function Articulos({
     .filter(item => categoriaFiltro === "Todos" || item.categoria === categoriaFiltro)
     .map(item => item.subcategoria)
     .filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
+
+  filtrados.sort((a, b) => {
+    const prioridad = estado => {
+      const valor = String(estado || "").trim().toLowerCase();
+      if (valor === "disponible") return 0;
+      if (valor === "vendido" || valor === "liquidado") return 2;
+      return 1;
+    };
+    return prioridad(a.estado) - prioridad(b.estado)
+      || (a.descripcion || "").localeCompare(b.descripcion || "");
+  });
 
   if(articuloSeleccionado){
 
@@ -520,6 +532,7 @@ export default function Articulos({
 
 
             onLiquidaciones={onLiquidaciones}
+            onGastos={onGastos}
 
 
           />

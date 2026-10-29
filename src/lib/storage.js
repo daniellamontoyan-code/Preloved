@@ -100,6 +100,53 @@ export async function uploadArticleImage(file) {
 
 }
 
+export async function uploadExpenseEvidence(file) {
+  if (!file) return null;
+
+  let compressedFile;
+  try {
+    compressedFile = await compressArticleImage(file);
+  } catch (error) {
+    console.error("ERROR PROCESANDO EVIDENCIA:", error);
+    return null;
+  }
+
+  const userId = await getCurrentUserId();
+  if (!userId) return null;
+  const fileName = `${userId}/${compressedFile.name}`;
+  const { error } = await supabase.storage.from("gastos").upload(fileName, compressedFile, {
+    contentType: "image/jpeg",
+    cacheControl: "31536000",
+  });
+
+  if (error) {
+    console.error("ERROR SUBIENDO EVIDENCIA:", error);
+    return null;
+  }
+  return fileName;
+}
+
+export async function deleteExpenseEvidence(path) {
+  if (!path) return;
+  const { error } = await supabase.storage.from("gastos").remove([path]);
+  if (error) console.error("ERROR ELIMINANDO EVIDENCIA NO VINCULADA:", error);
+}
+
+export async function signExpenseEvidence(expenses) {
+  const paths = [...new Set((expenses || []).map(item => item.evidencia_path).filter(Boolean))];
+  if (!paths.length) return expenses || [];
+  const { data, error } = await supabase.storage.from("gastos").createSignedUrls(paths, 86400);
+  if (error) {
+    console.error("No se pudieron cargar algunas evidencias de gastos.", error);
+    return expenses || [];
+  }
+  const signedByPath = new Map((data || []).map(item => [item.path, item.signedUrl]));
+  return (expenses || []).map(item => ({
+    ...item,
+    evidencia_url: signedByPath.get(item.evidencia_path) || null,
+  }));
+}
+
 export async function signArticleImages(articles) {
   const paths = [...new Set((articles || []).map(item => item.foto).filter(Boolean).filter(path => !/^https?:\/\//i.test(path)))];
   if (!paths.length) return articles || [];

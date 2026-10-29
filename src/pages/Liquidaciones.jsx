@@ -19,6 +19,7 @@ export default function Liquidaciones({
   onArticulos,
   onClientes,
   onAgregar,
+  onGastos,
 
 }) {
 
@@ -816,6 +817,7 @@ export default function Liquidaciones({
           onAgregar={onAgregar}
 
           onLiquidaciones={()=>{}}
+          onGastos={onGastos}
 
         />
 

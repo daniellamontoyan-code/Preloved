@@ -10,6 +10,7 @@ import AddArticleSheet from "../components/AddArticleSheet";
 import Articulos from "./articulos";
 import Clientes from "./Clientes";
 import Liquidaciones from "./Liquidaciones";
+import Gastos from "./Gastos";
 
 import {
   getArticlesCount,
@@ -42,6 +43,7 @@ export default function Dashboard({ user }){
   const [showArticulos,setShowArticulos] = useState(false);
   const [showClientes,setShowClientes] = useState(false);
   const [showLiquidaciones,setShowLiquidaciones] = useState(false);
+  const [showGastos,setShowGastos] = useState(false);
 
   const [categoriaSeleccionada,setCategoriaSeleccionada] = useState("");
   const [canalSeleccionado,setCanalSeleccionado] = useState("Todos");
@@ -140,6 +142,11 @@ export default function Dashboard({ user }){
 
         }}
 
+        onGastos={()=>{
+          setShowArticulos(false);
+          setShowGastos(true);
+        }}
+
         onLiquidaciones={()=>{
 
           setShowArticulos(false);
@@ -196,6 +203,11 @@ export default function Dashboard({ user }){
 
         }}
 
+        onGastos={()=>{
+          setShowClientes(false);
+          setShowGastos(true);
+        }}
+
       />
 
     );
@@ -244,10 +256,32 @@ export default function Dashboard({ user }){
 
         }}
 
+        onGastos={()=>{
+          setShowLiquidaciones(false);
+          setShowGastos(true);
+        }}
+
       />
 
     );
 
+  }
+
+  if(showGastos){
+    return <Gastos
+      onBack={()=>setShowGastos(false)}
+      onHome={()=>{
+        setShowGastos(false);
+        setShowArticulos(false);
+        setShowClientes(false);
+        setShowLiquidaciones(false);
+        cargarDatos();
+      }}
+      onArticulos={()=>{ setShowGastos(false); setShowArticulos(true); }}
+      onClientes={()=>{ setShowGastos(false); setShowClientes(true); }}
+      onLiquidaciones={()=>{ setShowGastos(false); setShowLiquidaciones(true); }}
+      onGastos={()=>{}}
+    />;
   }
 
 
@@ -807,6 +841,7 @@ export default function Dashboard({ user }){
           onClientes={()=>setShowClientes(true)}
 
           onLiquidaciones={()=>setShowLiquidaciones(true)}
+          onGastos={()=>setShowGastos(true)}
 
         />
 

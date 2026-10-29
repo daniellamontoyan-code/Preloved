@@ -8,6 +8,7 @@ export default function NewClientSheet({ onClose, onCreated }) {
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [comision, setComision] = useState("");
+  const [compartido, setCompartido] = useState(false);
   const [loading, setLoading] = useState(false);
 
 
@@ -30,6 +31,7 @@ export default function NewClientSheet({ onClose, onCreated }) {
         nombre,
         telefono,
         porcentaje_comision: Number(comision),
+        compartido,
       });
 
 
@@ -147,9 +149,6 @@ export default function NewClientSheet({ onClose, onCreated }) {
 
         </div>
 
-
-
-
         <input
           placeholder="Nombre"
           value={nombre}
@@ -201,6 +200,12 @@ export default function NewClientSheet({ onClose, onCreated }) {
           </span>
 
         </div>
+
+
+        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"4px 0 22px", color:"#42424D", fontSize:14, lineHeight:1.4, fontWeight:650 }}>
+          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#C0003B", flexShrink:0, marginTop:1 }} />
+          <span>Cliente de ambas (Dani y Mafer)</span>
+        </label>
 
 
 

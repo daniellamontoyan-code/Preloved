@@ -18,6 +18,7 @@ export default function Clientes({
   onHome,
   onArticulos,
   onLiquidaciones,
+  onGastos,
 
 }) {
 
@@ -405,6 +406,7 @@ export default function Clientes({
                 >
 
                   {cliente.nombre}
+                  {cliente.compartido && <span style={{ display:"inline-block", verticalAlign:"middle", marginLeft:8, padding:"4px 8px", borderRadius:999, background:"#FFF0F3", color:"#9D001E", fontSize:10, fontWeight:800 }}>AMBAS</span>}
 
                 </h3>
 
@@ -599,6 +601,7 @@ export default function Clientes({
 
 
             onLiquidaciones={onLiquidaciones}
+            onGastos={onGastos}
 
 
           />
