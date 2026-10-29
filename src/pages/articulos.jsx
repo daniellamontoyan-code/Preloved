@@ -33,6 +33,7 @@ export default function Articulos({
   const [canalSeleccionado, setCanalSeleccionado] = useState(canalInicial);
   const [categoriaFiltro, setCategoriaFiltro] = useState(categoria || "Todos");
   const [subcategoriaFiltro, setSubcategoriaFiltro] = useState(subcategoriaInicial);
+  const [estadoFiltro, setEstadoFiltro] = useState("Todos");
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
 
@@ -106,8 +107,9 @@ export default function Articulos({
       const prioridadEstado = (estado) => {
       const valor = (estado || "").trim().toLowerCase();
       if (valor === "disponible") return 0;
-      if (valor === "vendido" || valor === "liquidado") return 2;
-      return 1;
+      if (valor === "vendido") return 1;
+      if (valor === "liquidado") return 2;
+      return 3;
     };
 
     lista.sort((a, b) => {
@@ -140,9 +142,14 @@ export default function Articulos({
       .some(valor => String(valor || "").toLowerCase().includes(textoBusqueda));
     const coincideCategoria = categoriaFiltro === "Todos" || item.categoria === categoriaFiltro;
     const coincideSubcategoria = !subcategoriaFiltro || item.subcategoria === subcategoriaFiltro;
+    const estado = String(item.estado || "").trim().toLowerCase();
+    const coincideEstado = estadoFiltro === "Todos"
+      || (estadoFiltro === "Disponible" && estado === "disponible")
+      || (estadoFiltro === "Vendido" && estado === "vendido")
+      || (estadoFiltro === "Liquidado" && estado === "liquidado");
     const coincideCanal = canalSeleccionado === "Todos"
       || (canalSeleccionado === "Feria" ? item.publicar_feria !== false : item.publicar_web !== false);
-    return coincideBusqueda && coincideCategoria && coincideSubcategoria && coincideCanal;
+    return coincideBusqueda && coincideCategoria && coincideSubcategoria && coincideEstado && coincideCanal;
   });
 
   if (modoFeria) filtrados = filtrados.filter(item => item.estado === "Disponible" && item.publicar_feria !== false);
@@ -156,8 +163,9 @@ export default function Articulos({
     const prioridad = estado => {
       const valor = String(estado || "").trim().toLowerCase();
       if (valor === "disponible") return 0;
-      if (valor === "vendido" || valor === "liquidado") return 2;
-      return 1;
+      if (valor === "vendido") return 1;
+      if (valor === "liquidado") return 2;
+      return 3;
     };
     return prioridad(a.estado) - prioridad(b.estado)
       || (a.descripcion || "").localeCompare(b.descripcion || "");
@@ -392,6 +400,22 @@ export default function Articulos({
           ))}
         </div>
       </div>}
+
+      <div style={{ marginBottom:16 }}>
+        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Estado</div>
+        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
+          {[
+            ["Todos", "Todos"],
+            ["Disponible", "Disponible"],
+            ["Vendido", "Vendido · por liquidar"],
+            ["Liquidado", "Liquidado"],
+          ].map(([valor, etiqueta]) => (
+            <button key={valor} onClick={() => setEstadoFiltro(valor)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:estadoFiltro === valor ? "#C0003B" : "#FFFFFF", color:estadoFiltro === valor ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
+              {etiqueta}
+            </button>
+          ))}
+        </div>
+      </div>
 
 
 
