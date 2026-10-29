@@ -37,12 +37,13 @@ export default function BottomNav({
         height:"78px",
         background:"#FFFFFF",
         borderRadius:"28px",
-        display:"flex",
-        justifyContent:"space-around",
+        display:"grid",
+        gridTemplateColumns:"repeat(6, minmax(0, 1fr))",
+        justifyItems:"center",
         alignItems:"center",
         boxShadow:"0 12px 40px rgba(0,0,0,.12)",
         zIndex:999,
-        padding:"0 12px",
+        padding:"0 8px",
       }}
     >
 
