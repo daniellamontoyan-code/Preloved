@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Camera, ChevronLeft, ImagePlus, ReceiptText, X } from "lucide-react";
+import { Camera, ChevronLeft, ImagePlus, Pencil, ReceiptText, X } from "lucide-react";
 import BottomNav from "../components/BottomNav";
-import { createExpense, getExpenseMembers, getExpenses } from "../lib/gastos";
+import { createExpense, getExpenseMembers, getExpenses, updateExpense } from "../lib/gastos";
 import { getCurrentUserId } from "../lib/supabase";
 
 const today = () => {
@@ -13,6 +13,7 @@ const today = () => {
 export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiquidaciones, onGastos }) {
   const [gastos, setGastos] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [gastoEditando, setGastoEditando] = useState(null);
   const [descripcion, setDescripcion] = useState("");
   const [monto, setMonto] = useState("");
   const [fecha, setFecha] = useState(today());
@@ -55,6 +56,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   function cerrarFormulario() {
     if (preview?.startsWith("blob:")) URL.revokeObjectURL(preview);
     setShowForm(false);
+    setGastoEditando(null);
     setDescripcion("");
     setMonto("");
     setFecha(today());
@@ -64,12 +66,27 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
     setPreview(null);
   }
 
+  function editarGasto(gasto) {
+    setGastoEditando(gasto);
+    setDescripcion(gasto.descripcion || "");
+    setMonto(String(gasto.monto || ""));
+    setFecha(gasto.fecha || today());
+    setCompartido(Boolean(gasto.compartido));
+    setPagadoPor(gasto.pagado_por || gasto.owner_id || usuarioActual || "");
+    setEvidencia(null);
+    setPreview(gasto.evidencia_url || null);
+    setShowForm(true);
+  }
+
   async function guardarGasto() {
     if (!descripcion.trim()) return alert("Escribe para qué fue el gasto.");
     if (!Number(monto) || Number(monto) <= 0) return alert("Ingresa un monto válido.");
     if (!pagadoPor) return alert("Selecciona quién pagó o asumió el gasto.");
     setLoading(true);
-    const gasto = await createExpense({ descripcion, monto, fecha, evidencia, compartido, pagado_por: pagadoPor });
+    const guardar = gastoEditando ? updateExpense : createExpense;
+    const gasto = gastoEditando
+      ? await guardar(gastoEditando.id, { descripcion, monto, fecha, evidencia, evidencia_path: gastoEditando.evidencia_path, compartido, pagado_por: pagadoPor })
+      : await guardar({ descripcion, monto, fecha, evidencia, compartido, pagado_por: pagadoPor });
     setLoading(false);
     if (!gasto) return alert(evidencia ? "No se pudo guardar el gasto o subir la evidencia. Revisa tu conexión e inténtalo otra vez." : "No se pudo guardar el gasto. Revisa tu conexión e inténtalo otra vez.");
     cerrarFormulario();
@@ -120,7 +137,10 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
             <div style={{ marginTop:5, color:"#777783", fontSize:12 }}>{new Date(`${gasto.fecha}T12:00:00`).toLocaleDateString("es-PE")} · {gasto.registrado_por}</div>
             <div style={{ marginTop:5, color:gasto.compartido ? "#9D001E" : "#777783", fontSize:12, fontWeight:750 }}>{gasto.compartido ? `Compartido 50/50 · Lo pagó ${gasto.pagado_por_nombre}` : `Gasto personal · Lo asumió ${gasto.pagado_por_nombre}`}</div>
           </div>
-          <strong style={{ whiteSpace:"nowrap", color:"#C0003B", fontSize:17 }}>S/ {formato(gasto.monto)}</strong>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:9 }}>
+            <strong style={{ whiteSpace:"nowrap", color:"#C0003B", fontSize:17 }}>S/ {formato(gasto.monto)}</strong>
+            {gasto.owner_id === usuarioActual && <button type="button" onClick={() => editarGasto(gasto)} style={editButton}><Pencil size={14}/> Editar</button>}
+          </div>
         </div>
         {gasto.evidencia_url && <button onClick={() => setEvidenciaAbierta(gasto.evidencia_url)} style={{ display:"flex", alignItems:"center", gap:10, border:0, padding:0, marginTop:13, background:"transparent", color:"#7B1730", fontWeight:750 }}>
           <img src={gasto.evidencia_url} alt="Evidencia del gasto" style={{ width:54, height:54, borderRadius:12, objectFit:"cover" }}/>
@@ -135,7 +155,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
       <div onClick={cerrarFormulario} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.36)", zIndex:1100 }}/>
       <section role="dialog" aria-modal="true" aria-labelledby="expense-title" style={{ position:"fixed", bottom:0, left:"50%", transform:"translateX(-50%)", width:"100%", maxWidth:430, maxHeight:"90dvh", overflowY:"auto", background:"white", borderRadius:"28px 28px 0 0", padding:"22px 20px calc(28px + env(safe-area-inset-bottom))", zIndex:1101 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:18 }}>
-          <h2 id="expense-title" style={{ margin:0, fontSize:23 }}>Registrar gasto</h2>
+          <h2 id="expense-title" style={{ margin:0, fontSize:23 }}>{gastoEditando ? "Editar gasto" : "Registrar gasto"}</h2>
           <button onClick={cerrarFormulario} aria-label="Cerrar" style={iconButton}><X size={20}/></button>
         </div>
         <label style={labelStyle}>¿En qué se gastó?</label>
@@ -162,7 +182,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
           <button type="button" onClick={() => document.getElementById("expense-camera")?.click()} style={photoButton}><Camera size={17}/> Tomar foto</button>
           <button type="button" onClick={() => document.getElementById("expense-gallery")?.click()} style={photoButton}><ImagePlus size={17}/> Galería</button>
         </div>
-        <button onClick={guardarGasto} disabled={loading} style={saveButton}>{loading ? "Guardando…" : "Guardar gasto"}</button>
+        <button onClick={guardarGasto} disabled={loading} style={saveButton}>{loading ? "Guardando…" : gastoEditando ? "Guardar cambios" : "Guardar gasto"}</button>
       </section>
     </>}
 
@@ -177,4 +197,5 @@ const iconButton = { width:42, height:42, flexShrink:0, border:0, borderRadius:"
 const labelStyle = { display:"block", margin:"13px 0 7px", color:"#565662", fontSize:13, fontWeight:750 };
 const inputStyle = { width:"100%", boxSizing:"border-box", height:50, borderRadius:14, border:"1px solid #E3E3E8", padding:"0 13px", fontSize:16, background:"white" };
 const photoButton = { height:46, border:0, borderRadius:14, background:"#FFF0F3", color:"#9D001E", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 };
+const editButton = { display:"flex", alignItems:"center", gap:5, border:0, borderRadius:11, padding:"7px 9px", background:"#FFF0F3", color:"#9D001E", fontSize:12, fontWeight:800 };
 const saveButton = { width:"100%", height:54, border:0, borderRadius:16, background:"#C0003B", color:"white", fontWeight:850, fontSize:16 };

@@ -74,3 +74,42 @@ export async function createExpense(expense) {
 
   return data;
 }
+
+export async function updateExpense(expenseId, expense) {
+  const ownerId = await getCurrentUserId();
+  if (!ownerId) return null;
+
+  let evidencePath = expense.evidencia_path || null;
+  let uploadedEvidencePath = null;
+  if (expense.evidencia) {
+    uploadedEvidencePath = await uploadExpenseEvidence(expense.evidencia);
+    if (!uploadedEvidencePath) return null;
+    evidencePath = uploadedEvidencePath;
+  }
+
+  const { data, error } = await supabase
+    .from("gastos")
+    .update({
+      descripcion: expense.descripcion.trim(),
+      monto: Number(expense.monto),
+      fecha: expense.fecha,
+      evidencia_path: evidencePath,
+      compartido: expense.compartido === true,
+      pagado_por: expense.pagado_por,
+    })
+    .eq("id", expenseId)
+    .eq("owner_id", ownerId)
+    .select("*")
+    .maybeSingle();
+
+  if (error || !data) {
+    console.error("ERROR ACTUALIZANDO GASTO:", error);
+    await deleteExpenseEvidence(uploadedEvidencePath);
+    return null;
+  }
+
+  if (uploadedEvidencePath && expense.evidencia_path && expense.evidencia_path !== uploadedEvidencePath) {
+    await deleteExpenseEvidence(expense.evidencia_path);
+  }
+  return data;
+}
