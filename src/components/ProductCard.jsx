@@ -12,7 +12,8 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
   }
 
   const feriaPrice = articulo.precio || articulo.precio_venta || 0;
-  const vendido = ["vendido", "liquidado"].includes(String(articulo.estado || "").trim().toLowerCase());
+  const estadoNormalizado = String(articulo.estado || "").trim().toLowerCase();
+  const vendido = ["vendido", "liquidado"].includes(estadoNormalizado);
   const primaryChannel = canal || (feria || articulo.publicar_feria !== false ? "Feria" : "Web");
   const primaryPrice = vendido && articulo.precio_venta != null
     ? articulo.precio_venta
@@ -164,20 +165,20 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
 
 
-        { ["Vendido", "Liquidado"].includes(articulo.estado) && (
+        { vendido && (
           <span
             style={{
               display: "inline-block",
               marginTop: "6px",
               padding: "3px 8px",
               borderRadius: "999px",
-              background: "#FFF1F1",
-              color: "#C62828",
+              background: estadoNormalizado === "vendido" ? "#FFF3D6" : "#E8F5E9",
+              color: estadoNormalizado === "vendido" ? "#8A5700" : "#28733B",
               fontSize: "11px",
               fontWeight: "700",
             }}
           >
-            {articulo.estado.toUpperCase()}
+            {estadoNormalizado === "vendido" ? "VENDIDO · POR LIQUIDAR" : "LIQUIDADO"}
           </span>
         )}
 
