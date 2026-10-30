@@ -5,8 +5,17 @@ import { signArticleImages } from "../lib/storage";
 import "./CatalogoPublico.css";
 
 const instagramUrl = "https://www.instagram.com/pitucasperomisias.pe/";
+const newArticleBadgeMs = 7 * 24 * 60 * 60 * 1000;
 const isDemoPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).get("demo") === "1";
 const demoWelcomeBanner = isDemoPreview && new URLSearchParams(window.location.search).get("welcome") === "1";
+function wasRecentlyChanged(article) {
+  const timestamps = [article.updated_at, article.created_at]
+    .map(value => value ? new Date(value).getTime() : NaN)
+    .filter(value => Number.isFinite(value) && value <= Date.now());
+  if (!timestamps.length) return false;
+  const latest = Math.max(...timestamps);
+  return Date.now() - latest <= newArticleBadgeMs;
+}
 function limaDateKey(date) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
@@ -313,6 +322,7 @@ export default function CatalogoPublico() {
                   <button className="catalog-product-open" type="button" onClick={() => setSelectedArticle(article)} aria-label={`Ver detalles de ${article.descripcion}`}>
                     <div className="catalog-product-photo">
                       {photoUrls[article.id] && <img src={photoUrls[article.id]} alt={article.descripcion} loading="lazy" onLoad={() => markPhotoLoaded(article.id)} onError={() => hideUnavailablePhoto(article.id)}/>}
+                      {wasRecentlyChanged(article) && <span className="catalog-new-tag">¡Nuevo!</span>}
                       {article.talla && <span className="catalog-size-tag">Talla {article.talla}</span>}
                     </div>
                     <div className="catalog-product-info">
