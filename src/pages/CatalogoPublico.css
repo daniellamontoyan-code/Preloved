@@ -366,8 +366,17 @@
   box-shadow: 4px 5px 0 rgba(139,30,45,.08);
 }
 .catalog-hero::before, .catalog-hero::after { display: none; }
-.catalog-hero-copy { max-width: 46%; }
+.catalog-hero-copy { max-width: 50%; }
 .catalog-hero h1 { font-size: clamp(36px, 4.4vw, 56px); }
+.catalog-hero h1 .catalog-hero-title-line {
+  display: block;
+  margin-left: 0;
+  font-family: inherit;
+  font-size: .78em;
+  line-height: 1.04;
+}
+.catalog-hero h1 .catalog-hero-title-line:first-child { font-size: .96em; }
+.catalog-hero-manifesto { margin-top: 8px !important; }
 .catalog-hero-mascot {
   top: 50%;
   right: 4%;

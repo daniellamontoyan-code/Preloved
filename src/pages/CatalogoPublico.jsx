@@ -229,8 +229,12 @@ export default function CatalogoPublico() {
       <section className="catalog-hero">
         <div className="catalog-hero-copy">
           <p className="catalog-eyebrow">PITUCAS PERO MISIAS · MODA CIRCULAR</p>
-          <h1>Moda para todos<span>✨</span></h1>
-          <p>Compra, vende, repeat. Encuentra prendas únicas, a tu estilo y a tu presupuesto.</p>
+          <h1>
+            <span className="catalog-hero-title-line">VEN POR LA ROPA.</span>
+            <span className="catalog-hero-title-line">QUÉDATE POR EL CHISME.</span>
+          </h1>
+          <p>Compra, vende y descubre tu estilo.</p>
+          <p className="catalog-hero-manifesto">Un espacio para expresarte, probar cosas nuevas y ser tú mismo, sin pedir permiso.</p>
           <div className="catalog-hero-details">
             <span>🚚 Envíos a todo el Perú</span>
             <span>New drops · Jueves 3 PM</span>
