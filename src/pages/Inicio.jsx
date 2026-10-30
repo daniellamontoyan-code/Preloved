@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import BrandLockup from "../components/BrandLockup";
+import "./Inicio.css";
 
 export default function Inicio({ onDemo }) {
   const [email, setEmail] = useState("");
@@ -40,19 +41,19 @@ export default function Inicio({ onDemo }) {
     setRecoveryMessage("Si el correo está registrado, recibirás un enlace para crear tu contraseña.");
   }
 
-  return <div style={{ minHeight:"100vh", background:"#F5EBDD", display:"flex", justifyContent:"center", alignItems:"center", padding:32 }}>
-    <form onSubmit={ingresar} style={{ width:"100%", maxWidth:380, textAlign:"center" }}>
+  return <main className="login-page">
+    <form className="login-card" onSubmit={ingresar}>
       <BrandLockup />
-      <p style={{ fontSize:22, fontWeight:700, color:"#383B3B", marginBottom:32 }}>Tu espacio para organizar<br/>todo lo que vendes ✨</p>
-      <input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} placeholder="Correo" style={fieldStyle}/>
-      <input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Contraseña" style={{ ...fieldStyle, marginBottom:20 }}/>
-      <button type="submit" disabled={loading} style={{ width:"100%", height:58, border:0, borderRadius:20, background:"#8B1E2D", color:"white", fontSize:19, fontWeight:700 }}>{loading ? "Ingresando…" : "Ingresar"}</button>
-      {import.meta.env.DEV && <button type="button" onClick={onDemo} style={{ width:"100%", height:54, marginTop:12, border:"1px solid #8B1E2D", borderRadius:20, background:"white", color:"#8B1E2D", fontSize:16, fontWeight:750 }}>Ver vista de prueba</button>}
-      <button type="button" onClick={recuperarContrasena} disabled={loading} style={{ display:"block", margin:"16px auto 0", border:0, background:"transparent", color:"#8B1E2D", fontSize:14, fontWeight:700, textDecoration:"underline" }}>Olvidé mi contraseña</button>
-      {recoveryMessage && <p role="status" style={{ color:recoveryError ? "#B42318" : "#177245", fontSize:13, lineHeight:1.5, marginTop:12 }}>{recoveryMessage}</p>}
-      <p style={{ color:"#777", fontSize:13, lineHeight:1.5, marginTop:18 }}>Usa el correo y la contraseña configurados para tu cuenta.</p>
+      <p className="login-intro">Tu espacio para organizar<br/>todo lo que vendes.</p>
+      <label className="login-label" htmlFor="login-email">Correo</label>
+      <input id="login-email" className="login-field" type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} placeholder="Tu correo"/>
+      <label className="login-label" htmlFor="login-password">Contraseña</label>
+      <input id="login-password" className="login-field login-field-last" type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Tu contraseña"/>
+      <button className="login-submit" type="submit" disabled={loading}>{loading ? "Ingresando…" : "Ingresar"}</button>
+      {import.meta.env.DEV && <button className="login-demo" type="button" onClick={onDemo}>Ver vista de prueba</button>}
+      <button className="login-recovery" type="button" onClick={recuperarContrasena} disabled={loading}>Olvidé mi contraseña</button>
+      {recoveryMessage && <p className={`login-message${recoveryError ? " is-error" : ""}`} role="status">{recoveryMessage}</p>}
+      <p className="login-hint">Usa el correo y la contraseña configurados para tu cuenta.</p>
     </form>
-  </div>;
+  </main>;
 }
-
-const fieldStyle = { width:"100%", height:58, borderRadius:20, border:"1px solid #E5E7EB", padding:"0 20px", fontSize:17, marginBottom:15, boxSizing:"border-box", background:"white" };
