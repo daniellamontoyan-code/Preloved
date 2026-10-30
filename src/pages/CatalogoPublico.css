@@ -366,13 +366,13 @@
   box-shadow: 4px 5px 0 rgba(139,30,45,.08);
 }
 .catalog-hero::before, .catalog-hero::after { display: none; }
-.catalog-hero-copy { max-width: 48%; }
+.catalog-hero-copy { max-width: 46%; }
 .catalog-hero h1 { font-size: clamp(36px, 4.4vw, 56px); }
 .catalog-hero-mascot {
   top: 50%;
-  right: 22%;
+  right: 4%;
   bottom: auto;
-  width: min(46%, 500px);
+  width: min(42%, 480px);
   max-height: 94%;
   height: auto;
   object-fit: contain;
