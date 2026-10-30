@@ -36,7 +36,7 @@ function App() {
     return <CatalogoPublico />;
   }
 
-  if (session === undefined) return <div style={{ padding:40, textAlign:"center" }}>Abriendo Cherry Club…</div>;
+  if (session === undefined) return <div style={{ padding:40, textAlign:"center" }}>Abriendo Pitucas Pero Misias…</div>;
   if (demoMode) return <VistaDemo onExit={() => setDemoMode(false)} />;
   if (!session) return <Inicio onDemo={() => setDemoMode(true)} />;
   if (passwordFlow) return <EstablecerContrasena onDone={() => setPasswordFlow(false)} />;

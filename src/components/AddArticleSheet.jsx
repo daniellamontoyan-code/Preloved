@@ -295,12 +295,12 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           style={{
             height:"150px",
             borderRadius:"24px",
-            background:"#FFF0F3",
+            background:"#FFC9E3",
             display:"flex",
             flexDirection:"column",
             justifyContent:"center",
             alignItems:"center",
-            color:"#C0003B",
+            color:"#8B1E2D",
             marginBottom:"20px",
             overflow:"hidden",
             cursor:"pointer",
@@ -344,10 +344,10 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={seleccionarFoto} style={{ display:"none" }} />
           <input ref={galleryInputRef} type="file" accept="image/*" onChange={seleccionarFoto} style={{ display:"none" }} />
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
-            <button type="button" onClick={() => cameraInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFF0F3", color:"#9D001E", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+            <button type="button" onClick={() => cameraInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFC9E3", color:"#8B1E2D", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
               <Camera size={18}/> Tomar foto
             </button>
-            <button type="button" onClick={() => galleryInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFF0F3", color:"#9D001E", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+            <button type="button" onClick={() => galleryInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFC9E3", color:"#8B1E2D", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
               <ImagePlus size={18}/> Elegir de galería
             </button>
           </div>
@@ -438,14 +438,14 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
             <ChevronDown size={18} />
           </button>
           {generoMenuOpen && (
-            <div role="group" aria-label="Opciones de género" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 40, display: "flex", flexWrap: "wrap", gap: "8px", padding: "12px", border: "1px solid #F2D9DF", borderRadius: "16px", background: "#fff", boxShadow: "0 10px 25px rgba(50, 20, 30, .14)" }}>
+            <div role="group" aria-label="Opciones de género" style={{ position: "absolute", top: "calc(100% + 6px)", left: 0, right: 0, zIndex: 40, display: "flex", flexWrap: "wrap", gap: "8px", padding: "12px", border: "1px solid #EAD5DA", borderRadius: "16px", background: "#fff", boxShadow: "0 10px 25px rgba(50, 20, 30, .14)" }}>
               {["Mujer", "Hombre", "Unisex"].map(genero => (
                 <button
                   key={genero}
                   type="button"
                   aria-pressed={publicoObjetivo === genero}
                   onClick={() => { setPublicoObjetivo(genero); setGeneroMenuOpen(false); }}
-                  style={{ flex: "1 1 auto", minHeight: "40px", padding: "0 13px", border: `1px solid ${publicoObjetivo === genero ? "#C0003B" : "#E5E7EB"}`, borderRadius: "12px", color: publicoObjetivo === genero ? "#C0003B" : "#5F2433", background: publicoObjetivo === genero ? "#FFF1F4" : "#fff", fontWeight: 700 }}
+                  style={{ flex: "1 1 auto", minHeight: "40px", padding: "0 13px", border: `1px solid ${publicoObjetivo === genero ? "#8B1E2D" : "#E5E7EB"}`, borderRadius: "12px", color: publicoObjetivo === genero ? "#8B1E2D" : "#594137", background: publicoObjetivo === genero ? "#FFC9E3" : "#fff", fontWeight: 700 }}
                 >
                   {genero}
                 </button>
@@ -554,7 +554,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
             <span>Código</span>
 
-          <strong style={{color:"#C0003B"}}>
+          <strong style={{color:"#8B1E2D"}}>
             {article?.codigo || codigo}
           </strong>
 
@@ -674,12 +674,12 @@ const inputStyle = {
 };
 
 const channelBox = {
-  background:"#FFF7F8",
-  border:"1px solid #F2D9DF",
+  background:"#F5EBDD",
+  border:"1px solid #EAD5DA",
   borderRadius:"18px",
   padding:"14px 16px",
   marginBottom:"14px",
-  color:"#5F2433",
+  color:"#594137",
 };
 
 const channelOption = {
@@ -696,7 +696,7 @@ const createButton = {
 
   border:"none",
   background:"transparent",
-  color:"#C0003B",
+  color:"#8B1E2D",
   fontWeight:"600",
   display:"flex",
   alignItems:"center",
@@ -711,7 +711,7 @@ const infoBox = {
 
   display:"flex",
   justifyContent:"space-between",
-  background:"#FFF0F3",
+  background:"#FFC9E3",
   borderRadius:"18px",
   padding:"16px 18px",
   marginBottom:"12px",
@@ -740,7 +740,7 @@ const saveButton = {
   height:"60px",
   border:"none",
   borderRadius:"22px",
-  background:"#C0003B",
+  background:"#8B1E2D",
   color:"#fff",
   fontSize:"18px",
   fontWeight:"700",
@@ -752,7 +752,7 @@ const saveButton = {
 const circleButton = {
 
   border:"none",
-  background:"#F3F3F7",
+  background:"#F5EBDD",
   width:"40px",
   height:"40px",
   borderRadius:"50%",

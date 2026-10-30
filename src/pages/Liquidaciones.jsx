@@ -173,7 +173,7 @@ export default function Liquidaciones({
 
         minHeight:"100vh",
 
-        background:"#FAFAFC",
+        background:"#F5EBDD",
 
         padding:"60px 20px 120px",
 
@@ -216,7 +216,7 @@ export default function Liquidaciones({
 
             border:"none",
 
-            background:"#F3F3F7",
+            background:"#F5EBDD",
 
             display:"flex",
 
@@ -264,7 +264,7 @@ export default function Liquidaciones({
 
         style={{
 
-          background:"#C0003B",
+          background:"#8B1E2D",
 
           color:"#FFFFFF",
 
@@ -403,7 +403,7 @@ export default function Liquidaciones({
 
             style={{
 
-              background:"#FFF0F3",
+              background:"#FFC9E3",
 
               borderRadius:"30px",
 
@@ -449,7 +449,7 @@ export default function Liquidaciones({
 
             >
 
-              {cliente.articulos} artículo(s) vendido · Comisión Cherry Club {cliente.porcentaje}%
+              {cliente.articulos} artículo(s) vendido · Comisión Pitucas Pero Misias {cliente.porcentaje}%
 
             </p>
 
@@ -472,7 +472,7 @@ export default function Liquidaciones({
 
             <Fila
 
-              titulo="Comisión Cherry Club"
+              titulo="Comisión Pitucas Pero Misias"
 
               valor={`- S/. ${formato(calculo.comisionCherry)}`}
 
@@ -490,7 +490,7 @@ export default function Liquidaciones({
 
                 height:"1px",
 
-                background:"#FFD6DF",
+                background:"#FFC9E3",
 
                 margin:"22px 0",
 
@@ -720,7 +720,7 @@ export default function Liquidaciones({
 
             style={{
 
-              background:"#FFF0F3",
+              background:"#FFC9E3",
 
               borderRadius:"22px",
 
@@ -771,7 +771,7 @@ export default function Liquidaciones({
 
               borderRadius:"22px",
 
-              background:"#C0003B",
+              background:"#8B1E2D",
 
               color:"#FFFFFF",
 

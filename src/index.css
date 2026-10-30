@@ -1,14 +1,42 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=League+Spartan:wght@400;500;600;700;800&family=Lilita+One&family=Rochester&display=swap');
+
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
-  font-family:Inter,sans-serif;
+  font-family:"DM Sans",sans-serif;
+}
+
+h1,h2,h3{
+  font-family:"Lilita One",cursive;
 }
 
 body{
-  background:#FFF0F3;
+  background-color:#F5EBDD;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='112' height='112' viewBox='0 0 112 112'%3E%3Cg fill='none' stroke='%238B1E2D' stroke-opacity='.075' stroke-width='1.6'%3E%3Cpath d='M18 28c-7-10-18 1 0 15 18-14 7-25 0-15Z'/%3E%3Cpath d='M83 74c-6-8-14 1 0 12 14-11 6-20 0-12Z'/%3E%3Cpath d='m77 18 1.8 4.2L83 24l-4.2 1.8L77 30l-1.8-4.2L71 24l4.2-1.8Z'/%3E%3Cpath d='M42 84c-6-6-13 1-6 7l-4 7 9-5 9 5-4-7c7-6 0-13-4-7Z'/%3E%3Cpath d='M48 36c2-8 9-8 11 0m-11 0-5 7m5-7 8 7m3-7 6 7m-6-7-8 7'/%3E%3C/g%3E%3Ccircle cx='46' cy='44' r='3' fill='%23FF6B9E' fill-opacity='.14'/%3E%3Ccircle cx='59' cy='44' r='3' fill='%23FF6B9E' fill-opacity='.14'/%3E%3Ccircle cx='53' cy='51' r='3' fill='%23FF6B9E' fill-opacity='.14'/%3E%3Ccircle cx='46' cy='57' r='3' fill='%23FF6B9E' fill-opacity='.14'/%3E%3Ccircle cx='60' cy='57' r='3' fill='%23FF6B9E' fill-opacity='.14'/%3E%3C/svg%3E");
+  color:#383B3B;
 }
 
 #root{
   min-height:100vh;
 }
+
+.brand-lockup{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  margin:0 auto 12px;
+  color:#8B1E2D;
+  text-align:center;
+  line-height:1;
+  vertical-align:middle;
+  background:none;
+  -webkit-text-fill-color:#8B1E2D;
+}
+.brand-lockup img{display:block;width:min(290px,72vw);height:auto;max-height:260px;object-fit:contain;flex:0 0 auto}
+.brand-lockup small{display:block;color:#594137;font-family:"Rochester",cursive;font-size:19px;font-weight:400;letter-spacing:0;-webkit-text-fill-color:#594137}
+.brand-lockup-compact{gap:7px;margin:0;}
+.brand-lockup-compact img{width:88px;height:74px;object-fit:contain}
+@media(max-width:420px){.brand-lockup:not(.brand-lockup-compact) img{width:min(255px,74vw);max-height:225px}}

@@ -39,28 +39,28 @@ export default function Clientes({
   const colores = [
 
     {
-      fondo:"#FCE7F3",
-      texto:"#DB2777"
+      fondo:"#FFC9E3",
+      texto:"#FF6B9E"
     },
 
     {
-      fondo:"#FFE1E7",
-      texto:"#C0003B"
+      fondo:"#FFC9E3",
+      texto:"#8B1E2D"
     },
 
     {
-      fondo:"#FFE1E7",
-      texto:"#C0003B"
+      fondo:"#FFC9E3",
+      texto:"#8B1E2D"
     },
 
     {
-      fondo:"#FFD6DF",
-      texto:"#9D001E"
+      fondo:"#FFC9E3",
+      texto:"#8B1E2D"
     },
 
     {
-      fondo:"#FFE4E6",
-      texto:"#BE123C"
+      fondo:"#FFC9E3",
+      texto:"#8B1E2D"
     }
 
   ];
@@ -169,7 +169,7 @@ export default function Clientes({
 
         minHeight:"100vh",
 
-        background:"#FAFAFC",
+        background:"#F5EBDD",
 
         padding:"60px 20px 120px",
 
@@ -216,7 +216,7 @@ export default function Clientes({
 
             border:"none",
 
-            background:"#F3F3F7",
+            background:"#F5EBDD",
 
             display:"flex",
 
@@ -247,7 +247,7 @@ export default function Clientes({
 
             fontWeight:"750",
 
-            color:"#1F1F28",
+            color:"#383B3B",
 
             flex:1,
 
@@ -284,7 +284,7 @@ export default function Clientes({
 
             border:"none",
 
-            background:"#C0003B",
+            background:"#8B1E2D",
 
             color:"#FFFFFF",
 
@@ -406,7 +406,7 @@ export default function Clientes({
                 >
 
                   {cliente.nombre}
-                  {cliente.compartido && <span style={{ display:"inline-block", verticalAlign:"middle", marginLeft:8, padding:"4px 8px", borderRadius:999, background:"#FFF0F3", color:"#9D001E", fontSize:10, fontWeight:800 }}>AMBAS</span>}
+                  {cliente.compartido && <span style={{ display:"inline-block", verticalAlign:"middle", marginLeft:8, padding:"4px 8px", borderRadius:999, background:"#FFC9E3", color:"#8B1E2D", fontSize:10, fontWeight:800 }}>AMBAS</span>}
 
                 </h3>
 
@@ -439,7 +439,7 @@ export default function Clientes({
 
                       gap:"5px",
 
-                      background:"#FFF0F3",
+                      background:"#FFC9E3",
 
                       padding:"6px 10px",
 

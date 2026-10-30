@@ -74,7 +74,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
       <div
         style={{
           minHeight:"100vh",
-          background:"#FAFAFC",
+          background:"#F5EBDD",
           padding:"60px 20px 120px",
           maxWidth:"430px",
           margin:"0 auto",
@@ -101,7 +101,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
               height:"40px",
               borderRadius:"50%",
               border:"none",
-              background:"#F3F3F7",
+              background:"#F5EBDD",
               display:"flex",
               alignItems:"center",
               justifyContent:"center",
@@ -120,7 +120,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
               margin:0,
               fontSize:"26px",
               fontWeight:"700",
-              color:"#1F1F28",
+              color:"#383B3B",
             }}
           >
 
@@ -137,7 +137,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
               onClick={()=>setShowEdit(true)}
               style={{
                 width:"40px", height:"40px", borderRadius:"50%", border:"none",
-                background:"#FFF0F3", color:"#C0003B", display:"flex",
+                background:"#FFC9E3", color:"#8B1E2D", display:"flex",
                 alignItems:"center", justifyContent:"center",
               }}
             >
@@ -171,7 +171,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
             height:"300px",
             borderRadius:"28px",
             overflow:"hidden",
-            background:"#FFF0F3",
+            background:"#FFC9E3",
             marginBottom:"22px",
           }}
         >
@@ -197,7 +197,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
                   display:"flex",
                   alignItems:"center",
                   justifyContent:"center",
-                  color:"#C0003B",
+                  color:"#8B1E2D",
                   fontWeight:"600",
                 }}
               >
@@ -224,7 +224,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
             textAlign:"center",
             fontSize:"24px",
             fontWeight:"700",
-            color:"#1F1F28",
+            color:"#383B3B",
           }}
         >
 
@@ -384,7 +384,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
                 height:"60px",
                 border:"none",
                 borderRadius:"22px",
-                background:"#C0003B",
+                background:"#8B1E2D",
                 color:"#FFFFFF",
                 fontSize:"18px",
                 fontWeight:"700",
@@ -548,7 +548,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
                     height:"50px",
                     border:"none",
                     borderRadius:"18px",
-                    background:"#F3F3F7",
+                    background:"#F5EBDD",
                   }}
 
                 >
@@ -641,7 +641,7 @@ function InfoRow({titulo, valor}) {
 
       <strong
         style={{
-          color:"#1F1F28",
+          color:"#383B3B",
           fontSize:"15px",
         }}
       >

@@ -30,7 +30,7 @@ export default function DashboardHeader({ nombre, onLogout }) {
             margin: 0,
             fontSize: "34px",
             fontWeight: "700",
-            color: "#1F1F28",
+            color: "#383B3B",
           }}
         >
           {nombre}
@@ -43,8 +43,8 @@ export default function DashboardHeader({ nombre, onLogout }) {
           width: "54px",
           height: "54px",
           borderRadius: "50%",
-          background: "#FFE1E7",
-          color: "#C0003B",
+          background: "#FFC9E3",
+          color: "#8B1E2D",
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
@@ -54,7 +54,7 @@ export default function DashboardHeader({ nombre, onLogout }) {
       >
         {inicial}
       </div>
-      <button onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión" style={{ width:42, height:42, borderRadius:"50%", border:"none", background:"#FFF0F3", color:"#C0003B", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <button onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión" style={{ width:42, height:42, borderRadius:"50%", border:"none", background:"#FFC9E3", color:"#8B1E2D", display:"flex", alignItems:"center", justifyContent:"center" }}>
         <LogOut size={19}/>
       </button>
       </div>

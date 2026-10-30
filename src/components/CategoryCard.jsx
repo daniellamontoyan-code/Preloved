@@ -17,7 +17,7 @@ export default function CategoryCard({ title, onClick }) {
         cursor:"pointer",
         boxShadow:"0 10px 30px rgba(0,0,0,.05)",
         transition:"all .2s ease",
-        color:"#1F1F28",
+        color:"#383B3B",
       }}
 
 
@@ -55,7 +55,7 @@ export default function CategoryCard({ title, onClick }) {
 
         <ChevronRight
           size={20}
-          color="#C0003B"
+          color="#8B1E2D"
           strokeWidth={1.8}
         />
 

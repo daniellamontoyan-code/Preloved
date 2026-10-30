@@ -4,14 +4,14 @@ import { getPublicCatalog } from "../lib/catalog";
 import { signArticleImages } from "../lib/storage";
 import "./CatalogoPublico.css";
 
-const instagramUrl = "https://www.instagram.com/cherryclub.wav/";
+const instagramUrl = "https://www.instagram.com/pitucasperomisias.pe/";
 const isDemoPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).get("demo") === "1";
 const demoWelcomeBanner = isDemoPreview && new URLSearchParams(window.location.search).get("welcome") === "1";
 function limaDateKey(date) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Lima", year: "numeric", month: "2-digit", day: "2-digit" }).format(date);
 }
-function isTuesdayInLima(date) {
-  return new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", weekday: "short" }).format(date) === "Tue";
+function isThursdayInLima(date) {
+  return new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", weekday: "short" }).format(date) === "Thu";
 }
 const previewArticles = [
   { id:"demo-1", descripcion:"Top tejido cereza", categoria:"Ropa", subcategoria:"Polos y tops", talla:"S", publico_objetivo:"Mujer", precio:35, codigo:"PR-0001", estado:"Disponible" },
@@ -25,6 +25,8 @@ const previewArticles = [
 export default function CatalogoPublico() {
   const [articles, setArticles] = useState([]);
   const [photoUrls, setPhotoUrls] = useState({});
+  const [loadedPhotos, setLoadedPhotos] = useState({});
+  const [unavailablePhotos, setUnavailablePhotos] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [search, setSearch] = useState("");
@@ -68,12 +70,18 @@ export default function CatalogoPublico() {
     setLoading(true);
     setLoadError(false);
     if (isDemoPreview) {
-      setArticles(previewArticles);
+      setArticles(previewArticles.filter(item => item.foto));
+      setPhotoUrls({});
+      setLoadedPhotos({});
+      setUnavailablePhotos({});
       setLoading(false);
       return;
     }
     const result = await getPublicCatalog();
-    setArticles(result.articles);
+    setArticles(result.articles.filter(item => typeof item.foto === "string" && item.foto.trim()));
+    setPhotoUrls({});
+    setLoadedPhotos({});
+    setUnavailablePhotos({});
     setLoadError(Boolean(result.error));
     setLoading(false);
   }
@@ -97,16 +105,16 @@ export default function CatalogoPublico() {
     .sort((a, b) => String(a).localeCompare(String(b), "es", { numeric: true })), [sizeSource]);
   const activeFilterCount = Number(category !== "Todo") + Number(subcategory !== "Todas") + Number(size !== "Todas") + Number(audience !== "Todos") + Number(priceMin !== "" || priceMax !== "");
   const limaToday = limaDateKey(new Date());
-  const tuesdayItems = articles.filter(item => {
+  const dropItems = articles.filter(item => {
     if (!item.created_at) return false;
     const createdAt = new Date(item.created_at);
     return !Number.isNaN(createdAt.getTime()) && limaDateKey(createdAt) === limaToday;
   });
-  const latestDropTimestamp = tuesdayItems.reduce((latest, item) => Math.max(latest, new Date(item.created_at).getTime()), 0);
-  const dropBannerKey = demoWelcomeBanner ? "cherryclub-demo-drop" : `cherryclub-drop-${limaToday}-${latestDropTimestamp}`;
+  const latestDropTimestamp = dropItems.reduce((latest, item) => Math.max(latest, new Date(item.created_at).getTime()), 0);
+  const dropBannerKey = demoWelcomeBanner ? "pitucas-demo-drop" : `pitucas-drop-${limaToday}-${latestDropTimestamp}`;
   let dropDismissedInSession = false;
   try { dropDismissedInSession = window.sessionStorage.getItem(dropBannerKey) === "dismissed"; } catch { /* Storage may be unavailable in private browsing. */ }
-  const showTuesdayBanner = (demoWelcomeBanner || (isTuesdayInLima(new Date()) && tuesdayItems.length > 0))
+  const showDropBanner = (demoWelcomeBanner || (isThursdayInLima(new Date()) && dropItems.length > 0))
     && dropBannerKey !== dismissedDropKey && !dropDismissedInSession;
 
   function clearFilters() {
@@ -119,12 +127,13 @@ export default function CatalogoPublico() {
     setPriceMax("");
   }
 
-  function dismissTuesdayBanner() {
+  function dismissDropBanner() {
     try { window.sessionStorage.setItem(dropBannerKey, "dismissed"); } catch { /* Keep the banner dismissible if storage is unavailable. */ }
     setDismissedDropKey(dropBannerKey);
   }
 
   const visibleArticles = useMemo(() => articles.filter((item) => {
+    if (!photoUrls[item.id] || unavailablePhotos[item.id]) return false;
     const term = search.trim().toLocaleLowerCase("es");
     const matchesSearch = !term || [item.descripcion, item.codigo, item.categoria, item.subcategoria, item.talla, item.publico_objetivo]
       .filter(Boolean).some(value => String(value).toLocaleLowerCase("es").includes(term));
@@ -136,25 +145,37 @@ export default function CatalogoPublico() {
     const matchesMinPrice = priceMin === "" || price >= Number(priceMin);
     const matchesMaxPrice = priceMax === "" || price <= Number(priceMax);
     return matchesSearch && matchesCategory && matchesSubcategory && matchesSize && matchesAudience && matchesMinPrice && matchesMaxPrice;
-  }), [articles, search, category, subcategory, size, audience, priceMin, priceMax]);
+  }), [articles, search, category, subcategory, size, audience, priceMin, priceMax, photoUrls, unavailablePhotos]);
   const displayedArticles = useMemo(() => visibleArticles.slice(0, displayCount), [visibleArticles, displayCount]);
 
   useEffect(() => {
-    const photosToSign = displayedArticles.filter(item => item.foto && !photoUrls[item.id]);
+    const photosToSign = articles.filter(item => item.foto && !photoUrls[item.id] && !unavailablePhotos[item.id]);
     if (!photosToSign.length) return;
     let active = true;
     signArticleImages(photosToSign).then((signed) => {
       if (!active) return;
-      setPhotoUrls(current => {
-        const next = { ...current };
-        signed.forEach(item => {
-          if (item.foto && (item.foto_path || /^https?:/i.test(item.foto))) next[item.id] = item.foto;
-        });
-        return next;
+      const urls = {};
+      const missingIds = [];
+      signed.forEach(item => {
+        if (typeof item.foto === "string" && /^https?:\/\//i.test(item.foto)) urls[item.id] = item.foto;
+        else missingIds.push(item.id);
       });
+      setPhotoUrls(current => ({ ...current, ...urls }));
+      if (missingIds.length) setUnavailablePhotos(current => ({ ...current, ...Object.fromEntries(missingIds.map(id => [id, true])) }));
+    }).catch(() => {
+      if (active) setUnavailablePhotos(current => ({ ...current, ...Object.fromEntries(photosToSign.map(item => [item.id, true])) }));
     });
     return () => { active = false; };
-  }, [displayedArticles, photoUrls]);
+  }, [articles, photoUrls, unavailablePhotos]);
+
+  function markPhotoLoaded(articleId) {
+    setLoadedPhotos(current => ({ ...current, [articleId]: true }));
+  }
+
+  function hideUnavailablePhoto(articleId) {
+    setUnavailablePhotos(current => ({ ...current, [articleId]: true }));
+    if (String(selectedArticle?.id) === String(articleId)) setSelectedArticle(null);
+  }
 
   function addToCart(article) {
     setCart(current => current.some(item => String(item.id) === String(article.id))
@@ -170,7 +191,7 @@ export default function CatalogoPublico() {
 
   const total = cart.reduce((sum, item) => sum + Number(item.precio || 0), 0);
   const inquiryMessage = [
-    "Hola Cherry Club 🍒, quisiera consultar disponibilidad de:",
+    "Hola, Pitucas Pero Misias 💕. Quisiera consultar disponibilidad de:",
     ...cart.map(item => `• ${item.descripcion}${item.talla ? ` (talla ${item.talla})` : ""}${item.publico_objetivo ? ` · ${item.publico_objetivo}` : ""}${item.codigo ? ` · ${item.codigo}` : ""} — S/ ${Number(item.precio || 0).toFixed(2)}`),
     `Total referencial: S/ ${total.toFixed(2)}`,
   ].join("\n");
@@ -190,41 +211,40 @@ export default function CatalogoPublico() {
   return (
     <main className="public-catalog">
       {isDemoPreview && <div className="catalog-preview-banner">Vista de prueba · productos ficticios, no son artículos reales</div>}
-      {showTuesdayBanner && <aside className="catalog-tuesday-banner" aria-label="Nuevo drop de Cherry Club">
+      {showDropBanner && <aside className="catalog-tuesday-banner" aria-label="Nuevo drop de Pitucas Pero Misias">
         <span className="catalog-tuesday-emoji" aria-hidden="true">🍒</span>
-        <div><strong>¡Llegó el nuevo drop!</strong><p>{demoWelcomeBanner ? "Hoy hay prendas nuevas para descubrir." : `Subimos ${tuesdayItems.length} ${tuesdayItems.length === 1 ? "prenda nueva" : "prendas nuevas"} hoy. Encuentra tu favorita.`}</p></div>
+        <div><strong>¡Llegó el nuevo drop!</strong><p>{demoWelcomeBanner ? "Hoy hay prendas nuevas para descubrir." : `Subimos ${dropItems.length} ${dropItems.length === 1 ? "prenda nueva" : "prendas nuevas"} hoy. Encuentra tu favorita.`}</p></div>
         <a href="#catalog-products">Ver novedades <ArrowUpRight size={15}/></a>
-        <button onClick={dismissTuesdayBanner} aria-label="Cerrar aviso del nuevo drop"><X size={17}/></button>
+        <button onClick={dismissDropBanner} aria-label="Cerrar aviso del nuevo drop"><X size={17}/></button>
       </aside>}
       <header className="catalog-header">
-        <a className="catalog-brand" href="/catalogo" aria-label="Cherry Club, inicio del catálogo">
-          <img className="catalog-brand-logo" src="/cherry-club-logo.png" alt="Logo de Cherry Club: cerezas con un lazo" />
-          <span>Cherry Club<small>MODA PARA TODOS</small></span>
+        <a className="catalog-brand" href="/catalogo" aria-label="Pitucas Pero Misias, inicio del catálogo">
+          <img className="catalog-brand-logo" src="/pitucas-imagotipo-horizontal.jpg" alt="Pitucas Pero Misias" />
         </a>
         <button className="catalog-cart-icon" onClick={() => setCartOpen(true)} aria-label={`Abrir carrito, ${cart.length} productos`}>
           <ShoppingBag size={21}/>
           {cart.length > 0 && <span>{cart.length}</span>}
         </button>
       </header>
-
       <section className="catalog-hero">
         <div className="catalog-hero-copy">
-          <p className="catalog-eyebrow">CHERRY CLUB · MODA CIRCULAR</p>
+          <p className="catalog-eyebrow">PITUCAS PERO MISIAS · MODA CIRCULAR</p>
           <h1>Moda para todos<span>✨</span></h1>
-          <p>Compra, vende, repeat. Encuentra prendas únicas y dales una nueva historia.</p>
+          <p>Compra, vende, repeat. Encuentra prendas únicas, a tu estilo y a tu presupuesto.</p>
           <div className="catalog-hero-details">
             <span>🚚 Envíos a todo el Perú</span>
-            <span>New drops · Martes 3 PM</span>
+            <span>New drops · Jueves 3 PM</span>
           </div>
           <a className="catalog-instagram-link" href={instagramUrl} target="_blank" rel="noreferrer">
             Síguenos en Instagram <ArrowUpRight size={16}/>
           </a>
         </div>
+        <img className="catalog-hero-mascot" src="/pitucas-dani-mafer-circular.png" alt="Dani, Mafer y sus gatos dentro del isotipo circular de Pitucas Pero Misias" />
       </section>
 
       <section id="catalog-products" className="catalog-section" aria-label="Catálogo de prendas">
         <div className="catalog-section-heading">
-          <div><p className="catalog-eyebrow">PIEZAS ÚNICAS, SEGUNDA VIDA</p><h2>Catálogo Cherry Club</h2></div>
+          <div><p className="catalog-eyebrow">PIEZAS ÚNICAS, SEGUNDA VIDA</p><h2>Catálogo Pitucas Pero Misias</h2></div>
         </div>
 
         <div className="catalog-layout">
@@ -279,16 +299,16 @@ export default function CatalogoPublico() {
         ) : loadError ? (
           <div className="catalog-empty"><span>🍒</span><h3>El catálogo se está preparando</h3><p>Vuelve a intentarlo en un momento.</p><button onClick={loadCatalog}>Reintentar</button></div>
         ) : visibleArticles.length === 0 ? (
-          <div className="catalog-empty"><span>♡</span><h3>{articles.length ? "No encontramos prendas con esos filtros" : "Pronto habrá nuevas piezas"}</h3><p>{articles.length ? "Prueba con otra categoría, talla, precio o búsqueda." : "Estamos preparando el catálogo Cherry Club."}</p>{articles.length > 0 && <button onClick={clearFilters}>Ver todas las prendas</button>}</div>
+          <div className="catalog-empty"><span>♡</span><h3>{articles.length && Object.keys(photoUrls).some(id => !unavailablePhotos[id]) ? "No encontramos prendas con esos filtros" : "Pronto habrá nuevas piezas"}</h3><p>{articles.length && Object.keys(photoUrls).some(id => !unavailablePhotos[id]) ? "Prueba con otra categoría, talla, precio o búsqueda." : "Mostramos solo prendas con una foto cargada correctamente."}</p>{articles.length > 0 && Object.keys(photoUrls).some(id => !unavailablePhotos[id]) && <button onClick={clearFilters}>Ver todas las prendas</button>}</div>
         ) : (
           <div className="catalog-grid">
             {displayedArticles.map(article => {
               const inCart = cart.some(item => String(item.id) === String(article.id));
               return (
-                <article className="catalog-product" key={article.id}>
+                <article className={`catalog-product${loadedPhotos[article.id] ? " photo-ready" : " photo-pending"}`} key={article.id}>
                   <button className="catalog-product-open" type="button" onClick={() => setSelectedArticle(article)} aria-label={`Ver detalles de ${article.descripcion}`}>
                     <div className="catalog-product-photo">
-                      {photoUrls[article.id] ? <img src={photoUrls[article.id]} alt={article.descripcion} loading="lazy"/> : <div className="catalog-photo-placeholder">🍒</div>}
+                      {photoUrls[article.id] && <img src={photoUrls[article.id]} alt={article.descripcion} loading="lazy" onLoad={() => markPhotoLoaded(article.id)} onError={() => hideUnavailablePhoto(article.id)}/>}
                       {article.talla && <span className="catalog-size-tag">Talla {article.talla}</span>}
                     </div>
                     <div className="catalog-product-info">
@@ -308,13 +328,13 @@ export default function CatalogoPublico() {
         </div>
       </section>
 
-      <footer className="catalog-footer"><span>Cherry Club 🍒</span><span>Una segunda vida para piezas especiales</span><button className="catalog-terms-link" onClick={() => setTermsOpen(true)}>Términos y condiciones</button><a href={instagramUrl} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a></footer>
+      <footer className="catalog-footer"><span>Pitucas Pero Misias 💕</span><span>Moda para todos · Compra, vende, repeat.</span><button className="catalog-terms-link" onClick={() => setTermsOpen(true)}>Términos y condiciones</button><a href={instagramUrl} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a></footer>
 
       {selectedArticle && <div className="catalog-detail-overlay" onClick={() => setSelectedArticle(null)}>
         <section className="catalog-detail-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-detail-title" onClick={event => event.stopPropagation()}>
           <button className="catalog-close catalog-detail-close" onClick={() => setSelectedArticle(null)} aria-label="Cerrar detalles"><X size={21}/></button>
           <div className="catalog-detail-photo">
-            {photoUrls[selectedArticle.id] ? <img src={photoUrls[selectedArticle.id]} alt={selectedArticle.descripcion}/> : <div className="catalog-photo-placeholder">🍒</div>}
+            {photoUrls[selectedArticle.id] && <img src={photoUrls[selectedArticle.id]} alt={selectedArticle.descripcion} onLoad={() => markPhotoLoaded(selectedArticle.id)} onError={() => hideUnavailablePhoto(selectedArticle.id)}/>}
             {selectedArticle.talla && <span className="catalog-size-tag">Talla {selectedArticle.talla}</span>}
           </div>
           <div className="catalog-detail-copy">
@@ -331,17 +351,17 @@ export default function CatalogoPublico() {
 
       {termsOpen && <div className="catalog-terms-overlay" onClick={() => setTermsOpen(false)}>
         <section className="catalog-terms-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-terms-title" onClick={event => event.stopPropagation()}>
-          <div className="catalog-terms-heading"><div><p className="catalog-eyebrow">CHERRY CLUB</p><h2 id="catalog-terms-title">Términos y condiciones</h2></div><button className="catalog-close" onClick={() => setTermsOpen(false)} aria-label="Cerrar términos y condiciones"><X size={21}/></button></div>
+          <div className="catalog-terms-heading"><div><p className="catalog-eyebrow">PITUCAS PERO MISIAS</p><h2 id="catalog-terms-title">Términos y condiciones</h2></div><button className="catalog-close" onClick={() => setTermsOpen(false)} aria-label="Cerrar términos y condiciones"><X size={21}/></button></div>
           <div className="catalog-terms-content">
-            <p>Queremos que compres con información clara. Al consultar una prenda de Cherry Club, ten en cuenta lo siguiente:</p>
+            <p>Queremos que compres con información clara. Al consultar una prenda de Pitucas Pero Misias, ten en cuenta lo siguiente:</p>
             <h3>Prendas y disponibilidad</h3>
             <p>Las prendas son piezas únicas de segunda mano. Revisa su descripción, talla y fotos; la disponibilidad y el precio final se confirman por Instagram antes de coordinar la compra.</p>
             <h3>Consultas, pedidos y envíos</h3>
-            <p>Agregar una prenda al carrito solo prepara una consulta; no confirma ni reserva el producto. Realizamos envíos a todo el Perú. El costo del envío se cobra aparte del precio publicado y Cherry Club confirmará por Instagram su costo y plazo estimado antes de cerrar el pedido.</p>
+            <p>Agregar una prenda al carrito solo prepara una consulta; no confirma ni reserva el producto. Realizamos envíos a todo el Perú. El costo del envío se cobra aparte del precio publicado y Pitucas Pero Misias confirmará por Instagram su costo y plazo estimado antes de cerrar el pedido.</p>
             <h3>Cambios y devoluciones</h3>
             <p>Por tratarse de piezas únicas, no aceptamos cambios o devoluciones por arrepentimiento o por una talla elegida cuando el artículo coincide con la descripción publicada. Esto no limita los derechos que correspondan si la prenda presenta una falla no informada o no coincide con lo ofrecido. En ese caso, escríbenos para revisar una solución.</p>
             <h3>Contacto</h3>
-            <p>Para consultas sobre una prenda o un pedido, escríbenos a <a href={instagramUrl} target="_blank" rel="noreferrer">@cherryclub.wav</a>.</p>
+            <p>Para consultas sobre una prenda o un pedido, escríbenos a <a href={instagramUrl} target="_blank" rel="noreferrer">@pitucasperomisias.pe</a>.</p>
           </div>
           <button className="catalog-terms-done" onClick={() => setTermsOpen(false)}>Entendido</button>
         </section>

@@ -37,7 +37,7 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold, mod
         <button onClick={onClose} aria-label="Cerrar" style={closeStyle}><X size={20}/></button>
       </div>
       <div style={{ overflowY:"auto", minHeight:0, padding:"0 20px 18px", WebkitOverflowScrolling:"touch", overscrollBehavior:"contain" }}>
-      <div style={{ background:"#FFF0F3", borderRadius:16, padding:14, marginBottom:14, fontWeight:650 }}>{articulo.descripcion}</div>
+      <div style={{ background:"#FFC9E3", borderRadius:16, padding:14, marginBottom:14, fontWeight:650 }}>{articulo.descripcion}</div>
       {modoFeria ? (
         <div style={channelNotice}>Modo feria · se registra con el canal y precio de feria.</div>
       ) : <>
@@ -46,7 +46,7 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold, mod
           {["Feria", "Web"].map(canal => {
             const precioCanal = canal === "Web" ? articulo.precio_web ?? articulo.precio : articulo.precio;
             const selected = canalVenta === canal;
-            return <button key={canal} onClick={() => { setCanalVenta(canal); setPrecioVenta(String(precioCanal || "")); }} style={{ ...channelStyle, background:selected ? "#C0003B" : "#FFF0F3", color:selected ? "white" : "#7B1730" }}>
+            return <button key={canal} onClick={() => { setCanalVenta(canal); setPrecioVenta(String(precioCanal || "")); }} style={{ ...channelStyle, background:selected ? "#8B1E2D" : "#FFC9E3", color:selected ? "white" : "#8B1E2D" }}>
               {canal}<small style={{ display:"block", marginTop:3, opacity:.85 }}>S/ {Number(precioCanal || 0).toFixed(2)}</small>
             </button>;
           })}
@@ -59,7 +59,7 @@ export default function SaleSheet({ articulo, paymentQrSrc, onClose, onSold, mod
       <input type="number" inputMode="decimal" value={precioVenta} onChange={e => setPrecioVenta(e.target.value)} style={inputStyle} placeholder="Monto en soles" />
       <label style={labelStyle}>¿Cómo te pagaron?</label>
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:14 }}>
-        {metodos.map(m => <button key={m} onClick={() => setMetodoPago(m)} style={{ ...methodStyle, background: metodoPago === m ? "#C0003B" : "#FFF0F3", color: metodoPago === m ? "white" : "#7B1730" }}>{m}</button>)}
+        {metodos.map(m => <button key={m} onClick={() => setMetodoPago(m)} style={{ ...methodStyle, background: metodoPago === m ? "#8B1E2D" : "#FFC9E3", color: metodoPago === m ? "white" : "#8B1E2D" }}>{m}</button>)}
       </div>
       {metodoPago === "Efectivo" && <>
         <label style={labelStyle}>Efectivo recibido (opcional)</label>
@@ -86,6 +86,6 @@ const inputStyle = { width:"100%", height:52, borderRadius:15, border:"1px solid
 const chipStyle = { border:0, borderRadius:20, padding:"8px 13px", background:"#F5F5F7", color:"#555", fontWeight:700 };
 const methodStyle = { border:0, borderRadius:15, height:48, fontSize:15, fontWeight:700 };
 const channelStyle = { border:0, borderRadius:15, minHeight:58, padding:"8px 10px", fontSize:15, fontWeight:800 };
-const channelNotice = { borderRadius:13, padding:"12px 14px", marginBottom:14, background:"#FFF0F3", color:"#7B1730", fontSize:13, fontWeight:750 };
-const closeStyle = { width:40, height:40, borderRadius:"50%", border:0, background:"#F3F3F7" };
-const submitStyle = { width:"100%", height:56, border:0, borderRadius:17, background:"#C0003B", color:"white", fontSize:17, fontWeight:800 };
+const channelNotice = { borderRadius:13, padding:"12px 14px", marginBottom:14, background:"#FFC9E3", color:"#8B1E2D", fontSize:13, fontWeight:750 };
+const closeStyle = { width:40, height:40, borderRadius:"50%", border:0, background:"#F5EBDD" };
+const submitStyle = { width:"100%", height:56, border:0, borderRadius:17, background:"#8B1E2D", color:"white", fontSize:17, fontWeight:800 };

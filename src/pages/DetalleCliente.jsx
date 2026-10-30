@@ -126,7 +126,7 @@ export default function DetalleCliente({
 
         minHeight:"100vh",
 
-        background:"#FAFAFC",
+        background:"#F5EBDD",
 
         padding:"60px 20px 120px",
 
@@ -174,7 +174,7 @@ export default function DetalleCliente({
 
             border:"none",
 
-            background:"#F3F3F7",
+            background:"#F5EBDD",
 
             display:"flex",
 
@@ -208,7 +208,7 @@ export default function DetalleCliente({
 
             fontWeight:"800",
 
-            color:"#1F1F28",
+            color:"#383B3B",
 
           }}
 
@@ -238,9 +238,9 @@ export default function DetalleCliente({
 
             border:"none",
 
-            background:"#FFE1E7",
+            background:"#FFC9E3",
 
-            color:"#C0003B",
+            color:"#8B1E2D",
 
             display:"flex",
 
@@ -357,7 +357,7 @@ export default function DetalleCliente({
 
           size={24}
 
-          color="#C0003B"
+          color="#8B1E2D"
 
         />
 
@@ -501,7 +501,7 @@ export default function DetalleCliente({
 
                   borderRadius:"18px",
 
-                  background:"#FFF0F3",
+                  background:"#FFC9E3",
 
                   overflow:"hidden",
 
@@ -560,7 +560,7 @@ export default function DetalleCliente({
 
                     fontSize:"18px",
 
-                    color:"#1F1F28",
+                    color:"#383B3B",
 
                   }}
 
@@ -606,7 +606,7 @@ export default function DetalleCliente({
 
                   fontSize:"20px",
 
-                  color:"#C0003B",
+                  color:"#8B1E2D",
 
                 }}
 
@@ -793,9 +793,9 @@ padding:"10px 16px",
 
 borderRadius:"18px",
 
-background:"#FFE1E7",
+background:"#FFC9E3",
 
-color:"#C0003B",
+color:"#8B1E2D",
 
 fontSize:"18px",
 

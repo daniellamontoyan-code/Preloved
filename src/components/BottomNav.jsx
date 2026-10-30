@@ -93,7 +93,7 @@ export default function BottomNav({
           height:"60px",
           borderRadius:"50%",
           border:"none",
-          background:"#C0003B",
+          background:"#8B1E2D",
           color:"#FFFFFF",
           display:"flex",
           justifyContent:"center",

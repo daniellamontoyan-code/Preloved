@@ -37,7 +37,7 @@ export async function getExpenses() {
   const names = new Map((usersResult.data || []).map(user => [user.auth_user_id, user.nombre]));
   return withEvidence.map(expense => ({
     ...expense,
-    registrado_por: names.get(expense.owner_id) || "Cherry Club",
+    registrado_por: names.get(expense.owner_id) || "Pitucas Pero Misias",
     pagado_por_nombre: names.get(expense.pagado_por || expense.owner_id) || "Sin indicar",
   }));
 }

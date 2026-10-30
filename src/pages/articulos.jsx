@@ -216,7 +216,7 @@ export default function Articulos({
 
         minHeight:"100vh",
 
-        background:"#FAFAFC",
+        background:"#F5EBDD",
 
         padding:"60px 20px 120px",
 
@@ -259,7 +259,7 @@ export default function Articulos({
 
             border:"none",
 
-            background:"#F3F3F7",
+            background:"#F5EBDD",
 
             width:"40px",
 
@@ -297,7 +297,7 @@ export default function Articulos({
 
             fontWeight:"700",
 
-            color:"#1F1F28",
+            color:"#383B3B",
 
           }}
 
@@ -322,13 +322,13 @@ export default function Articulos({
         <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Ver artículos de</div>
         <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
           {["Todos", "Feria", "Web"].map(canal => (
-            <button key={canal} onClick={() => { setCanalSeleccionado(canal); if (canal !== "Feria") setModoFeria(false); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 16px", background:canalSeleccionado === canal ? "#C0003B" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800 }}>
+            <button key={canal} onClick={() => { setCanalSeleccionado(canal); if (canal !== "Feria") setModoFeria(false); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 16px", background:canalSeleccionado === canal ? "#8B1E2D" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800 }}>
               {canal === "Web" ? "Página web" : canal}
             </button>
           ))}
         </div>
       </div>
-      <button onClick={() => setModoFeria(value => { const next = !value; if (next) setCanalSeleccionado("Feria"); return next; })} style={{ width:"100%", height:46, marginBottom:16, border:0, borderRadius:15, background: modoFeria ? "#C0003B" : "#FFF0F3", color: modoFeria ? "white" : "#7B1730", fontSize:14, fontWeight:800 }}>
+      <button onClick={() => setModoFeria(value => { const next = !value; if (next) setCanalSeleccionado("Feria"); return next; })} style={{ width:"100%", height:46, marginBottom:16, border:0, borderRadius:15, background: modoFeria ? "#8B1E2D" : "#FFC9E3", color: modoFeria ? "white" : "#8B1E2D", fontSize:14, fontWeight:800 }}>
         {modoFeria ? "✓ Modo venta feria activo" : "Activar modo venta feria"}
       </button>
 
@@ -383,7 +383,7 @@ export default function Articulos({
         <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Categoría</div>
         <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
           {["Todos", ...categoriasDisponibles].map(nombre => (
-            <button key={nombre} onClick={() => { setCategoriaFiltro(nombre); setSubcategoriaFiltro(""); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:categoriaFiltro === nombre ? "#C0003B" : "#FFFFFF", color:categoriaFiltro === nombre ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
+            <button key={nombre} onClick={() => { setCategoriaFiltro(nombre); setSubcategoriaFiltro(""); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:categoriaFiltro === nombre ? "#8B1E2D" : "#FFFFFF", color:categoriaFiltro === nombre ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
               {nombre === "Todos" ? "Todas" : nombre}
             </button>
           ))}
@@ -394,7 +394,7 @@ export default function Articulos({
         <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Tipo de artículo</div>
         <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
           {["", ...subcategoriasDisponibles].map(tipo => (
-            <button key={tipo || "todas-subcategorias"} onClick={() => setSubcategoriaFiltro(tipo)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:subcategoriaFiltro === tipo ? "#FFE8ED" : "#FFFFFF", color:subcategoriaFiltro === tipo ? "#9D001E" : "#555563", fontWeight:700, fontSize:13 }}>
+            <button key={tipo || "todas-subcategorias"} onClick={() => setSubcategoriaFiltro(tipo)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:subcategoriaFiltro === tipo ? "#FFC9E3" : "#FFFFFF", color:subcategoriaFiltro === tipo ? "#8B1E2D" : "#555563", fontWeight:700, fontSize:13 }}>
               {tipo || "Todos los tipos"}
             </button>
           ))}
@@ -410,7 +410,7 @@ export default function Articulos({
             ["Vendido", "Vendido · por liquidar"],
             ["Liquidado", "Liquidado"],
           ].map(([valor, etiqueta]) => (
-            <button key={valor} onClick={() => setEstadoFiltro(valor)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:estadoFiltro === valor ? "#C0003B" : "#FFFFFF", color:estadoFiltro === valor ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
+            <button key={valor} onClick={() => setEstadoFiltro(valor)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:estadoFiltro === valor ? "#8B1E2D" : "#FFFFFF", color:estadoFiltro === valor ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
               {etiqueta}
             </button>
           ))}

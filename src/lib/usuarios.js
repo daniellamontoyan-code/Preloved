@@ -12,7 +12,7 @@ export async function getCurrentAppUser() {
     .maybeSingle();
 
   if (error) {
-    console.error("No se pudo cargar el nombre de usuario de Cherry Club.", error);
+    console.error("No se pudo cargar el nombre de usuario de Pitucas Pero Misias.", error);
     return null;
   }
   return data;

@@ -101,7 +101,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
               borderRadius:"16px",
 
-              background:"#FFF0F3",
+              background:"#FFC9E3",
 
               flexShrink:0,
 
@@ -144,7 +144,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
             fontWeight:"700",
 
-            color:"#1F1F28",
+            color:"#383B3B",
 
             whiteSpace:"nowrap",
 
@@ -224,7 +224,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
         style={{
 
-          color:"#C0003B",
+          color:"#8B1E2D",
 
           fontSize:"16px",
 
@@ -245,7 +245,7 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
 
       {feria && articulo.estado === "Disponible" && <button
         onClick={(event) => { event.stopPropagation(); onQuickSale?.(articulo); }}
-        style={{ border:0, borderRadius:13, padding:"11px 13px", background:"#C0003B", color:"white", fontWeight:800, whiteSpace:"nowrap" }}
+        style={{ border:0, borderRadius:13, padding:"11px 13px", background:"#8B1E2D", color:"white", fontWeight:800, whiteSpace:"nowrap" }}
       >Vender</button>}
 
 

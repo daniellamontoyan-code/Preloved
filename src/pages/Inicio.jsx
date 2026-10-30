@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import BrandLockup from "../components/BrandLockup";
 
 export default function Inicio({ onDemo }) {
   const [email, setEmail] = useState("");
@@ -39,17 +40,17 @@ export default function Inicio({ onDemo }) {
     setRecoveryMessage("Si el correo está registrado, recibirás un enlace para crear tu contraseña.");
   }
 
-  return <div style={{ minHeight:"100vh", background:"#FAFAFC", display:"flex", justifyContent:"center", alignItems:"center", padding:32 }}>
+  return <div style={{ minHeight:"100vh", background:"#F5EBDD", display:"flex", justifyContent:"center", alignItems:"center", padding:32 }}>
     <form onSubmit={ingresar} style={{ width:"100%", maxWidth:380, textAlign:"center" }}>
-      <h1 style={{ fontSize:64, fontWeight:800, background:"linear-gradient(90deg,#9D001E,#C0003B,#F43F5E)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", margin:"0 0 8px" }}>Cherry Club</h1>
-      <p style={{ fontSize:22, fontWeight:700, color:"#1F2937", marginBottom:32 }}>Tu espacio para organizar<br/>todo lo que vendes ✨</p>
+      <BrandLockup />
+      <p style={{ fontSize:22, fontWeight:700, color:"#383B3B", marginBottom:32 }}>Tu espacio para organizar<br/>todo lo que vendes ✨</p>
       <input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} placeholder="Correo" style={fieldStyle}/>
       <input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} placeholder="Contraseña" style={{ ...fieldStyle, marginBottom:20 }}/>
-      <button type="submit" disabled={loading} style={{ width:"100%", height:58, border:0, borderRadius:20, background:"#C0003B", color:"white", fontSize:19, fontWeight:700 }}>{loading ? "Ingresando…" : "Ingresar"}</button>
-      {import.meta.env.DEV && <button type="button" onClick={onDemo} style={{ width:"100%", height:54, marginTop:12, border:"1px solid #C0003B", borderRadius:20, background:"white", color:"#A00031", fontSize:16, fontWeight:750 }}>Ver vista de prueba</button>}
-      <button type="button" onClick={recuperarContrasena} disabled={loading} style={{ display:"block", margin:"16px auto 0", border:0, background:"transparent", color:"#A00031", fontSize:14, fontWeight:700, textDecoration:"underline" }}>Olvidé mi contraseña</button>
+      <button type="submit" disabled={loading} style={{ width:"100%", height:58, border:0, borderRadius:20, background:"#8B1E2D", color:"white", fontSize:19, fontWeight:700 }}>{loading ? "Ingresando…" : "Ingresar"}</button>
+      {import.meta.env.DEV && <button type="button" onClick={onDemo} style={{ width:"100%", height:54, marginTop:12, border:"1px solid #8B1E2D", borderRadius:20, background:"white", color:"#8B1E2D", fontSize:16, fontWeight:750 }}>Ver vista de prueba</button>}
+      <button type="button" onClick={recuperarContrasena} disabled={loading} style={{ display:"block", margin:"16px auto 0", border:0, background:"transparent", color:"#8B1E2D", fontSize:14, fontWeight:700, textDecoration:"underline" }}>Olvidé mi contraseña</button>
       {recoveryMessage && <p role="status" style={{ color:recoveryError ? "#B42318" : "#177245", fontSize:13, lineHeight:1.5, marginTop:12 }}>{recoveryMessage}</p>}
-      <p style={{ color:"#777", fontSize:13, lineHeight:1.5, marginTop:18 }}>Usa el correo y la contraseña configurados para tu cuenta Cherry Club.</p>
+      <p style={{ color:"#777", fontSize:13, lineHeight:1.5, marginTop:18 }}>Usa el correo y la contraseña configurados para tu cuenta.</p>
     </form>
   </div>;
 }

@@ -19,7 +19,7 @@ export default function SectionTitle({
           margin: 0,
           fontSize: "24px",
           fontWeight: "700",
-          color: "#1F1F28",
+          color: "#383B3B",
         }}
       >
         {title}
@@ -33,7 +33,7 @@ export default function SectionTitle({
           display: "flex",
           alignItems: "center",
           gap: "4px",
-          color: "#C0003B",
+          color: "#8B1E2D",
           fontWeight: "600",
           fontSize: "15px",
           cursor: "pointer",

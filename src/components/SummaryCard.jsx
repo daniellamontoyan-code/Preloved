@@ -21,7 +21,7 @@ export default function SummaryCard({ value, title }) {
           fontSize:"38px",
           lineHeight:"1",
           fontWeight:"700",
-          color:"#1F1F28",
+          color:"#383B3B",
         }}
       >
         {value}

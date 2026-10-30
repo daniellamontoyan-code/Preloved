@@ -6,6 +6,7 @@ import PrimaryButton from "../components/PrimaryButton";
 import SectionTitle from "../components/SectionTitle";
 import BottomNav from "../components/BottomNav";
 import AddArticleSheet from "../components/AddArticleSheet";
+import BrandLockup from "../components/BrandLockup";
 
 import Articulos from "./articulos";
 import Clientes from "./Clientes";
@@ -25,7 +26,7 @@ import { clearPrivatePhotoCache } from "../lib/storage";
 
 export default function Dashboard({ user }){
 
-  const [nombreUsuario, setNombreUsuario] = useState(user?.user_metadata?.nombre || user?.email?.split("@")[0] || "Cherry Club");
+  const [nombreUsuario, setNombreUsuario] = useState(user?.user_metadata?.nombre || user?.email?.split("@")[0] || "Pitucas Pero Misias");
 
   async function cerrarSesion(){
     if (user?.id) localStorage.removeItem(`cherry_catalog_cache_${user.id}`);
@@ -292,27 +293,27 @@ export default function Dashboard({ user }){
 
     {
       nombre:"Ropa",
-      color:"linear-gradient(135deg,#9D001E,#C0003B)"
+      color:"linear-gradient(135deg,#8B1E2D,#8B1E2D)"
     },
 
     {
       nombre:"Calzado",
-      color:"linear-gradient(135deg,#C0003B,#F43F5E)"
+      color:"linear-gradient(135deg,#8B1E2D,#FF6B9E)"
     },
 
     {
       nombre:"Bolsos",
-      color:"linear-gradient(135deg,#F43F5E,#FB7185)"
+      color:"linear-gradient(135deg,#FF6B9E,#FF6B9E)"
     },
 
     {
       nombre:"Accesorios",
-      color:"linear-gradient(135deg,#9D001E,#E11D48)"
+      color:"linear-gradient(135deg,#8B1E2D,#E11D48)"
     },
 
     {
       nombre:"Otros",
-      color:"linear-gradient(135deg,#B42348,#F43F5E)"
+      color:"linear-gradient(135deg,#B42348,#FF6B9E)"
     }
 
   ];
@@ -342,7 +343,7 @@ export default function Dashboard({ user }){
 
         minHeight:"100vh",
 
-        background:"#FAFAFC",
+        background:"#F5EBDD",
 
         padding:"100px 20px 120px",
 
@@ -371,7 +372,7 @@ export default function Dashboard({ user }){
 
           borderRadius:"50%",
 
-          background:"#F43F5E",
+          background:"#FF6B9E",
 
           filter:"blur(80px)",
 
@@ -398,7 +399,7 @@ export default function Dashboard({ user }){
 
           borderRadius:"50%",
 
-          background:"#FBCFE8",
+          background:"#FFC9E3",
 
           filter:"blur(80px)",
 
@@ -425,7 +426,7 @@ export default function Dashboard({ user }){
 
           borderRadius:"50%",
 
-          background:"#FFE1E7",
+          background:"#FFC9E3",
 
           filter:"blur(80px)",
 
@@ -471,11 +472,11 @@ export default function Dashboard({ user }){
 
             margin:0,
 
-            fontSize:"36px",
+            fontSize:"24px",
 
             fontWeight:"900",
 
-            background:"linear-gradient(90deg,#9D001E,#C0003B,#F43F5E)",
+            background:"linear-gradient(90deg,#8B1E2D,#8B1E2D,#FF6B9E)",
 
             WebkitBackgroundClip:"text",
 
@@ -485,7 +486,7 @@ export default function Dashboard({ user }){
 
         >
 
-          Cherry Club
+          <BrandLockup compact />
 
         </h1>
 
@@ -642,7 +643,7 @@ export default function Dashboard({ user }){
 
                   <span>{metodo}</span>
 
-                  <span style={{color:"#C0003B"}}>
+                  <span style={{color:"#8B1E2D"}}>
 
                     S/. {monto.toFixed(2)}
 
@@ -667,7 +668,7 @@ export default function Dashboard({ user }){
           <p style={{ margin:"8px 0 12px", color:"#777783", fontSize:13, fontWeight:600 }}>Filtra por dónde los ofreces</p>
           <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
             {["Todos", "Feria", "Web"].map(canal => (
-              <button key={canal} onClick={() => abrirArticulos({ canal })} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"11px 17px", background:canalSeleccionado === canal ? "#C0003B" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800, boxShadow:"0 5px 16px rgba(0,0,0,.05)" }}>
+              <button key={canal} onClick={() => abrirArticulos({ canal })} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"11px 17px", background:canalSeleccionado === canal ? "#8B1E2D" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800, boxShadow:"0 5px 16px rgba(0,0,0,.05)" }}>
                 {canal === "Web" ? "Página web" : canal}
               </button>
             ))}
@@ -676,7 +677,7 @@ export default function Dashboard({ user }){
             <p style={{ margin:"18px 0 10px", color:"#777783", fontSize:13, fontWeight:600 }}>Tipos de prenda, accesorio o calzado</p>
             <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
               {tiposArticulo.map(tipo => (
-                <button key={`${tipo.categoria}:${tipo.subcategoria}`} onClick={() => abrirArticulos({ canal:canalSeleccionado, categoria:tipo.categoria, subcategoria:tipo.subcategoria })} style={{ flex:"0 0 auto", border:"1px solid #F2DCE2", borderRadius:15, padding:"11px 14px", background:"#FFFFFF", color:"#77152B", fontWeight:700, boxShadow:"0 5px 16px rgba(0,0,0,.04)" }}>
+                <button key={`${tipo.categoria}:${tipo.subcategoria}`} onClick={() => abrirArticulos({ canal:canalSeleccionado, categoria:tipo.categoria, subcategoria:tipo.subcategoria })} style={{ flex:"0 0 auto", border:"1px solid #EAD5DA", borderRadius:15, padding:"11px 14px", background:"#FFFFFF", color:"#77152B", fontWeight:700, boxShadow:"0 5px 16px rgba(0,0,0,.04)" }}>
                   {tipo.subcategoria}{tipo.categoria ? <span style={{ color:"#999", fontSize:11, marginLeft:5 }}>{tipo.categoria}</span> : null}
                 </button>
               ))}

@@ -202,8 +202,8 @@ export default function NewClientSheet({ onClose, onCreated }) {
         </div>
 
 
-        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"4px 0 22px", color:"#42424D", fontSize:14, lineHeight:1.4, fontWeight:650 }}>
-          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#C0003B", flexShrink:0, marginTop:1 }} />
+        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"4px 0 22px", color:"#594137", fontSize:14, lineHeight:1.4, fontWeight:650 }}>
+          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#8B1E2D", flexShrink:0, marginTop:1 }} />
           <span>Cliente de ambas (Dani y Mafer)</span>
         </label>
 
@@ -251,7 +251,7 @@ const closeButton = {
   height:"40px",
   borderRadius:"50%",
   border:"none",
-  background:"#F3F3F7",
+  background:"#F5EBDD",
 };
 
 
@@ -262,7 +262,7 @@ const saveButton = {
   height:"60px",
   border:"none",
   borderRadius:"22px",
-  background:"#C0003B",
+  background:"#8B1E2D",
   color:"#fff",
   fontSize:"18px",
   fontWeight:"700",

@@ -101,17 +101,17 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   const pagadoMafer = gastos.reduce((sum, gasto) => sum + (gasto.compartido && (gasto.pagado_por || gasto.owner_id) === mafer?.id ? Number(gasto.monto || 0) : 0), 0);
   const saldo = (pagadoDani - pagadoMafer) / 2;
 
-  return <div style={{ minHeight:"100vh", background:"#FAFAFC", padding:"60px 20px 125px", maxWidth:430, margin:"0 auto" }}>
+  return <div style={{ minHeight:"100vh", background:"#F5EBDD", padding:"60px 20px 125px", maxWidth:430, margin:"0 auto" }}>
     <header style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
       <button onClick={onBack} aria-label="Volver" style={iconButton}><ChevronLeft size={22}/></button>
       <div style={{ flex:1 }}>
-        <h1 style={{ margin:0, color:"#1F1F28", fontSize:27 }}>Gastos</h1>
+        <h1 style={{ margin:0, color:"#383B3B", fontSize:27 }}>Gastos</h1>
         <div style={{ marginTop:3, color:"#777783", fontSize:13 }}>Visible para Dani y Mafer</div>
       </div>
-      <ReceiptText size={25} color="#C0003B"/>
+      <ReceiptText size={25} color="#8B1E2D"/>
     </header>
 
-    <div style={{ background:"linear-gradient(135deg,#9D001E,#C0003B)", color:"white", borderRadius:22, padding:19, marginBottom:20 }}>
+    <div style={{ background:"linear-gradient(135deg,#8B1E2D,#8B1E2D)", color:"white", borderRadius:22, padding:19, marginBottom:20 }}>
       <div style={{ fontSize:13, opacity:.85, fontWeight:700 }}>Total registrado</div>
       <strong style={{ display:"block", marginTop:5, fontSize:27 }}>S/ {formato(total)}</strong>
       <div style={{ marginTop:3, fontSize:12, opacity:.85 }}>{gastos.length} gasto{gastos.length === 1 ? "" : "s"} registrado{gastos.length === 1 ? "" : "s"}</div>
@@ -123,26 +123,26 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
         ? <strong style={{ display:"block", marginTop:8, color:"#777783", fontSize:15 }}>No se pudo cargar el saldo entre ambas.</strong>
         : Math.abs(saldo) < 0.005
           ? <strong style={{ display:"block", marginTop:8, color:"#28733B", fontSize:17 }}>Están al día entre ustedes</strong>
-          : <strong style={{ display:"block", marginTop:8, color:"#9D001E", fontSize:17 }}>{saldo > 0 ? "Mafer le debe a Dani" : "Dani le debe a Mafer"} S/ {formato(Math.abs(saldo))}</strong>}
+          : <strong style={{ display:"block", marginTop:8, color:"#8B1E2D", fontSize:17 }}>{saldo > 0 ? "Mafer le debe a Dani" : "Dani le debe a Mafer"} S/ {formato(Math.abs(saldo))}</strong>}
       <div style={{ marginTop:5, color:"#777783", fontSize:12 }}>Solo cuenta gastos marcados como compartidos y quién los pagó.</div>
     </div>
 
-    <button onClick={() => setShowForm(true)} style={{ width:"100%", height:54, border:0, borderRadius:17, background:"#FFF0F3", color:"#9D001E", fontSize:16, fontWeight:800, marginBottom:18 }}>+ Registrar gasto</button>
+    <button onClick={() => setShowForm(true)} style={{ width:"100%", height:54, border:0, borderRadius:17, background:"#FFC9E3", color:"#8B1E2D", fontSize:16, fontWeight:800, marginBottom:18 }}>+ Registrar gasto</button>
 
     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
       {gastos.length ? gastos.map(gasto => <article key={gasto.id} style={{ background:"white", borderRadius:19, padding:16, boxShadow:"0 8px 24px rgba(0,0,0,.045)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"flex-start" }}>
           <div style={{ minWidth:0 }}>
-            <strong style={{ display:"block", color:"#272731", fontSize:15, overflowWrap:"anywhere" }}>{gasto.descripcion}</strong>
+            <strong style={{ display:"block", color:"#383B3B", fontSize:15, overflowWrap:"anywhere" }}>{gasto.descripcion}</strong>
             <div style={{ marginTop:5, color:"#777783", fontSize:12 }}>{new Date(`${gasto.fecha}T12:00:00`).toLocaleDateString("es-PE")} · {gasto.registrado_por}</div>
-            <div style={{ marginTop:5, color:gasto.compartido ? "#9D001E" : "#777783", fontSize:12, fontWeight:750 }}>{gasto.compartido ? `Compartido 50/50 · Lo pagó ${gasto.pagado_por_nombre}` : `Gasto personal · Lo asumió ${gasto.pagado_por_nombre}`}</div>
+            <div style={{ marginTop:5, color:gasto.compartido ? "#8B1E2D" : "#777783", fontSize:12, fontWeight:750 }}>{gasto.compartido ? `Compartido 50/50 · Lo pagó ${gasto.pagado_por_nombre}` : `Gasto personal · Lo asumió ${gasto.pagado_por_nombre}`}</div>
           </div>
           <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:9 }}>
-            <strong style={{ whiteSpace:"nowrap", color:"#C0003B", fontSize:17 }}>S/ {formato(gasto.monto)}</strong>
+            <strong style={{ whiteSpace:"nowrap", color:"#8B1E2D", fontSize:17 }}>S/ {formato(gasto.monto)}</strong>
             {gasto.owner_id === usuarioActual && <button type="button" onClick={() => editarGasto(gasto)} style={editButton}><Pencil size={14}/> Editar</button>}
           </div>
         </div>
-        {gasto.evidencia_url && <button onClick={() => setEvidenciaAbierta(gasto.evidencia_url)} style={{ display:"flex", alignItems:"center", gap:10, border:0, padding:0, marginTop:13, background:"transparent", color:"#7B1730", fontWeight:750 }}>
+        {gasto.evidencia_url && <button onClick={() => setEvidenciaAbierta(gasto.evidencia_url)} style={{ display:"flex", alignItems:"center", gap:10, border:0, padding:0, marginTop:13, background:"transparent", color:"#8B1E2D", fontWeight:750 }}>
           <img src={gasto.evidencia_url} alt="Evidencia del gasto" style={{ width:54, height:54, borderRadius:12, objectFit:"cover" }}/>
           Ver evidencia
         </button>}
@@ -169,15 +169,15 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
           <option value="" disabled>Selecciona una persona</option>
           {miembros.map(persona => <option key={persona.id} value={persona.id}>{persona.nombre}</option>)}
         </select>
-        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"15px 0 7px", color:"#42424D", fontSize:14, lineHeight:1.4, fontWeight:750 }}>
-          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#C0003B", flexShrink:0, marginTop:1 }}/>
+        <label style={{ display:"flex", alignItems:"flex-start", gap:11, margin:"15px 0 7px", color:"#594137", fontSize:14, lineHeight:1.4, fontWeight:750 }}>
+          <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#8B1E2D", flexShrink:0, marginTop:1 }}/>
           <span>Este gasto se comparte entre Dani y Mafer</span>
         </label>
         {compartido && <div style={{ margin:"0 0 8px 30px", color:"#777783", fontSize:12 }}>Se dividirá 50/50 para calcular el saldo entre ustedes.</div>}
         <label style={labelStyle}>Foto de evidencia (opcional)</label>
         <input id="expense-camera" type="file" accept="image/*" capture="environment" onChange={elegirEvidencia} style={{ display:"none" }}/>
         <input id="expense-gallery" type="file" accept="image/*" onChange={elegirEvidencia} style={{ display:"none" }}/>
-        {preview && <img src={preview} alt="Vista previa de la evidencia" style={{ display:"block", width:"100%", maxHeight:180, objectFit:"contain", background:"#FAFAFC", borderRadius:15, marginBottom:10 }}/>}
+        {preview && <img src={preview} alt="Vista previa de la evidencia" style={{ display:"block", width:"100%", maxHeight:180, objectFit:"contain", background:"#F5EBDD", borderRadius:15, marginBottom:10 }}/>}
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:9, marginBottom:18 }}>
           <button type="button" onClick={() => document.getElementById("expense-camera")?.click()} style={photoButton}><Camera size={17}/> Tomar foto</button>
           <button type="button" onClick={() => document.getElementById("expense-gallery")?.click()} style={photoButton}><ImagePlus size={17}/> Galería</button>
@@ -193,9 +193,9 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   </div>;
 }
 
-const iconButton = { width:42, height:42, flexShrink:0, border:0, borderRadius:"50%", display:"grid", placeItems:"center", background:"#F3F3F7", color:"#272731" };
+const iconButton = { width:42, height:42, flexShrink:0, border:0, borderRadius:"50%", display:"grid", placeItems:"center", background:"#F5EBDD", color:"#383B3B" };
 const labelStyle = { display:"block", margin:"13px 0 7px", color:"#565662", fontSize:13, fontWeight:750 };
 const inputStyle = { width:"100%", boxSizing:"border-box", height:50, borderRadius:14, border:"1px solid #E3E3E8", padding:"0 13px", fontSize:16, background:"white" };
-const photoButton = { height:46, border:0, borderRadius:14, background:"#FFF0F3", color:"#9D001E", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 };
-const editButton = { display:"flex", alignItems:"center", gap:5, border:0, borderRadius:11, padding:"7px 9px", background:"#FFF0F3", color:"#9D001E", fontSize:12, fontWeight:800 };
-const saveButton = { width:"100%", height:54, border:0, borderRadius:16, background:"#C0003B", color:"white", fontWeight:850, fontSize:16 };
+const photoButton = { height:46, border:0, borderRadius:14, background:"#FFC9E3", color:"#8B1E2D", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 };
+const editButton = { display:"flex", alignItems:"center", gap:5, border:0, borderRadius:11, padding:"7px 9px", background:"#FFC9E3", color:"#8B1E2D", fontSize:12, fontWeight:800 };
+const saveButton = { width:"100%", height:54, border:0, borderRadius:16, background:"#8B1E2D", color:"white", fontWeight:850, fontSize:16 };
