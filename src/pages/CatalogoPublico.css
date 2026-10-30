@@ -375,6 +375,10 @@
   font-size: .96em;
   line-height: 1.04;
 }
+.catalog-hero h1 .catalog-hero-title-line + .catalog-hero-title-line {
+  font-size: .64em;
+  white-space: nowrap;
+}
 .catalog-hero-manifesto { margin-top: 8px !important; }
 .catalog-hero-mascot {
   top: 50%;
