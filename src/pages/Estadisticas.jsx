@@ -55,6 +55,23 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       return date && date >= cutoff;
     });
     const revenue = periodSales.reduce((sum, item) => sum + salePrice(item), 0);
+    // The Pitucas commission is calculated per client, then split 50/50.
+    // Use the same cent rounding as the liquidation screen.
+    const salesByClient = new Map();
+    for (const item of periodSales) {
+      const clientId = String(item.cliente || "");
+      const client = mapaClientes.get(clientId);
+      if (!clientId || !client) continue;
+      const entry = salesByClient.get(clientId) || { total:0, percentage:Number(client.porcentaje_comision || 0) };
+      entry.total += salePrice(item);
+      salesByClient.set(clientId, entry);
+    }
+    const personalCommission = [...salesByClient.values()].reduce((sum, entry) => {
+      const commissionCents = Math.round(entry.total * (entry.percentage / 100) * 100);
+      const daniCents = Math.ceil(commissionCents / 2);
+      const maferCents = commissionCents - daniCents;
+      return sum + (nombreUsuario?.toLowerCase().includes("mafer") ? maferCents : daniCents) / 100;
+    }, 0);
     const byChannel = ["Feria", "Web", "Sin canal"].map(name => {
       const items = periodSales.filter(item => channelName(item) === name);
       return { name, count:items.length, revenue:items.reduce((sum, item) => sum + salePrice(item), 0) };
@@ -76,8 +93,8 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const peakHour = Math.max(...hourCounts);
     const peakHours = peakHour ? hourCounts.map((count, hour) => ({ hour, count })).filter(item => item.count === peakHour) : [];
     const sharedClientSales = periodSales.filter(item => mapaClientes.get(String(item.cliente))?.compartido === true);
-    return { sold:periodSales, revenue, byChannel, categories, peakHours, sharedClientSales };
-  }, [articulosActualizados, clientes, mapaClientes, rango]);
+    return { sold:periodSales, revenue, personalCommission, byChannel, categories, peakHours, sharedClientSales };
+  }, [articulosActualizados, clientes, mapaClientes, nombreUsuario, rango]);
 
   const topCategory = metricas.categories[0];
   const average = metricas.sold.length ? metricas.revenue / metricas.sold.length : 0;
@@ -101,6 +118,12 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       <div style={{ display:"flex", alignItems:"center", gap:9, opacity:.9, fontWeight:700 }}><Wallet size={18}/> Ventas registradas</div>
       <strong style={{ display:"block", fontSize:31, marginTop:8 }}>{money(metricas.revenue)}</strong>
       <div style={{ marginTop:3, opacity:.9 }}>{metricas.sold.length} prenda{metricas.sold.length === 1 ? "" : "s"} vendida{metricas.sold.length === 1 ? "" : "s"} · Promedio {money(average)}</div>
+    </section>
+
+    <section style={{ ...card, border:"1px solid #FF6B9E", background:"#FFF5F8" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:9, color:"#8B1E2D", fontWeight:750 }}><Wallet size={18}/> Tu parte de la comisión · 50/50</div>
+      <strong style={{ display:"block", color:"#8B1E2D", fontSize:28, marginTop:8 }}>{money(metricas.personalCommission)}</strong>
+      <div style={subValue}>Calculada con los porcentajes actuales de tus clientes y las ventas del periodo. No incluye gastos del negocio.</div>
     </section>
 
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:13 }}>
