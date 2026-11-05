@@ -77,14 +77,22 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       return { name, count:items.length, revenue:items.reduce((sum, item) => sum + salePrice(item), 0) };
     });
     const categoryMap = new Map();
+    const subcategoryMap = new Map();
     for (const item of periodSales) {
       const name = item.categoria || "Sin categoría";
       const entry = categoryMap.get(name) || { name, count:0, revenue:0 };
       entry.count += 1;
       entry.revenue += salePrice(item);
       categoryMap.set(name, entry);
+
+      const subcategory = item.subcategoria || "Sin subcategoría";
+      const subEntry = subcategoryMap.get(subcategory) || { name:subcategory, count:0, revenue:0 };
+      subEntry.count += 1;
+      subEntry.revenue += salePrice(item);
+      subcategoryMap.set(subcategory, subEntry);
     }
     const categories = [...categoryMap.values()].sort((a, b) => b.count - a.count || b.revenue - a.revenue);
+    const subcategories = [...subcategoryMap.values()].sort((a, b) => b.count - a.count || b.revenue - a.revenue);
     const hourCounts = Array(24).fill(0);
     for (const item of periodSales) {
       const date = saleDate(item);
@@ -93,7 +101,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const peakHour = Math.max(...hourCounts);
     const peakHours = peakHour ? hourCounts.map((count, hour) => ({ hour, count })).filter(item => item.count === peakHour) : [];
     const sharedClientSales = periodSales.filter(item => mapaClientes.get(String(item.cliente))?.compartido === true);
-    return { sold:periodSales, revenue, personalCommission, byChannel, categories, peakHours, sharedClientSales };
+    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales };
   }, [articulosActualizados, clientes, mapaClientes, nombreUsuario, rango]);
 
   const topCategory = metricas.categories[0];
@@ -146,6 +154,14 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
         <strong style={{ flex:1 }}>{item.name}</strong><span style={{ color:"#777783", fontSize:13 }}>{item.count} · {money(item.revenue)}</span>
       </div>) : <div style={emptyText}>Todavía no hay ventas en este periodo.</div>}
       {topCategory && <p style={{ margin:"14px 0 0", color:"#777783", fontSize:12 }}>La categoría con más unidades vendidas es <strong style={{ color:"#8B1E2D" }}>{topCategory.name}</strong>.</p>}
+    </section>
+
+    <section style={card}>
+      <h2 style={sectionHeading}><Shirt size={19}/> Lo más vendido por subcategoría</h2>
+      {metricas.subcategories.length ? metricas.subcategories.slice(0, 6).map((item, index) => <div key={item.name} style={rowStyle}>
+        <span style={{ width:27, height:27, flexShrink:0, display:"grid", placeItems:"center", borderRadius:9, background:index === 0 ? "#FFC9E3" : "#F5EBDD", color:"#8B1E2D", fontWeight:800 }}>{index + 1}</span>
+        <strong style={{ flex:1 }}>{item.name}</strong><span style={{ color:"#777783", fontSize:13 }}>{item.count} · {money(item.revenue)}</span>
+      </div>) : <div style={emptyText}>Todavía no hay ventas en este periodo.</div>}
     </section>
 
     <section style={{ ...card, marginBottom:12 }}>
