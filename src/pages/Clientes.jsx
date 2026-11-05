@@ -20,6 +20,7 @@ export default function Clientes({
   onArticulos,
   onLiquidaciones,
   onGastos,
+  onEstadisticas,
 
 }) {
 
@@ -570,6 +571,7 @@ export default function Clientes({
 
             onLiquidaciones={onLiquidaciones}
             onGastos={onGastos}
+            onEstadisticas={onEstadisticas}
 
 
           />

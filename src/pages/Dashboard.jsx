@@ -12,6 +12,7 @@ import Articulos from "./articulos";
 import Clientes from "./Clientes";
 import Liquidaciones from "./Liquidaciones";
 import Gastos from "./Gastos";
+import Estadisticas from "./Estadisticas";
 
 import {
   getArticlesCount,
@@ -45,6 +46,7 @@ export default function Dashboard({ user }){
   const [showClientes,setShowClientes] = useState(false);
   const [showLiquidaciones,setShowLiquidaciones] = useState(false);
   const [showGastos,setShowGastos] = useState(false);
+  const [showEstadisticas,setShowEstadisticas] = useState(false);
 
   const [categoriaSeleccionada,setCategoriaSeleccionada] = useState("");
   const [canalSeleccionado,setCanalSeleccionado] = useState("Todos");
@@ -155,6 +157,8 @@ export default function Dashboard({ user }){
 
         }}
 
+        onEstadisticas={()=>{ setShowArticulos(false); setShowEstadisticas(true); }}
+
         onAgregar={()=>{
 
           setShowAddArticle(true);
@@ -209,6 +213,8 @@ export default function Dashboard({ user }){
           setShowGastos(true);
         }}
 
+        onEstadisticas={()=>{ setShowClientes(false); setShowEstadisticas(true); }}
+
       />
 
     );
@@ -262,6 +268,8 @@ export default function Dashboard({ user }){
           setShowGastos(true);
         }}
 
+        onEstadisticas={()=>{ setShowLiquidaciones(false); setShowEstadisticas(true); }}
+
       />
 
     );
@@ -282,6 +290,23 @@ export default function Dashboard({ user }){
       onClientes={()=>{ setShowGastos(false); setShowClientes(true); }}
       onLiquidaciones={()=>{ setShowGastos(false); setShowLiquidaciones(true); }}
       onGastos={()=>{}}
+      onEstadisticas={()=>{ setShowGastos(false); setShowEstadisticas(true); }}
+    />;
+  }
+
+  if(showEstadisticas){
+    return <Estadisticas
+      articulos={articulos}
+      nombreUsuario={nombreUsuario}
+      onRefresh={cargarDatos}
+      onBack={()=>setShowEstadisticas(false)}
+      onHome={()=>setShowEstadisticas(false)}
+      onArticulos={()=>{ setShowEstadisticas(false); setShowArticulos(true); }}
+      onClientes={()=>{ setShowEstadisticas(false); setShowClientes(true); }}
+      onLiquidaciones={()=>{ setShowEstadisticas(false); setShowLiquidaciones(true); }}
+      onGastos={()=>{ setShowEstadisticas(false); setShowGastos(true); }}
+      onAgregar={()=>{ setShowEstadisticas(false); setShowAddArticle(true); }}
+      onEstadisticas={()=>{}}
     />;
   }
 
@@ -843,6 +868,7 @@ export default function Dashboard({ user }){
 
           onLiquidaciones={()=>setShowLiquidaciones(true)}
           onGastos={()=>setShowGastos(true)}
+          onEstadisticas={()=>setShowEstadisticas(true)}
 
         />
 

@@ -28,6 +28,7 @@ export default function Articulos({
   onClientes,
   onLiquidaciones,
   onGastos,
+  onEstadisticas,
 
 }) {
 
@@ -551,6 +552,7 @@ export default function Articulos({
 
             onLiquidaciones={onLiquidaciones}
             onGastos={onGastos}
+            onEstadisticas={onEstadisticas}
 
 
           />

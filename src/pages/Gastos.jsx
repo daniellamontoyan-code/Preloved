@@ -10,7 +10,7 @@ const today = () => {
   return date.toISOString().slice(0, 10);
 };
 
-export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiquidaciones, onGastos }) {
+export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiquidaciones, onGastos, onEstadisticas }) {
   const [gastos, setGastos] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);
@@ -149,7 +149,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
       </article>) : <div style={{ padding:"28px 18px", textAlign:"center", background:"white", borderRadius:20, color:"#777783" }}>Aún no hay gastos compartidos. Registra el primero con el botón de arriba.</div>}
     </div>
 
-    <BottomNav onHome={onHome || onBack} onArticulos={onArticulos} onAgregar={() => setShowForm(true)} onClientes={onClientes} onLiquidaciones={onLiquidaciones} onGastos={onGastos}/>
+    <BottomNav onHome={onHome || onBack} onArticulos={onArticulos} onAgregar={() => setShowForm(true)} onClientes={onClientes} onLiquidaciones={onLiquidaciones} onGastos={onGastos} onEstadisticas={onEstadisticas}/>
 
     {showForm && <>
       <div onClick={cerrarFormulario} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,.36)", zIndex:1100 }}/>
