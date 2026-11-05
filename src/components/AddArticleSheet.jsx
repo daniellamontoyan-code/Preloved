@@ -5,7 +5,7 @@ import NewClientSheet from "./NewClientSheet";
 import { generateArticleCode, createArticle, updateArticle } from "../lib/articles";
 import { getClients } from "../lib/clients";
 import { uploadArticleImage } from "../lib/storage";
-import { createSharedArticleSubcategory, DEFAULT_ARTICLE_CATEGORIES, getSharedArticleCategories, getSharedArticleSubcategories } from "../lib/categories";
+import { createSharedArticleCategory, createSharedArticleSubcategory, DEFAULT_ARTICLE_CATEGORIES, getSharedArticleCategories, getSharedArticleSubcategories } from "../lib/categories";
 
 const subcategories = {
   Ropa: ["Polos y tops", "Shorts", "Pantalones", "Faldas", "Vestidos", "Casacas", "Chompas"],
@@ -35,6 +35,8 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [descripcion, setDescripcion] = useState(article?.descripcion || "");
   const [categoria, setCategoria] = useState(article?.categoria || "");
   const [categoriasCompartidas, setCategoriasCompartidas] = useState([]);
+  const [categoriaNueva, setCategoriaNueva] = useState("");
+  const [guardandoCategoria, setGuardandoCategoria] = useState(false);
   const [subcategoriasCompartidas, setSubcategoriasCompartidas] = useState([]);
   const [subcategoriaNueva, setSubcategoriaNueva] = useState("");
   const [guardandoSubcategoria, setGuardandoSubcategoria] = useState(false);
@@ -89,6 +91,22 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
     setClientes(listaClientes);
 
+  }
+
+  async function agregarCategoria() {
+    const result = await createSharedArticleCategory(categoriaNueva);
+    if (result.error) {
+      alert(result.error);
+      setGuardandoCategoria(false);
+      return;
+    }
+    setCategoriasCompartidas((current) => [...new Set([...current, result.category])].sort((a, b) => a.localeCompare(b, "es")));
+    setCategoria(result.category);
+    setCategoriaNueva("");
+    setSubcategoria("");
+    setSubcategoriaOtra("");
+    setSubcategoriaNueva("");
+    setGuardandoCategoria(false);
   }
 
   async function agregarSubcategoria() {
@@ -435,6 +453,26 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
             .map((nombre) => <option key={nombre} value={nombre}>{nombre}</option>)}
 
         </select>
+
+        {categoria === "Otros" && (
+          <div style={{ display:"flex", gap:8, marginTop:-6, marginBottom:14 }}>
+            <input
+              placeholder="Nombre de nueva categoría"
+              value={categoriaNueva}
+              onChange={(event) => setCategoriaNueva(event.target.value)}
+              style={{ ...inputStyle, marginBottom:0, flex:1 }}
+              aria-label="Nombre de nueva categoría compartida"
+            />
+            <button
+              type="button"
+              disabled={!categoriaNueva.trim() || guardandoCategoria}
+              onClick={async () => { setGuardandoCategoria(true); await agregarCategoria(); }}
+              style={{ border:0, borderRadius:14, padding:"0 15px", minHeight:50, background:"#8B1E2D", color:"white", fontWeight:800, opacity:!categoriaNueva.trim() || guardandoCategoria ? .55 : 1 }}
+            >
+              {guardandoCategoria ? "Guardando…" : "Crear categoría para ambas"}
+            </button>
+          </div>
+        )}
 
         {categoria && (
           <>
