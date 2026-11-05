@@ -98,6 +98,10 @@ export default function Liquidaciones({
 
       comisionCherry,
 
+      comisionDani: Number(cliente.comisionDani ?? Math.ceil(Math.round(comisionCherry * 100) / 2) / 100),
+
+      comisionMafer: Number(cliente.comisionMafer ?? (Math.round(comisionCherry * 100) - Math.ceil(Math.round(comisionCherry * 100) / 2)) / 100),
+
       montoCliente,
 
     };
@@ -477,6 +481,12 @@ export default function Liquidaciones({
               valor={`- S/. ${formato(calculo.comisionCherry)}`}
 
             />
+
+            <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,.72)", color: "#594137", fontSize: 14, lineHeight: 1.5 }}>
+              <strong>Comisión repartida 50/50</strong>
+              <div>Dani: S/. {formato(calculo.comisionDani)}</div>
+              <div>Mafer: S/. {formato(calculo.comisionMafer)}</div>
+            </div>
 
 
 

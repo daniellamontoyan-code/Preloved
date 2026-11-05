@@ -84,6 +84,9 @@ export async function getLiquidaciones(){
 
 
     const ganancia = comision;
+    const comisionEnCentimos = Math.round(comision * 100);
+    const comisionDani = Math.ceil(comisionEnCentimos / 2) / 100;
+    const comisionMafer = (comisionEnCentimos - Math.ceil(comisionEnCentimos / 2)) / 100;
 
 
 
@@ -104,6 +107,10 @@ export async function getLiquidaciones(){
       totalVenta,
 
       comision,
+
+      comisionDani,
+
+      comisionMafer,
 
       liquidar,
 
@@ -242,6 +249,8 @@ export async function crearLiquidacion(cliente){
 
         monto_total:cliente.liquidar,
 
+        monto_comision:cliente.comision,
+
         cantidad_articulos:cliente.articulos,
 
         fecha_liquidacion:new Date(),
@@ -301,8 +310,6 @@ export async function getLastLiquidacion(clienteId){
       "cliente_id",
       clienteId
     )
-    .eq("owner_id", ownerId)
-
     .order(
       "fecha_liquidacion",
       {

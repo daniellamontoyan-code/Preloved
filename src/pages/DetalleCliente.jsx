@@ -28,6 +28,10 @@ export default function DetalleCliente({
 
   const [ultimaLiquidacion, setUltimaLiquidacion] = useState(null);
 
+  const comisionCentimos = Math.round(Number(ultimaLiquidacion?.monto_comision || 0) * 100);
+  const mitadDani = Math.ceil(comisionCentimos / 2) / 100;
+  const mitadMafer = (comisionCentimos - Math.ceil(comisionCentimos / 2)) / 100;
+
 
 
 
@@ -325,6 +329,11 @@ export default function DetalleCliente({
         }
 
       />
+
+      {ultimaLiquidacion?.monto_comision != null && <InfoCard
+        titulo="COMISIÓN PITUCAS · 50/50"
+        valor={<span>Dani: S/. {mitadDani.toFixed(2)}<br />Mafer: S/. {mitadMafer.toFixed(2)}</span>}
+      />}
 
 
 
