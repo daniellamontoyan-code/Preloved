@@ -494,21 +494,21 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
               <option value="Otra">Crear nueva subcategoría…</option>
             </select>
             {subcategoria === "Otra" && (
-              <div style={{ display:"flex", gap:8, marginTop:-6, marginBottom:14 }}>
+              <div style={{ display:"grid", gridTemplateColumns:"minmax(0, 1fr)", gap:8, marginTop:-6, marginBottom:14 }}>
                 <input
-                  placeholder="Nueva subcategoría"
+                  placeholder="Escribe la subcategoría nueva"
                   value={subcategoriaNueva || subcategoriaOtra}
                   onChange={(e)=>{ setSubcategoriaNueva(e.target.value); setSubcategoriaOtra(e.target.value); }}
-                  style={{ ...inputStyle, marginBottom:0, flex:1 }}
+                  style={{ ...inputStyle, marginBottom:0, width:"100%", boxSizing:"border-box" }}
                   aria-label="Nueva subcategoría compartida"
                 />
                 <button
                   type="button"
                   disabled={!(subcategoriaNueva || subcategoriaOtra).trim() || guardandoSubcategoria}
                   onClick={async () => { setGuardandoSubcategoria(true); await agregarSubcategoria(); }}
-                  style={{ border:0, borderRadius:14, padding:"0 15px", minHeight:50, background:"#8B1E2D", color:"white", fontWeight:800, opacity:!(subcategoriaNueva || subcategoriaOtra).trim() || guardandoSubcategoria ? .55 : 1 }}
+                  style={{ border:0, borderRadius:14, padding:"0 15px", minHeight:50, width:"100%", background:"#8B1E2D", color:"white", fontWeight:800, opacity:!(subcategoriaNueva || subcategoriaOtra).trim() || guardandoSubcategoria ? .55 : 1 }}
                 >
-                  {guardandoSubcategoria ? "Guardando…" : "Crear para ambas"}
+                  {guardandoSubcategoria ? "Guardando…" : "Guardar subcategoría para ambas"}
                 </button>
               </div>
             )}
