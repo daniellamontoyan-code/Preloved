@@ -40,6 +40,7 @@ export default function Articulos({
   const [categoriaFiltro, setCategoriaFiltro] = useState(categoria || "Todos");
   const [subcategoriaFiltro, setSubcategoriaFiltro] = useState(subcategoriaInicial);
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
+  const [soloIncompletos, setSoloIncompletos] = useState(false);
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
 
@@ -135,6 +136,8 @@ export default function Articulos({
 
 
   const textoBusqueda = busqueda.trim().toLowerCase();
+  const faltanDatos = item => !String(item.categoria || "").trim() || !String(item.subcategoria || "").trim();
+  const incompletosCount = articulos.filter(faltanDatos).length;
   const categoriasDisponibles = [...new Set(articulos.map(item => item.categoria).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "es"));
   let filtrados = articulos.filter(item => {
@@ -149,7 +152,8 @@ export default function Articulos({
       || (estadoFiltro === "Liquidado" && estado === "liquidado");
     const coincideCanal = canalSeleccionado === "Todos"
       || (canalSeleccionado === "Feria" ? item.publicar_feria !== false : item.publicar_web !== false);
-    return coincideBusqueda && coincideCategoria && coincideSubcategoria && coincideEstado && coincideCanal;
+    return coincideBusqueda && coincideCategoria && coincideSubcategoria && coincideEstado && coincideCanal
+      && (!soloIncompletos || faltanDatos(item));
   });
 
   if (modoFeria) filtrados = filtrados.filter(item => item.estado === "Disponible" && item.publicar_feria !== false);
@@ -364,6 +368,20 @@ export default function Articulos({
         }}
 
       />
+
+      <button
+        type="button"
+        onClick={() => setSoloIncompletos(value => !value)}
+        style={{
+          width:"100%", minHeight:48, marginBottom:16, padding:"10px 14px",
+          border:soloIncompletos ? "2px solid #8B1E2D" : "1px solid #E8C8CF",
+          borderRadius:15, background:soloIncompletos ? "#FFC9E3" : "#FFFFFF",
+          color:"#8B1E2D", fontSize:14, fontWeight:800, textAlign:"left",
+        }}
+      >
+        {soloIncompletos ? "✓ Mostrando solo artículos incompletos" : "Ver artículos sin categoría o subcategoría"}
+        <span style={{ float:"right" }}>{incompletosCount}</span>
+      </button>
 
 
 

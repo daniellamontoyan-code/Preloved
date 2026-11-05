@@ -19,6 +19,8 @@ export default function ProductCard({ articulo, cliente, colorCliente, onClick, 
     ? articulo.precio_venta
     : primaryChannel === "Web" ? articulo.precio_web || 0 : feriaPrice;
   const priceLabel = vendido ? "Vendido por" : primaryChannel;
+  const sinCategoria = !String(articulo.categoria || "").trim();
+  const sinSubcategoria = !String(articulo.subcategoria || "").trim();
 
 
 
@@ -189,8 +191,13 @@ export default function ProductCard({ articulo, cliente, colorCliente, onClick, 
           </span>
         )}
 
+        {(sinCategoria || sinSubcategoria) && <div style={{ display:"flex", flexWrap:"wrap", gap:5, marginTop:6 }}>
+          {sinCategoria && <span style={{ padding:"3px 8px", borderRadius:999, background:"#FFF3D6", color:"#8A5700", fontSize:11, fontWeight:750 }}>Falta categoría</span>}
+          {sinSubcategoria && <span style={{ padding:"3px 8px", borderRadius:999, background:"#FFF3D6", color:"#8A5700", fontSize:11, fontWeight:750 }}>Falta subcategoría</span>}
+        </div>}
+
         {
-          articulo.categoria && (
+          (articulo.categoria || articulo.subcategoria || articulo.talla) && (
 
             <span
 
