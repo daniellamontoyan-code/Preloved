@@ -5,7 +5,7 @@ import NewClientSheet from "./NewClientSheet";
 import { generateArticleCode, createArticle, updateArticle } from "../lib/articles";
 import { getClients } from "../lib/clients";
 import { uploadArticleImage } from "../lib/storage";
-import { createSharedArticleCategory, DEFAULT_ARTICLE_CATEGORIES, getSharedArticleCategories } from "../lib/categories";
+import { createSharedArticleSubcategory, DEFAULT_ARTICLE_CATEGORIES, getSharedArticleCategories, getSharedArticleSubcategories } from "../lib/categories";
 
 const subcategories = {
   Ropa: ["Polos y tops", "Shorts", "Pantalones", "Faldas", "Vestidos", "Casacas", "Chompas"],
@@ -35,8 +35,9 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [descripcion, setDescripcion] = useState(article?.descripcion || "");
   const [categoria, setCategoria] = useState(article?.categoria || "");
   const [categoriasCompartidas, setCategoriasCompartidas] = useState([]);
-  const [categoriaNueva, setCategoriaNueva] = useState("");
-  const [guardandoCategoria, setGuardandoCategoria] = useState(false);
+  const [subcategoriasCompartidas, setSubcategoriasCompartidas] = useState([]);
+  const [subcategoriaNueva, setSubcategoriaNueva] = useState("");
+  const [guardandoSubcategoria, setGuardandoSubcategoria] = useState(false);
   const [subcategoria, setSubcategoria] = useState(!existingSubcategory ? "" : hasSuggestedSubcategory ? existingSubcategory : "Otra");
   const [subcategoriaOtra, setSubcategoriaOtra] = useState(hasSuggestedSubcategory ? "" : existingSubcategory);
   const [talla, setTalla] = useState(article?.talla || "");
@@ -60,6 +61,14 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
   }, []);
 
+  useEffect(() => {
+    let activo = true;
+    getSharedArticleSubcategories(categoria).then((items) => {
+      if (activo) setSubcategoriasCompartidas(items);
+    });
+    return () => { activo = false; };
+  }, [categoria]);
+
 
 
 
@@ -82,19 +91,18 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
   }
 
-  async function agregarCategoria() {
-    const result = await createSharedArticleCategory(categoriaNueva);
+  async function agregarSubcategoria() {
+    const result = await createSharedArticleSubcategory(categoria, subcategoriaNueva);
     if (result.error) {
       alert(result.error);
-      setGuardandoCategoria(false);
+      setGuardandoSubcategoria(false);
       return;
     }
-    setCategoriasCompartidas((current) => [...new Set([...current, result.category])].sort((a, b) => a.localeCompare(b, "es")));
-    setCategoria(result.category);
-    setCategoriaNueva("");
-    setSubcategoria("");
+    setSubcategoriasCompartidas((current) => [...new Set([...current, result.subcategory])].sort((a, b) => a.localeCompare(b, "es")));
+    setSubcategoria(result.subcategory);
+    setSubcategoriaNueva("");
     setSubcategoriaOtra("");
-    setGuardandoCategoria(false);
+    setGuardandoSubcategoria(false);
   }
 
 
@@ -148,6 +156,19 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
     setLoading(true);
 
+    let subcategoriaFinal = subcategoria === "Otra" ? subcategoriaOtra.trim() : subcategoria;
+
+    if (subcategoria === "Otra" && subcategoriaFinal) {
+      const result = await createSharedArticleSubcategory(categoria, subcategoriaFinal);
+      if (result.error) {
+        alert(result.error);
+        setLoading(false);
+        return;
+      }
+      subcategoriaFinal = result.subcategory;
+      setSubcategoriasCompartidas((current) => [...new Set([...current, result.subcategory])].sort((a, b) => a.localeCompare(b, "es")));
+    }
+
 
 
     let urlFoto = null;
@@ -178,7 +199,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       descripcion,
 
       categoria,
-      subcategoria: subcategoria === "Otra" ? subcategoriaOtra.trim() : subcategoria,
+      subcategoria: subcategoriaFinal,
       talla,
       publico_objetivo: publicoObjetivo,
 
@@ -415,26 +436,6 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
         </select>
 
-        {categoria === "Otros" && (
-          <div style={{ display:"flex", gap:8, marginTop:-6, marginBottom:14 }}>
-            <input
-              placeholder="Nombre de nueva categoría"
-              value={categoriaNueva}
-              onChange={(event) => setCategoriaNueva(event.target.value)}
-              style={{ ...inputStyle, marginBottom:0, flex:1 }}
-              aria-label="Nombre de nueva categoría compartida"
-            />
-            <button
-              type="button"
-              disabled={!categoriaNueva.trim() || guardandoCategoria}
-              onClick={async () => { setGuardandoCategoria(true); await agregarCategoria(); }}
-              style={{ border:0, borderRadius:14, padding:"0 15px", minHeight:50, background:"#8B1E2D", color:"white", fontWeight:800, opacity:!categoriaNueva.trim() || guardandoCategoria ? .55 : 1 }}
-            >
-              {guardandoCategoria ? "Guardando…" : "Crear para ambas"}
-            </button>
-          </div>
-        )}
-
         {categoria && (
           <>
             <select
@@ -449,15 +450,29 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
               {(subcategories[categoria] || []).map((item) => (
                 <option key={item} value={item}>{item}</option>
               ))}
-              <option value="Otra">Otra</option>
+              {subcategoriasCompartidas
+                .filter((nombre) => !(subcategories[categoria] || []).includes(nombre))
+                .map((nombre) => <option key={nombre} value={nombre}>{nombre}</option>)}
+              <option value="Otra">Crear nueva subcategoría…</option>
             </select>
             {subcategoria === "Otra" && (
-              <input
-                placeholder="Escribe la subcategoría"
-                value={subcategoriaOtra}
-                onChange={(e)=>setSubcategoriaOtra(e.target.value)}
-                style={inputStyle}
-              />
+              <div style={{ display:"flex", gap:8, marginTop:-6, marginBottom:14 }}>
+                <input
+                  placeholder="Nueva subcategoría"
+                  value={subcategoriaNueva || subcategoriaOtra}
+                  onChange={(e)=>{ setSubcategoriaNueva(e.target.value); setSubcategoriaOtra(e.target.value); }}
+                  style={{ ...inputStyle, marginBottom:0, flex:1 }}
+                  aria-label="Nueva subcategoría compartida"
+                />
+                <button
+                  type="button"
+                  disabled={!(subcategoriaNueva || subcategoriaOtra).trim() || guardandoSubcategoria}
+                  onClick={async () => { setGuardandoSubcategoria(true); await agregarSubcategoria(); }}
+                  style={{ border:0, borderRadius:14, padding:"0 15px", minHeight:50, background:"#8B1E2D", color:"white", fontWeight:800, opacity:!(subcategoriaNueva || subcategoriaOtra).trim() || guardandoSubcategoria ? .55 : 1 }}
+                >
+                  {guardandoSubcategoria ? "Guardando…" : "Crear para ambas"}
+                </button>
+              </div>
             )}
           </>
         )}
