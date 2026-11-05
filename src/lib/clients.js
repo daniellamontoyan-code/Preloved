@@ -66,6 +66,7 @@ export async function createClient(cliente) {
         porcentaje_comision:
           Number(cliente.porcentaje_comision),
         compartido: cliente.compartido === true,
+        color: cliente.color || "#8B1E2D",
         owner_id:ownerId,
 
       }
@@ -127,6 +128,8 @@ export async function updateClient(id, cliente){
         Number(cliente.porcentaje_comision),
 
       compartido: cliente.compartido === true,
+
+      color: cliente.color || "#8B1E2D",
 
     })
     .eq(

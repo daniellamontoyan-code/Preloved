@@ -18,9 +18,9 @@ $$;
 revoke all on function public.is_cherry_member() from public, anon;
 grant execute on function public.is_cherry_member() to authenticated, anon;
 
--- Let the two Cherry Club accounts identify who registered a shared expense.
-drop policy if exists "read Cherry Club teammates" on public.usuarios;
-create policy "read Cherry Club teammates" on public.usuarios
+-- Let the two Pitucas accounts identify who registered a shared expense.
+drop policy if exists "read Pitucas teammates" on public.usuarios;
+create policy "read Pitucas teammates" on public.usuarios
   for select to authenticated
   using (public.is_cherry_member());
 

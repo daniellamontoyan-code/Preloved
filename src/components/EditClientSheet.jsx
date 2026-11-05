@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 
 import { updateClient, deleteClient } from "../lib/clients";
+import { CLIENT_COLORS } from "../lib/clientColors";
 
 
 
@@ -22,6 +23,7 @@ export default function EditClientSheet({
   );
 
   const [compartido,setCompartido] = useState(Boolean(cliente.compartido));
+  const [color,setColor] = useState(cliente.color || CLIENT_COLORS[0].valor);
 
   const [loading,setLoading] = useState(false);
 
@@ -49,6 +51,8 @@ export default function EditClientSheet({
         porcentaje_comision:comision,
 
         compartido,
+
+        color,
 
       }
 
@@ -165,6 +169,8 @@ export default function EditClientSheet({
           width:"100%",
 
           maxWidth:"430px",
+          maxHeight:"90vh",
+          overflowY:"auto",
 
           background:"#FFFFFF",
 
@@ -260,6 +266,13 @@ export default function EditClientSheet({
           <input type="checkbox" checked={compartido} onChange={event => setCompartido(event.target.checked)} style={{ width:19, height:19, accentColor:"#8B1E2D", flexShrink:0, marginTop:1 }} />
           <span>Cliente de ambas (Dani y Mafer)</span>
         </label>
+
+        <div style={{ marginBottom:20 }}>
+          <div style={{ marginBottom:10, color:"#594137", fontSize:14, fontWeight:750 }}>Color para identificar sus prendas</div>
+          <div style={{ display:"flex", flexWrap:"wrap", gap:12 }}>
+            {CLIENT_COLORS.map(option => <button key={option.valor} type="button" title={option.nombre} aria-label={`Color ${option.nombre}`} aria-pressed={color === option.valor} onClick={() => setColor(option.valor)} style={{ width:34, height:34, borderRadius:"50%", background:option.valor, border:color === option.valor ? "3px solid #383B3B" : "2px solid white", boxShadow:"0 0 0 1px rgba(89,65,55,.24)", cursor:"pointer" }}/>) }
+          </div>
+        </div>
 
 
 

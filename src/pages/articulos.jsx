@@ -8,6 +8,10 @@ import AddArticleSheet from "../components/AddArticleSheet";
 import SaleSheet from "../components/SaleSheet";
 
 import { getArticles, getPendingSales, syncPendingSales } from "../lib/articles";
+import { getClients } from "../lib/clients";
+import { getClientColor } from "../lib/clientColors";
+
+const prioridadEstado = (estado) => String(estado || "").trim().toLowerCase() === "disponible" ? 0 : 1;
 
 
 
@@ -29,6 +33,7 @@ export default function Articulos({
 
 
   const [articulos, setArticulos] = useState([]);
+  const [clientesById, setClientesById] = useState(new Map());
   const [busqueda, setBusqueda] = useState("");
   const [canalSeleccionado, setCanalSeleccionado] = useState(canalInicial);
   const [categoriaFiltro, setCategoriaFiltro] = useState(categoria || "Todos");
@@ -83,7 +88,9 @@ export default function Articulos({
   async function cargarArticulos(){
 
 
-    const data = await getArticles();
+    const [data, clientesData] = await Promise.all([getArticles(), getClients()]);
+
+    setClientesById(new Map((clientesData || []).map(cliente => [String(cliente.id), cliente])));
 
 
 
@@ -103,14 +110,6 @@ export default function Articulos({
 
 
 
-
-      const prioridadEstado = (estado) => {
-      const valor = (estado || "").trim().toLowerCase();
-      if (valor === "disponible") return 0;
-      if (valor === "vendido") return 1;
-      if (valor === "liquidado") return 2;
-      return 3;
-    };
 
     lista.sort((a, b) => {
       const diferenciaEstado =
@@ -160,14 +159,7 @@ export default function Articulos({
     .filter(Boolean))].sort((a, b) => a.localeCompare(b, "es"));
 
   filtrados.sort((a, b) => {
-    const prioridad = estado => {
-      const valor = String(estado || "").trim().toLowerCase();
-      if (valor === "disponible") return 0;
-      if (valor === "vendido") return 1;
-      if (valor === "liquidado") return 2;
-      return 3;
-    };
-    return prioridad(a.estado) - prioridad(b.estado)
+    return prioridadEstado(a.estado) - prioridadEstado(b.estado)
       || (a.descripcion || "").localeCompare(b.descripcion || "");
   });
 
@@ -454,6 +446,8 @@ export default function Articulos({
                 key={item.id}
 
                 articulo={item}
+                cliente={clientesById.get(String(item.cliente))}
+                colorCliente={getClientColor(clientesById.get(String(item.cliente))?.color)}
                 feria={modoFeria}
                 canal={canalSeleccionado === "Todos" ? null : canalSeleccionado}
                 onQuickSale={setShowSale}

@@ -1,4 +1,4 @@
-export default function ProductCard({ articulo, onClick, onQuickSale, feria = false, canal = null }) {
+export default function ProductCard({ articulo, cliente, colorCliente, onClick, onQuickSale, feria = false, canal = null }) {
 
 
   function abrirDetalle(){
@@ -179,6 +179,13 @@ export default function ProductCard({ articulo, onClick, onQuickSale, feria = fa
             }}
           >
             {estadoNormalizado === "vendido" ? "VENDIDO · POR LIQUIDAR" : "LIQUIDADO"}
+          </span>
+        )}
+
+        {cliente && (
+          <span style={{ display:"flex", alignItems:"center", gap:6, marginTop:6, color:"#594137", fontSize:12, fontWeight:750 }}>
+            <span aria-hidden="true" style={{ width:10, height:10, flexShrink:0, borderRadius:"50%", background:colorCliente?.valor || "#8B1E2D", boxShadow:"0 0 0 2px #FFFFFF, 0 0 0 3px rgba(89,65,55,.22)" }}/>
+            {cliente.nombre}{cliente.compartido ? " · Ambas" : ""}
           </span>
         )}
 

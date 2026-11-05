@@ -9,6 +9,7 @@ import DetalleCliente from "./DetalleCliente";
 
 import { getClients } from "../lib/clients";
 import { getArticles } from "../lib/articles";
+import { getClientColor } from "../lib/clientColors";
 
 
 
@@ -30,41 +31,6 @@ export default function Clientes({
   const [showAddClient, setShowAddClient] = useState(false);
 
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null);
-
-
-
-
-
-
-  const colores = [
-
-    {
-      fondo:"#FFC9E3",
-      texto:"#FF6B9E"
-    },
-
-    {
-      fondo:"#FFC9E3",
-      texto:"#8B1E2D"
-    },
-
-    {
-      fondo:"#FFC9E3",
-      texto:"#8B1E2D"
-    },
-
-    {
-      fondo:"#FFC9E3",
-      texto:"#8B1E2D"
-    },
-
-    {
-      fondo:"#FFC9E3",
-      texto:"#8B1E2D"
-    }
-
-  ];
-
 
 
 
@@ -121,6 +87,7 @@ export default function Clientes({
 
 
   }
+
 
 
 
@@ -337,10 +304,10 @@ export default function Clientes({
         clientes.length > 0 ? (
 
 
-          clientes.map((cliente,index)=>{
+          clientes.map(cliente=>{
 
 
-            const color = colores[index % colores.length];
+            const color = getClientColor(cliente.color);
 
 
 
@@ -406,6 +373,7 @@ export default function Clientes({
                 >
 
                   {cliente.nombre}
+                  <span aria-hidden="true" style={{ display:"inline-block", width:11, height:11, marginLeft:8, verticalAlign:"middle", borderRadius:"50%", background:color.valor, boxShadow:"0 0 0 2px #FFFFFF, 0 0 0 3px rgba(89,65,55,.18)" }}/>
                   {cliente.compartido && <span style={{ display:"inline-block", verticalAlign:"middle", marginLeft:8, padding:"4px 8px", borderRadius:999, background:"#FFC9E3", color:"#8B1E2D", fontSize:10, fontWeight:800 }}>AMBAS</span>}
 
                 </h3>
@@ -439,7 +407,7 @@ export default function Clientes({
 
                       gap:"5px",
 
-                      background:"#FFC9E3",
+                      background:color?.fondo || "#FFC9E3",
 
                       padding:"6px 10px",
 
