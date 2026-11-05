@@ -48,7 +48,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const now = new Date();
     const days = rango === "all" ? null : Number(rango);
     const cutoff = days ? new Date(now.getTime() - days * 86400000) : null;
-    const sold = articulosActualizados.filter(item => String(item.estado || "").toLowerCase() === "vendido");
+    const sold = articulosActualizados.filter(item => ["vendido", "liquidado"].includes(String(item.estado || "").trim().toLowerCase()));
     const periodSales = sold.filter(item => {
       if (!cutoff) return true;
       const date = saleDate(item);
