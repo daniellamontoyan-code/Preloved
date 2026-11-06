@@ -7,6 +7,12 @@ import EditClientSheet from "../components/EditClientSheet";
 import { getArticles } from "../lib/articles";
 import { getLastLiquidacion } from "../lib/liquidaciones";
 
+const estadoNormalizado = estado => String(estado || "").trim().toLowerCase();
+const estadoOrden = estado => ({ disponible:0, vendido:1, liquidado:2 }[estadoNormalizado(estado)] ?? 3);
+const estadoEtiqueta = estado => ({ disponible:"Disponible", vendido:"Vendido", liquidado:"Liquidado" }[estadoNormalizado(estado)] || estado || "Sin estado");
+const estadoFondo = estado => ({ disponible:"#E8F7ED", vendido:"#FDE9E8", liquidado:"#FFF3CD" }[estadoNormalizado(estado)] || "#F0F0F0");
+const estadoTexto = estado => ({ disponible:"#28733B", vendido:"#A52A2A", liquidado:"#805B00" }[estadoNormalizado(estado)] || "#594137");
+
 
 
 export default function DetalleCliente({
@@ -18,6 +24,8 @@ export default function DetalleCliente({
 
 
   const [articulos, setArticulos] = useState([]);
+
+  const [filtroEstado, setFiltroEstado] = useState("Todos");
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
 
@@ -61,7 +69,7 @@ export default function DetalleCliente({
 
       articulo => articulo.cliente === clienteActual.id
 
-    );
+    ).sort((a, b) => estadoOrden(a.estado) - estadoOrden(b.estado));
 
 
 
@@ -83,6 +91,10 @@ export default function DetalleCliente({
 
 
   }
+
+  const opcionesEstado = ["Todos", "Disponible", "Vendido", "Liquidado"];
+  const contarEstado = estado => articulos.filter(item => estadoNormalizado(item.estado) === estado.toLowerCase()).length;
+  const articulosFiltrados = articulos.filter(item => filtroEstado === "Todos" || estadoNormalizado(item.estado) === filtroEstado.toLowerCase());
 
 
 
@@ -331,8 +343,10 @@ export default function DetalleCliente({
       />
 
       {ultimaLiquidacion?.monto_comision != null && <InfoCard
-        titulo="COMISIÓN PITUCAS · 50/50"
-        valor={<span>Dani: S/. {mitadDani.toFixed(2)}<br />Mafer: S/. {mitadMafer.toFixed(2)}</span>}
+        titulo={clienteActual.compartido ? "COMISIÓN PITUCAS · 50/50" : "COMISIÓN PITUCAS"}
+        valor={clienteActual.compartido
+          ? <span>Dani: S/. {mitadDani.toFixed(2)}<br />Mafer: S/. {mitadMafer.toFixed(2)}</span>
+          : `S/. ${Number(ultimaLiquidacion.monto_comision).toFixed(2)}`}
       />}
 
 
@@ -402,6 +416,26 @@ export default function DetalleCliente({
 
 
       <div
+        role="group"
+        aria-label="Filtrar artículos por estado"
+        style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:5, marginBottom:16 }}
+      >
+        {opcionesEstado.map(estado => {
+          const cantidad = estado === "Todos" ? articulos.length : contarEstado(estado);
+          const activo = filtroEstado === estado;
+          return <button
+            key={estado}
+            type="button"
+            aria-pressed={activo}
+            onClick={() => setFiltroEstado(estado)}
+            style={{ flex:"0 0 auto", border:activo ? "1px solid #8B1E2D" : "1px solid #E6D5CC", borderRadius:999, padding:"9px 13px", background:activo ? "#8B1E2D" : "#FFFFFF", color:activo ? "#FFFFFF" : "#594137", fontSize:13, fontWeight:750, cursor:"pointer" }}
+          >
+            {estado} · {cantidad}
+          </button>;
+        })}
+      </div>
+
+      <div
 
         style={{
 
@@ -420,10 +454,10 @@ export default function DetalleCliente({
 
       {
 
-        articulos.length > 0 ? (
+        articulosFiltrados.length > 0 ? (
 
 
-          articulos.map(item=>(
+          articulosFiltrados.map(item=>(
 
 
             <button
@@ -599,6 +633,10 @@ export default function DetalleCliente({
 
                 </div>
 
+                <span style={{ display:"inline-flex", marginTop:7, padding:"4px 9px", borderRadius:999, background:estadoFondo(item.estado), color:estadoTexto(item.estado), fontSize:11, fontWeight:800 }}>
+                  {estadoEtiqueta(item.estado)}
+                </span>
+
 
               </div>
 
@@ -658,7 +696,7 @@ export default function DetalleCliente({
 
           >
 
-            No tiene artículos registrados
+            {articulos.length === 0 ? "No tiene artículos registrados" : `No hay artículos con estado “${filtroEstado}”`}
 
 
           </div>
