@@ -27,6 +27,8 @@ export default function Clientes({
 
   const [clientes, setClientes] = useState([]);
 
+  const [filtroArticulos, setFiltroArticulos] = useState("Todos");
+
   const [showAddArticle, setShowAddArticle] = useState(false);
 
   const [showAddClient, setShowAddClient] = useState(false);
@@ -61,13 +63,8 @@ export default function Clientes({
 
 
     const clientesConCantidad = clientesData.map(cliente=>{
-
-
-      const cantidad = articulosData.filter(
-
-        articulo => articulo.cliente === cliente.id
-
-      ).length;
+      const articulosCliente = articulosData.filter(articulo => articulo.cliente === cliente.id);
+      const contar = estado => articulosCliente.filter(articulo => String(articulo.estado || "").trim().toLowerCase() === estado).length;
 
 
 
@@ -75,7 +72,10 @@ export default function Clientes({
 
         ...cliente,
 
-        cantidad,
+        cantidad:articulosCliente.length,
+        cantidadDisponible:contar("disponible"),
+        cantidadVendida:contar("vendido"),
+        cantidadLiquidada:contar("liquidado"),
 
       };
 
@@ -96,6 +96,17 @@ export default function Clientes({
 
 
 
+
+  const filtrosArticulos = [
+    { id:"Todos", label:"Todos", count:clientes.reduce((sum, cliente) => sum + cliente.cantidad, 0) },
+    { id:"Disponible", label:"Disponibles", count:clientes.reduce((sum, cliente) => sum + cliente.cantidadDisponible, 0) },
+    { id:"Vendido", label:"Vendidos", count:clientes.reduce((sum, cliente) => sum + cliente.cantidadVendida, 0) },
+    { id:"Liquidado", label:"Liquidados", count:clientes.reduce((sum, cliente) => sum + cliente.cantidadLiquidada, 0) },
+  ];
+  const clientesFiltrados = filtroArticulos === "Todos" ? clientes : clientes.filter(cliente => {
+    const key = { Disponible:"cantidadDisponible", Vendido:"cantidadVendida", Liquidado:"cantidadLiquidada" }[filtroArticulos];
+    return cliente[key] > 0;
+  });
 
   if(clienteSeleccionado){
 
@@ -284,6 +295,21 @@ export default function Clientes({
 
 
 
+      <div role="group" aria-label="Filtrar clientes por estado de sus prendas" style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:5, marginBottom:16 }}>
+        {filtrosArticulos.map(filtro => {
+          const activo = filtroArticulos === filtro.id;
+          return <button
+            key={filtro.id}
+            type="button"
+            aria-pressed={activo}
+            onClick={() => setFiltroArticulos(filtro.id)}
+            style={{ flex:"0 0 auto", border:activo ? "1px solid #8B1E2D" : "1px solid #E6D5CC", borderRadius:999, padding:"9px 13px", background:activo ? "#8B1E2D" : "#FFFFFF", color:activo ? "#FFFFFF" : "#594137", fontSize:13, fontWeight:750, cursor:"pointer" }}
+          >
+            {filtro.label} · {filtro.count}
+          </button>;
+        })}
+      </div>
+
       <div
 
         style={{
@@ -302,10 +328,10 @@ export default function Clientes({
 
       {
 
-        clientes.length > 0 ? (
+        clientesFiltrados.length > 0 ? (
 
 
-          clientes.map(cliente=>{
+          clientesFiltrados.map(cliente=>{
 
 
             const color = getClientColor(cliente.color);
@@ -462,7 +488,15 @@ export default function Clientes({
 
                 </div>
 
-
+                <div style={{ display:"flex", flexWrap:"wrap", gap:6, marginTop:10 }}>
+                  {[
+                    { label:"Disponibles", cantidad:cliente.cantidadDisponible, color:"#28733B", fondo:"#E8F7ED" },
+                    { label:"Vendidos", cantidad:cliente.cantidadVendida, color:"#A52A2A", fondo:"#FDE9E8" },
+                    { label:"Liquidados", cantidad:cliente.cantidadLiquidada, color:"#805B00", fondo:"#FFF3CD" },
+                  ].map(resumen => <span key={resumen.label} style={{ background:resumen.fondo, color:resumen.color, padding:"5px 9px", borderRadius:999, fontSize:11, fontWeight:750 }}>
+                    {resumen.label} {resumen.cantidad}
+                  </span>)}
+                </div>
 
               </div>
 
@@ -512,7 +546,7 @@ export default function Clientes({
 
           >
 
-            No tienes clientes registrados
+            {clientes.length === 0 ? "No tienes clientes registrados" : `No hay clientes con prendas “${filtroArticulos.toLowerCase()}”`}
 
 
           </div>
