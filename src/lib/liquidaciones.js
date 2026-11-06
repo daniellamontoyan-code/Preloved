@@ -2,6 +2,8 @@ import { getCurrentUserId, supabase } from "./supabase";
 
 import { getClients } from "./clients";
 import { getArticles } from "./articles";
+import { getCurrentAppUser } from "./usuarios";
+import { commissionShares } from "./commission";
 
 
 
@@ -10,9 +12,11 @@ import { getArticles } from "./articles";
 export async function getLiquidaciones(){
 
 
-  const clientes = await getClients();
-
-  const articulos = await getArticles();
+  const [clientes, articulos, usuario] = await Promise.all([
+    getClients(),
+    getArticles(),
+    getCurrentAppUser(),
+  ]);
 
 
 
@@ -83,10 +87,12 @@ export async function getLiquidaciones(){
 
 
 
+    const { dani:comisionDani, mafer:comisionMafer } = commissionShares(
+      comision,
+      cliente.compartido === true,
+      usuario?.nombre,
+    );
     const ganancia = comision;
-    const comisionEnCentimos = Math.round(comision * 100);
-    const comisionDani = Math.ceil(comisionEnCentimos / 2) / 100;
-    const comisionMafer = (comisionEnCentimos - Math.ceil(comisionEnCentimos / 2)) / 100;
 
 
 
@@ -101,6 +107,10 @@ export async function getLiquidaciones(){
       nombre:cliente.nombre,
 
       porcentaje,
+
+      compartido:cliente.compartido === true,
+
+      comisionTitular:usuario?.nombre || "esta cuenta",
 
       articulos:articulosCliente.length,
 

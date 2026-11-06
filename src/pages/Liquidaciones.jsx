@@ -7,6 +7,7 @@ import {
   getLiquidaciones,
   crearLiquidacion
 } from "../lib/liquidaciones";
+import { commissionShares } from "../lib/commission";
 
 import { liquidarArticulosCliente } from "../lib/articles";
 
@@ -85,6 +86,8 @@ export default function Liquidaciones({
 
       total * (porcentaje / 100);
 
+    const shares = commissionShares(comisionCherry, cliente.compartido === true, cliente.comisionTitular);
+
 
 
     const montoCliente =
@@ -99,9 +102,9 @@ export default function Liquidaciones({
 
       comisionCherry,
 
-      comisionDani: Number(cliente.comisionDani ?? Math.ceil(Math.round(comisionCherry * 100) / 2) / 100),
+      comisionDani: Number(cliente.comisionDani ?? shares.dani),
 
-      comisionMafer: Number(cliente.comisionMafer ?? (Math.round(comisionCherry * 100) - Math.ceil(Math.round(comisionCherry * 100) / 2)) / 100),
+      comisionMafer: Number(cliente.comisionMafer ?? shares.mafer),
 
       montoCliente,
 
@@ -484,9 +487,14 @@ export default function Liquidaciones({
             />
 
             <div style={{ marginTop: 10, padding: "12px 14px", borderRadius: 16, background: "rgba(255,255,255,.72)", color: "#594137", fontSize: 14, lineHeight: 1.5 }}>
-              <strong>Comisión repartida 50/50</strong>
-              <div>Dani: S/. {formato(calculo.comisionDani)}</div>
-              <div>Mafer: S/. {formato(calculo.comisionMafer)}</div>
+              {cliente.compartido ? <>
+                <strong>Comisión repartida 50/50 · cliente compartido</strong>
+                <div>Dani: S/. {formato(calculo.comisionDani)}</div>
+                <div>Mafer: S/. {formato(calculo.comisionMafer)}</div>
+              </> : <>
+                <strong>Cliente personal · comisión íntegra para {cliente.comisionTitular}</strong>
+                <div>S/. {formato(calculo.comisionCherry)}</div>
+              </>}
             </div>
 
 

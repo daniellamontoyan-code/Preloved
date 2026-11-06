@@ -3,6 +3,7 @@ import { BarChart3, ChevronLeft, Clock3, RefreshCw, Shirt, Store, Users, Wallet 
 import BottomNav from "../components/BottomNav";
 import { getArticles } from "../lib/articles";
 import { getClients } from "../lib/clients";
+import { commissionShares } from "../lib/commission";
 
 const money = value => `S/ ${Number(value || 0).toFixed(2)}`;
 const salePrice = article => Number(article.precio_venta || 0);
@@ -55,22 +56,21 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       return date && date >= cutoff;
     });
     const revenue = periodSales.reduce((sum, item) => sum + salePrice(item), 0);
-    // The Pitucas commission is calculated per client, then split 50/50.
-    // Use the same cent rounding as the liquidation screen.
+    // Shared clients split Pitucas commission 50/50; personal clients belong
+    // entirely to the signed-in member.
     const salesByClient = new Map();
     for (const item of periodSales) {
       const clientId = String(item.cliente || "");
       const client = mapaClientes.get(clientId);
       if (!clientId || !client) continue;
-      const entry = salesByClient.get(clientId) || { total:0, percentage:Number(client.porcentaje_comision || 0) };
+      const entry = salesByClient.get(clientId) || { total:0, percentage:Number(client.porcentaje_comision || 0), shared:client.compartido === true };
       entry.total += salePrice(item);
       salesByClient.set(clientId, entry);
     }
     const personalCommission = [...salesByClient.values()].reduce((sum, entry) => {
-      const commissionCents = Math.round(entry.total * (entry.percentage / 100) * 100);
-      const daniCents = Math.ceil(commissionCents / 2);
-      const maferCents = commissionCents - daniCents;
-      return sum + (nombreUsuario?.toLowerCase().includes("mafer") ? maferCents : daniCents) / 100;
+      const commission = entry.total * (entry.percentage / 100);
+      const shares = commissionShares(commission, entry.shared, nombreUsuario);
+      return sum + (nombreUsuario?.toLowerCase().includes("mafer") ? shares.mafer : shares.dani);
     }, 0);
     const byChannel = ["Feria", "Web", "Sin canal"].map(name => {
       const items = periodSales.filter(item => channelName(item) === name);
@@ -129,9 +129,9 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     </section>
 
     <section style={{ ...card, border:"1px solid #FF6B9E", background:"#FFF5F8" }}>
-      <div style={{ display:"flex", alignItems:"center", gap:9, color:"#8B1E2D", fontWeight:750 }}><Wallet size={18}/> Tu parte de la comisión · 50/50</div>
+      <div style={{ display:"flex", alignItems:"center", gap:9, color:"#8B1E2D", fontWeight:750 }}><Wallet size={18}/> Tu comisión de Pitucas</div>
       <strong style={{ display:"block", color:"#8B1E2D", fontSize:28, marginTop:8 }}>{money(metricas.personalCommission)}</strong>
-      <div style={subValue}>Calculada con los porcentajes actuales de tus clientes y las ventas del periodo. No incluye gastos del negocio.</div>
+      <div style={subValue}>Clientes personales: comisión completa para ti. Clientes compartidos: reparto 50/50. No incluye gastos del negocio.</div>
     </section>
 
     <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:13 }}>
