@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ChevronLeft, Wifi, WifiOff } from "lucide-react";
+import { ChevronLeft, Filter, Search, Wifi, WifiOff, X } from "lucide-react";
 
 import ProductCard from "../components/ProductCard";
 import DetalleArticulo from "./DetalleArticulo";
@@ -41,6 +41,7 @@ export default function Articulos({
   const [subcategoriaFiltro, setSubcategoriaFiltro] = useState(subcategoriaInicial);
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [soloIncompletos, setSoloIncompletos] = useState(false);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
   const posicionListaRef = useRef(0);
@@ -146,6 +147,8 @@ export default function Articulos({
   const textoBusqueda = busqueda.trim().toLowerCase();
   const faltanDatos = item => !String(item.categoria || "").trim() || !String(item.subcategoria || "").trim();
   const incompletosCount = articulos.filter(faltanDatos).length;
+  const filtrosActivos = Number(canalSeleccionado !== "Todos") + Number(categoriaFiltro !== "Todos")
+    + Number(Boolean(subcategoriaFiltro)) + Number(estadoFiltro !== "Todos") + Number(soloIncompletos);
   const categoriasDisponibles = [...new Set(articulos.map(item => item.categoria).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "es"));
   let filtrados = articulos.filter(item => {
@@ -321,126 +324,48 @@ export default function Articulos({
         </div>
         {pendientes > 0 && <span style={{ fontSize:12, color:"#A45B00", fontWeight:700 }}>{pendientes} venta{pendientes === 1 ? "" : "s"} por sincronizar</span>}
       </div>
-      <div style={{ marginBottom:16 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Ver artículos de</div>
-        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
-          {["Todos", "Feria", "Web"].map(canal => (
-            <button key={canal} onClick={() => { setCanalSeleccionado(canal); if (canal !== "Feria") setModoFeria(false); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 16px", background:canalSeleccionado === canal ? "#8B1E2D" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800 }}>
-              {canal === "Web" ? "Página web" : canal}
-            </button>
-          ))}
-        </div>
-      </div>
-      <button onClick={() => setModoFeria(value => { const next = !value; if (next) setCanalSeleccionado("Feria"); return next; })} style={{ width:"100%", height:46, marginBottom:16, border:0, borderRadius:15, background: modoFeria ? "#8B1E2D" : "#FFC9E3", color: modoFeria ? "white" : "#8B1E2D", fontSize:14, fontWeight:800 }}>
-        {modoFeria ? "✓ Modo venta feria activo" : "Activar modo venta feria"}
-      </button>
-
-
-
-
-
-
-
-
-
-      <input
-
-        placeholder="Buscar artículo"
-
-        value={busqueda}
-
-        onChange={(e)=>setBusqueda(e.target.value)}
-
-        style={{
-
-          width:"100%",
-
-          height:"54px",
-
-          borderRadius:"18px",
-
-          border:"1px solid #E5E7EB",
-
-          padding:"0 18px",
-
-          fontSize:"16px",
-
-          marginBottom:"16px",
-
-          background:"#FFFFFF",
-
-          outline:"none",
-
-        }}
-
-      />
-
-      <button
-        type="button"
-        onClick={() => setSoloIncompletos(value => !value)}
-        style={{
-          width:"100%", minHeight:48, marginBottom:16, padding:"10px 14px",
-          border:soloIncompletos ? "2px solid #8B1E2D" : "1px solid #E8C8CF",
-          borderRadius:15, background:soloIncompletos ? "#FFC9E3" : "#FFFFFF",
-          color:"#8B1E2D", fontSize:14, fontWeight:800, textAlign:"left",
-        }}
-      >
-        {soloIncompletos ? "✓ Mostrando solo artículos incompletos" : "Ver artículos sin categoría o subcategoría"}
-        <span style={{ float:"right" }}>{incompletosCount}</span>
-      </button>
-
-
-
-
-
-
-
-
-      <div style={{ marginBottom:14 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Categoría</div>
-        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
-          {["Todos", ...categoriasDisponibles].map(nombre => (
-            <button key={nombre} onClick={() => { setCategoriaFiltro(nombre); setSubcategoriaFiltro(""); }} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:categoriaFiltro === nombre ? "#8B1E2D" : "#FFFFFF", color:categoriaFiltro === nombre ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
-              {nombre === "Todos" ? "Todas" : nombre}
-            </button>
-          ))}
-        </div>
+      <div className="articles-quick-tools">
+        <label className="articles-search">
+          <Search size={19}/>
+          <input placeholder="Buscar por nombre o código" value={busqueda} onChange={event => setBusqueda(event.target.value)}/>
+        </label>
+        <button className={`articles-filter-toggle${mostrarFiltros ? " active" : ""}`} type="button" onClick={() => setMostrarFiltros(value => !value)} aria-expanded={mostrarFiltros}>
+          {mostrarFiltros ? <X size={18}/> : <Filter size={18}/>} Filtros{filtrosActivos > 0 && <span>{filtrosActivos}</span>}
+        </button>
+        <button className={`articles-fair-toggle${modoFeria ? " active" : ""}`} type="button" onClick={() => setModoFeria(value => { const next = !value; if (next) setCanalSeleccionado("Feria"); return next; })}>
+          {modoFeria ? "✓ Feria" : "Modo feria"}
+        </button>
       </div>
 
-      {subcategoriasDisponibles.length > 0 && <div style={{ marginBottom:20 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Tipo de artículo</div>
-        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
-          {["", ...subcategoriasDisponibles].map(tipo => (
-            <button key={tipo || "todas-subcategorias"} onClick={() => setSubcategoriaFiltro(tipo)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:subcategoriaFiltro === tipo ? "#FFC9E3" : "#FFFFFF", color:subcategoriaFiltro === tipo ? "#8B1E2D" : "#555563", fontWeight:700, fontSize:13 }}>
-              {tipo || "Todos los tipos"}
-            </button>
-          ))}
-        </div>
-      </div>}
+      {mostrarFiltros && <section className="articles-filter-panel" aria-label="Filtros de artículos">
+        <label className="articles-filter-field">Canal
+          <select value={canalSeleccionado} onChange={event => { setCanalSeleccionado(event.target.value); setModoFeria(false); }}>
+            <option value="Todos">Todos los canales</option><option value="Feria">Feria</option><option value="Web">Página web</option>
+          </select>
+        </label>
+        <label className="articles-filter-field">Categoría
+          <select value={categoriaFiltro} onChange={event => { setCategoriaFiltro(event.target.value); setSubcategoriaFiltro(""); }}>
+            <option value="Todos">Todas las categorías</option>{categoriasDisponibles.map(nombre => <option key={nombre} value={nombre}>{nombre}</option>)}
+          </select>
+        </label>
+        <label className="articles-filter-field">Subcategoría
+          <select value={subcategoriaFiltro} onChange={event => setSubcategoriaFiltro(event.target.value)}>
+            <option value="">Todas las subcategorías</option>{subcategoriasDisponibles.map(tipo => <option key={tipo} value={tipo}>{tipo}</option>)}
+          </select>
+        </label>
+        <label className="articles-filter-field">Estado
+          <select value={estadoFiltro} onChange={event => setEstadoFiltro(event.target.value)}>
+            <option value="Todos">Todos los estados</option><option value="Disponible">Disponible</option><option value="Vendido">Vendido · por liquidar</option><option value="Liquidado">Liquidado</option>
+          </select>
+        </label>
+        <label className="articles-incomplete-toggle">
+          <input type="checkbox" checked={soloIncompletos} onChange={event => setSoloIncompletos(event.target.checked)}/>
+          <span>Sin categoría o subcategoría</span><strong>{incompletosCount}</strong>
+        </label>
+        <button className="articles-clear-filters" type="button" onClick={() => { setCanalSeleccionado("Todos"); setCategoriaFiltro("Todos"); setSubcategoriaFiltro(""); setEstadoFiltro("Todos"); setSoloIncompletos(false); setModoFeria(false); }}>Limpiar filtros</button>
+      </section>}
 
-      <div style={{ marginBottom:16 }}>
-        <div style={{ fontSize:13, fontWeight:800, color:"#7B7B88", marginBottom:8 }}>Estado</div>
-        <div style={{ display:"flex", gap:8, overflowX:"auto", paddingBottom:2 }}>
-          {[
-            ["Todos", "Todos"],
-            ["Disponible", "Disponible"],
-            ["Vendido", "Vendido · por liquidar"],
-            ["Liquidado", "Liquidado"],
-          ].map(([valor, etiqueta]) => (
-            <button key={valor} onClick={() => setEstadoFiltro(valor)} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"10px 14px", background:estadoFiltro === valor ? "#8B1E2D" : "#FFFFFF", color:estadoFiltro === valor ? "#FFFFFF" : "#555563", fontWeight:700, fontSize:13 }}>
-              {etiqueta}
-            </button>
-          ))}
-        </div>
-      </div>
-
-
-
-
-
-
-
-
+      <div className="articles-result-count">{filtrados.length} artículo{filtrados.length === 1 ? "" : "s"}</div>
 
       <div
         className="app-article-grid"
