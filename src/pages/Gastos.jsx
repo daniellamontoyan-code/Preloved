@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Camera, ChevronLeft, ImagePlus, Pencil, ReceiptText, X } from "lucide-react";
 import BottomNav from "../components/BottomNav";
-import { createExpense, getExpenseMembers, getExpenses, updateExpense } from "../lib/gastos";
+import { createExpense, getExpenseMembers, getExpenses, settleSharedExpense, updateExpense } from "../lib/gastos";
 import { getCurrentUserId } from "../lib/supabase";
 
 const today = () => {
@@ -25,6 +25,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   const [preview, setPreview] = useState(null);
   const [evidenciaAbierta, setEvidenciaAbierta] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [settlingExpenseId, setSettlingExpenseId] = useState(null);
 
   const cargarGastos = useCallback(async () => {
     const data = await getExpenses();
@@ -99,7 +100,24 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   const mafer = miembros.find(persona => persona.nombre.trim().toLowerCase() === "mafer");
   const pagadoDani = gastos.reduce((sum, gasto) => sum + (gasto.compartido && (gasto.pagado_por || gasto.owner_id) === dani?.id ? Number(gasto.monto || 0) : 0), 0);
   const pagadoMafer = gastos.reduce((sum, gasto) => sum + (gasto.compartido && (gasto.pagado_por || gasto.owner_id) === mafer?.id ? Number(gasto.monto || 0) : 0), 0);
-  const saldo = (pagadoDani - pagadoMafer) / 2;
+  const ajustesSaldados = gastos.reduce((sum, gasto) => {
+    if (!gasto.compartido || !gasto.deuda_saldada_at) return sum;
+    const montoSaldado = Number(gasto.deuda_saldada_monto || Number(gasto.monto || 0) / 2);
+    return sum + ((gasto.pagado_por || gasto.owner_id) === dani?.id ? -montoSaldado : montoSaldado);
+  }, 0);
+  const saldo = (pagadoDani - pagadoMafer) / 2 + ajustesSaldados;
+
+  async function marcarDeudaSaldada(gasto) {
+    const montoDeuda = Number(gasto.deuda_saldada_monto || Number(gasto.monto || 0) / 2);
+    const deudora = miembros.find(persona => persona.id !== (gasto.pagado_por || gasto.owner_id));
+    const pagadora = gasto.pagado_por_nombre || "la otra persona";
+    if (!window.confirm(`¿Confirmas que ${deudora?.nombre || "la otra persona"} ya pagó S/ ${formato(montoDeuda)} a ${pagadora}? La liquidación quedará registrada en el historial.`)) return;
+    setSettlingExpenseId(gasto.id);
+    const success = await settleSharedExpense(gasto.id);
+    setSettlingExpenseId(null);
+    if (!success) return alert("No se pudo saldar la deuda. Actualiza la sección e inténtalo nuevamente.");
+    await cargarGastos();
+  }
 
   return <div className="app-page" style={{ minHeight:"100vh", background:"#F5EBDD", padding:"60px 20px 125px", maxWidth:430, margin:"0 auto" }}>
     <header style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
@@ -130,23 +148,36 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
     <button onClick={() => setShowForm(true)} style={{ width:"100%", height:54, border:0, borderRadius:17, background:"#FFC9E3", color:"#8B1E2D", fontSize:16, fontWeight:800, marginBottom:18 }}>+ Registrar gasto</button>
 
     <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-      {gastos.length ? gastos.map(gasto => <article key={gasto.id} style={{ background:"white", borderRadius:19, padding:16, boxShadow:"0 8px 24px rgba(0,0,0,.045)" }}>
+      {gastos.length ? gastos.map(gasto => {
+        const contraparte = miembros.find(persona => persona.id !== (gasto.pagado_por || gasto.owner_id));
+        const montoDeuda = Number(gasto.deuda_saldada_monto || Number(gasto.monto || 0) / 2);
+        const puedeSaldar = gasto.compartido && !gasto.deuda_saldada_at && miembros.some(persona => persona.id === usuarioActual) && contraparte;
+        const loPagoUsuarioActual = (gasto.pagado_por || gasto.owner_id) === usuarioActual;
+        return <article key={gasto.id} style={{ background:"white", borderRadius:19, padding:16, boxShadow:"0 8px 24px rgba(0,0,0,.045)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"flex-start" }}>
           <div style={{ minWidth:0 }}>
             <strong style={{ display:"block", color:"#383B3B", fontSize:15, overflowWrap:"anywhere" }}>{gasto.descripcion}</strong>
             <div style={{ marginTop:5, color:"#777783", fontSize:12 }}>{new Date(`${gasto.fecha}T12:00:00`).toLocaleDateString("es-PE")} · {gasto.registrado_por}</div>
             <div style={{ marginTop:5, color:gasto.compartido ? "#8B1E2D" : "#777783", fontSize:12, fontWeight:750 }}>{gasto.compartido ? `Compartido 50/50 · Lo pagó ${gasto.pagado_por_nombre}` : `Gasto personal · Lo asumió ${gasto.pagado_por_nombre}`}</div>
+            {gasto.compartido && (gasto.deuda_saldada_at
+              ? <div style={{ display:"inline-flex", flexWrap:"wrap", gap:4, marginTop:9, padding:"6px 9px", borderRadius:999, color:"#28733B", background:"#E8F5E9", fontSize:11, fontWeight:800 }}>
+                  Deuda saldada · S/ {formato(montoDeuda)} · {new Date(gasto.deuda_saldada_at).toLocaleDateString("es-PE")}{gasto.deuda_saldada_por_nombre ? ` · Confirmó ${gasto.deuda_saldada_por_nombre}` : ""}
+                </div>
+              : contraparte && <div style={{ marginTop:7, color:"#777783", fontSize:12 }}>{contraparte.nombre} debe S/ {formato(montoDeuda)} a {gasto.pagado_por_nombre} por este gasto.</div>)}
           </div>
           <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:9 }}>
             <strong style={{ whiteSpace:"nowrap", color:"#8B1E2D", fontSize:17 }}>S/ {formato(gasto.monto)}</strong>
-            {gasto.owner_id === usuarioActual && <button type="button" onClick={() => editarGasto(gasto)} style={editButton}><Pencil size={14}/> Editar</button>}
+            {gasto.owner_id === usuarioActual && !gasto.deuda_saldada_at && <button type="button" onClick={() => editarGasto(gasto)} style={editButton}><Pencil size={14}/> Editar</button>}
           </div>
         </div>
+        {puedeSaldar && <button type="button" disabled={settlingExpenseId === gasto.id} onClick={() => marcarDeudaSaldada(gasto)} style={{ ...settleButton, opacity:settlingExpenseId === gasto.id ? .65 : 1 }}>
+          {settlingExpenseId === gasto.id ? "Registrando pago…" : `${loPagoUsuarioActual ? "Registrar pago recibido" : "Marcar como pagada"} · S/ ${formato(montoDeuda)}`}
+        </button>}
         {gasto.evidencia_url && <button onClick={() => setEvidenciaAbierta(gasto.evidencia_url)} style={{ display:"flex", alignItems:"center", gap:10, border:0, padding:0, marginTop:13, background:"transparent", color:"#8B1E2D", fontWeight:750 }}>
           <img src={gasto.evidencia_url} alt="Evidencia del gasto" style={{ width:54, height:54, borderRadius:12, objectFit:"cover" }}/>
           Ver evidencia
         </button>}
-      </article>) : <div style={{ padding:"28px 18px", textAlign:"center", background:"white", borderRadius:20, color:"#777783" }}>Aún no hay gastos compartidos. Registra el primero con el botón de arriba.</div>}
+      </article>}) : <div style={{ padding:"28px 18px", textAlign:"center", background:"white", borderRadius:20, color:"#777783" }}>Aún no hay gastos compartidos. Registra el primero con el botón de arriba.</div>}
     </div>
 
     <BottomNav onHome={onHome || onBack} onArticulos={onArticulos} onAgregar={() => setShowForm(true)} onClientes={onClientes} onLiquidaciones={onLiquidaciones} onGastos={onGastos} onEstadisticas={onEstadisticas}/>
@@ -198,4 +229,5 @@ const labelStyle = { display:"block", margin:"13px 0 7px", color:"#565662", font
 const inputStyle = { width:"100%", boxSizing:"border-box", height:50, borderRadius:14, border:"1px solid #E3E3E8", padding:"0 13px", fontSize:16, background:"white" };
 const photoButton = { height:46, border:0, borderRadius:14, background:"#FFC9E3", color:"#8B1E2D", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 };
 const editButton = { display:"flex", alignItems:"center", gap:5, border:0, borderRadius:11, padding:"7px 9px", background:"#FFC9E3", color:"#8B1E2D", fontSize:12, fontWeight:800 };
+const settleButton = { display:"flex", alignItems:"center", justifyContent:"center", width:"100%", minHeight:44, marginTop:13, border:0, borderRadius:13, padding:"9px 12px", background:"#FFC9E3", color:"#8B1E2D", fontSize:13, fontWeight:800 };
 const saveButton = { width:"100%", height:54, border:0, borderRadius:16, background:"#8B1E2D", color:"white", fontWeight:850, fontSize:16 };

@@ -39,7 +39,17 @@ export async function getExpenses() {
     ...expense,
     registrado_por: names.get(expense.owner_id) || "Pitucas Pero Misias",
     pagado_por_nombre: names.get(expense.pagado_por || expense.owner_id) || "Sin indicar",
+    deuda_saldada_por_nombre: names.get(expense.deuda_saldada_por) || null,
   }));
+}
+
+export async function settleSharedExpense(expenseId) {
+  const { data, error } = await supabase.rpc("settle_shared_expense", { expense_id: expenseId });
+  if (error) {
+    console.error("ERROR MARCANDO LA DEUDA COMO SALDADA:", error);
+    return false;
+  }
+  return data === true;
 }
 
 export async function createExpense(expense) {
@@ -99,6 +109,7 @@ export async function updateExpense(expenseId, expense) {
     })
     .eq("id", expenseId)
     .eq("owner_id", ownerId)
+    .is("deuda_saldada_at", null)
     .select("*")
     .maybeSingle();
 
