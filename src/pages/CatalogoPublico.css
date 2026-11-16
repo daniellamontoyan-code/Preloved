@@ -403,14 +403,16 @@
   .catalog-header { height: 76px; margin-bottom: 0; }
   .catalog-brand { width: 112px; height: 42px; }
   .catalog-cart-icon { grid-column: 3; justify-self: end; }
-  .catalog-hero { min-height: 440px; margin-top: 24px; padding-top: 34px; padding-bottom: 205px; background-color: #F5EBDD; }
+  .catalog-hero { min-height: 0; margin-top: 24px; padding: 30px 22px 22px; flex-direction: column; align-items: stretch; background-color: #F5EBDD; }
   .catalog-hero-copy { max-width: 100%; }
   .catalog-hero-mascot {
-    top: auto;
-    right: 50%;
-    bottom: 12px;
-    width: min(68%, 245px);
-    transform: translateX(50%);
+    position: relative;
+    inset: auto;
+    align-self: center;
+    width: min(62%, 230px);
+    max-height: none;
+    margin: 12px auto 0;
+    transform: none;
   }
   .catalog-tuesday-banner { padding-bottom: 20px; }
 }
