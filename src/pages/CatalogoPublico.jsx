@@ -1,13 +1,24 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowUpRight, Check, Minus, Plus, Search, Send, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import { getPublicCatalog } from "../lib/catalog";
 import { signArticleImages } from "../lib/storage";
 import "./CatalogoPublico.css";
 
 const instagramUrl = "https://www.instagram.com/pitucasperomisias.pe/";
+const publicCatalogCacheKey = "pitucas_public_catalog_v1";
+const publicCatalogCacheMaxAge = 12 * 60 * 60 * 1000;
 const newArticleBadgeMs = 7 * 24 * 60 * 60 * 1000;
 const isDemoPreview = import.meta.env.DEV && new URLSearchParams(window.location.search).get("demo") === "1";
 const demoWelcomeBanner = isDemoPreview && new URLSearchParams(window.location.search).get("welcome") === "1";
+function readCachedCatalog() {
+  try {
+    const cached = JSON.parse(window.localStorage.getItem(publicCatalogCacheKey) || "null");
+    if (!Number.isFinite(Number(cached?.savedAt)) || Date.now() - Number(cached.savedAt) > publicCatalogCacheMaxAge) return [];
+    return Array.isArray(cached?.articles) ? cached.articles : [];
+  } catch {
+    return [];
+  }
+}
 function wasRecentlyChanged(article) {
   const timestamps = [article.updated_at, article.created_at]
     .map(value => value ? new Date(value).getTime() : NaN)
@@ -32,7 +43,7 @@ const previewArticles = [
 ];
 
 export default function CatalogoPublico() {
-  const [articles, setArticles] = useState([]);
+  const [articles, setArticles] = useState(readCachedCatalog);
   const [photoUrls, setPhotoUrls] = useState({});
   const [loadedPhotos, setLoadedPhotos] = useState({});
   const [unavailablePhotos, setUnavailablePhotos] = useState({});
@@ -54,6 +65,7 @@ export default function CatalogoPublico() {
   const [copied, setCopied] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [displayCount, setDisplayCount] = useState(24);
+  const photoRetryIdsRef = useRef(new Map());
 
   useEffect(() => { loadCatalog(); }, []);
 
@@ -86,13 +98,26 @@ export default function CatalogoPublico() {
       setLoading(false);
       return;
     }
-    const result = await getPublicCatalog();
-    setArticles(result.articles.filter(item => typeof item.foto === "string" && item.foto.trim()));
-    setPhotoUrls({});
-    setLoadedPhotos({});
-    setUnavailablePhotos({});
-    setLoadError(Boolean(result.error));
-    setLoading(false);
+    try {
+      const result = await getPublicCatalog();
+      if (result.error) throw result.error;
+      const nextArticles = (result.articles || []).filter(item => typeof item.foto === "string" && item.foto.trim());
+      setArticles(nextArticles);
+      setPhotoUrls({});
+      setLoadedPhotos({});
+      setUnavailablePhotos({});
+      photoRetryIdsRef.current.clear();
+      try {
+        window.localStorage.setItem(publicCatalogCacheKey, JSON.stringify({ savedAt: Date.now(), articles: nextArticles }));
+      } catch { /* The live catalog still works when browser storage is unavailable. */ }
+    } catch (error) {
+      console.error("No se pudo actualizar el catálogo público:", error);
+      setLoadError(true);
+      // Leave the last recently cached catalog in place so a temporary request failure
+      // does not make the whole storefront look empty.
+    } finally {
+      setLoading(false);
+    }
   }
 
   const categories = useMemo(() => [
@@ -156,32 +181,72 @@ export default function CatalogoPublico() {
     return matchesSearch && matchesCategory && matchesSubcategory && matchesSize && matchesAudience && matchesMinPrice && matchesMaxPrice;
   }), [articles, search, category, subcategory, size, audience, priceMin, priceMax, photoUrls, unavailablePhotos]);
   const displayedArticles = useMemo(() => visibleArticles.slice(0, displayCount), [visibleArticles, displayCount]);
+  const photosPending = articles.some(item => item.foto && !photoUrls[item.id] && !unavailablePhotos[item.id]);
 
   useEffect(() => {
-    const photosToSign = articles.filter(item => item.foto && !photoUrls[item.id] && !unavailablePhotos[item.id]);
+    const photosToSign = articles.filter(item => item.foto);
     if (!photosToSign.length) return;
     let active = true;
-    signArticleImages(photosToSign).then((signed) => {
-      if (!active) return;
-      const urls = {};
-      const missingIds = [];
-      signed.forEach(item => {
-        if (typeof item.foto === "string" && /^https?:\/\//i.test(item.foto)) urls[item.id] = item.foto;
-        else missingIds.push(item.id);
-      });
-      setPhotoUrls(current => ({ ...current, ...urls }));
-      if (missingIds.length) setUnavailablePhotos(current => ({ ...current, ...Object.fromEntries(missingIds.map(id => [id, true])) }));
-    }).catch(() => {
-      if (active) setUnavailablePhotos(current => ({ ...current, ...Object.fromEntries(photosToSign.map(item => [item.id, true])) }));
-    });
+    const signWithRetries = async () => {
+      const batchSize = 24;
+      for (let offset = 0; offset < photosToSign.length && active; offset += batchSize) {
+        let pending = photosToSign.slice(offset, offset + batchSize);
+        for (let attempt = 0; pending.length && attempt < 3; attempt += 1) {
+          try {
+            const signed = await signArticleImages(pending);
+            if (!active) return;
+            const urls = {};
+            const unresolved = [];
+            signed.forEach(item => {
+              if (typeof item.foto === "string" && /^https?:\/\//i.test(item.foto)) urls[item.id] = item.foto;
+              else unresolved.push(item);
+            });
+            if (Object.keys(urls).length) setPhotoUrls(current => ({ ...current, ...urls }));
+            pending = unresolved;
+          } catch (error) {
+            console.error("No se pudieron firmar algunas fotos; se volverá a intentar:", error);
+          }
+          if (pending.length && attempt < 2) await new Promise(resolve => window.setTimeout(resolve, 700 * (attempt + 1)));
+        }
+        if (active && pending.length) {
+          setUnavailablePhotos(current => ({ ...current, ...Object.fromEntries(pending.map(item => [item.id, true])) }));
+        }
+      }
+    };
+    signWithRetries();
     return () => { active = false; };
-  }, [articles, photoUrls, unavailablePhotos]);
+  }, [articles]);
 
   function markPhotoLoaded(articleId) {
     setLoadedPhotos(current => ({ ...current, [articleId]: true }));
   }
 
-  function hideUnavailablePhoto(articleId) {
+  async function retryPhotoBeforeHiding(articleId) {
+    const retryStatus = photoRetryIdsRef.current.get(String(articleId));
+    if (retryStatus === "refreshing") return;
+    if (retryStatus === "retried") {
+      setUnavailablePhotos(current => ({ ...current, [articleId]: true }));
+      if (String(selectedArticle?.id) === String(articleId)) setSelectedArticle(null);
+      return;
+    }
+    photoRetryIdsRef.current.set(String(articleId), "refreshing");
+    const article = articles.find(item => String(item.id) === String(articleId));
+    if (!article) {
+      photoRetryIdsRef.current.set(String(articleId), "retried");
+      return;
+    }
+    try {
+      const [signed] = await signArticleImages([article]);
+      if (typeof signed?.foto === "string" && /^https?:\/\//i.test(signed.foto)) {
+        photoRetryIdsRef.current.set(String(articleId), "retried");
+        setLoadedPhotos(current => ({ ...current, [articleId]: false }));
+        setPhotoUrls(current => ({ ...current, [articleId]: signed.foto }));
+        return;
+      }
+    } catch (error) {
+      console.error("No se pudo renovar el enlace de la foto:", error);
+    }
+    photoRetryIdsRef.current.set(String(articleId), "retried");
     setUnavailablePhotos(current => ({ ...current, [articleId]: true }));
     if (String(selectedArticle?.id) === String(articleId)) setSelectedArticle(null);
   }
@@ -307,21 +372,21 @@ export default function CatalogoPublico() {
               <span className="catalog-count">{loading ? "Cargando…" : `${visibleArticles.length} piezas`}</span>
             </div>
 
-            {loading ? (
+            {visibleArticles.length === 0 && (loading || photosPending) ? (
           <div className="catalog-empty"><div className="catalog-loader"/><p>Estamos preparando las prendas…</p></div>
-        ) : loadError ? (
+        ) : loadError && articles.length === 0 ? (
           <div className="catalog-empty"><span>🍒</span><h3>El catálogo se está preparando</h3><p>Vuelve a intentarlo en un momento.</p><button onClick={loadCatalog}>Reintentar</button></div>
         ) : visibleArticles.length === 0 ? (
           <div className="catalog-empty"><span>♡</span><h3>{articles.length && Object.keys(photoUrls).some(id => !unavailablePhotos[id]) ? "No encontramos prendas con esos filtros" : "Pronto habrá nuevas piezas"}</h3><p>{articles.length && Object.keys(photoUrls).some(id => !unavailablePhotos[id]) ? "Prueba con otra categoría, talla, precio o búsqueda." : "Mostramos solo prendas con una foto cargada correctamente."}</p>{articles.length > 0 && Object.keys(photoUrls).some(id => !unavailablePhotos[id]) && <button onClick={clearFilters}>Ver todas las prendas</button>}</div>
         ) : (
           <div className="catalog-grid">
-            {displayedArticles.map(article => {
+            {displayedArticles.map((article, index) => {
               const inCart = cart.some(item => String(item.id) === String(article.id));
               return (
                 <article className={`catalog-product${loadedPhotos[article.id] ? " photo-ready" : " photo-pending"}`} key={article.id}>
                   <button className="catalog-product-open" type="button" onClick={() => setSelectedArticle(article)} aria-label={`Ver detalles de ${article.descripcion}`}>
                     <div className="catalog-product-photo">
-                      {photoUrls[article.id] && <img src={photoUrls[article.id]} alt={article.descripcion} loading="lazy" onLoad={() => markPhotoLoaded(article.id)} onError={() => hideUnavailablePhoto(article.id)}/>}
+                      {photoUrls[article.id] && <img src={photoUrls[article.id]} alt={article.descripcion} loading={index < 4 ? "eager" : "lazy"} fetchPriority={index < 4 ? "high" : "auto"} decoding="async" onLoad={() => markPhotoLoaded(article.id)} onError={() => retryPhotoBeforeHiding(article.id)}/>}
                       {wasRecentlyChanged(article) && <span className="catalog-new-tag">¡Nuevo!</span>}
                       {article.talla && <span className="catalog-size-tag">Talla {article.talla}</span>}
                     </div>
@@ -348,7 +413,7 @@ export default function CatalogoPublico() {
         <section className="catalog-detail-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-detail-title" onClick={event => event.stopPropagation()}>
           <button className="catalog-close catalog-detail-close" onClick={() => setSelectedArticle(null)} aria-label="Cerrar detalles"><X size={21}/></button>
           <div className="catalog-detail-photo">
-            {photoUrls[selectedArticle.id] && <img src={photoUrls[selectedArticle.id]} alt={selectedArticle.descripcion} onLoad={() => markPhotoLoaded(selectedArticle.id)} onError={() => hideUnavailablePhoto(selectedArticle.id)}/>}
+            {photoUrls[selectedArticle.id] && <img src={photoUrls[selectedArticle.id]} alt={selectedArticle.descripcion} onLoad={() => markPhotoLoaded(selectedArticle.id)} onError={() => retryPhotoBeforeHiding(selectedArticle.id)}/>}
             {selectedArticle.talla && <span className="catalog-size-tag">Talla {selectedArticle.talla}</span>}
           </div>
           <div className="catalog-detail-copy">

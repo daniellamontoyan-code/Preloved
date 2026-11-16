@@ -56,3 +56,39 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .brand-lockup-compact{gap:7px;margin:0;}
 .brand-lockup-compact img{width:104px;height:82px;object-fit:contain}
 @media(max-width:420px){.brand-lockup:not(.brand-lockup-compact) img{width:min(255px,74vw);max-height:225px}}
+
+@media (min-width: 760px) {
+  .app-page {
+    width: calc(100% - 64px) !important;
+    max-width: 1240px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding-left: 32px !important;
+    padding-right: 32px !important;
+  }
+
+  .app-page-detail {
+    max-width: 980px !important;
+  }
+
+  .app-page-articles .app-article-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px !important;
+  }
+
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .app-bottom-nav {
+    width: min(760px, calc(100% - 64px)) !important;
+    max-width: 760px !important;
+  }
+}
+
+@media (min-width: 1120px) {
+  .app-page-articles .app-article-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

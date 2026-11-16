@@ -143,7 +143,7 @@ export default function Clientes({
   return (
 
     <div
-
+      className="app-page"
       style={{
 
         minHeight:"100vh",

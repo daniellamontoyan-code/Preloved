@@ -363,7 +363,7 @@ export default function Dashboard({ user }){
   return (
 
     <div
-
+      className="app-page app-page-dashboard"
       style={{
 
         minHeight:"100vh",
@@ -543,6 +543,7 @@ export default function Dashboard({ user }){
 
 
         <div
+          className="dashboard-summary-grid"
 
           style={{
 

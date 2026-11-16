@@ -101,7 +101,7 @@ export default function Gastos({ onBack, onHome, onArticulos, onClientes, onLiqu
   const pagadoMafer = gastos.reduce((sum, gasto) => sum + (gasto.compartido && (gasto.pagado_por || gasto.owner_id) === mafer?.id ? Number(gasto.monto || 0) : 0), 0);
   const saldo = (pagadoDani - pagadoMafer) / 2;
 
-  return <div style={{ minHeight:"100vh", background:"#F5EBDD", padding:"60px 20px 125px", maxWidth:430, margin:"0 auto" }}>
+  return <div className="app-page" style={{ minHeight:"100vh", background:"#F5EBDD", padding:"60px 20px 125px", maxWidth:430, margin:"0 auto" }}>
     <header style={{ display:"flex", alignItems:"center", gap:12, marginBottom:18 }}>
       <button onClick={onBack} aria-label="Volver" style={iconButton}><ChevronLeft size={22}/></button>
       <div style={{ flex:1 }}>

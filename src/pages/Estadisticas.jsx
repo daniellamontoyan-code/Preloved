@@ -111,7 +111,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     : "Sin horas registradas";
   const sellerName = nombreUsuario?.toLowerCase().includes("mafer") ? "Mafer" : "Dani";
 
-  return <main style={{ minHeight:"100vh", background:"#F5EBDD", padding:"54px 18px 125px", maxWidth:470, margin:"0 auto", color:"#383B3B" }}>
+  return <main className="app-page" style={{ minHeight:"100vh", background:"#F5EBDD", padding:"54px 18px 125px", maxWidth:470, margin:"0 auto", color:"#383B3B" }}>
     <header style={{ display:"flex", alignItems:"center", gap:12, marginBottom:22 }}>
       <button onClick={onBack} aria-label="Volver" style={iconButton}><ChevronLeft size={22}/></button>
       <div style={{ flex:1 }}><h1 style={{ margin:0, fontSize:27 }}>Estadísticas</h1><div style={{ color:"#777783", fontSize:13, marginTop:3 }}>Tus ventas, {sellerName}</div></div>

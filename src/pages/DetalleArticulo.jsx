@@ -72,6 +72,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
     <>
 
       <div
+        className="app-page app-page-detail"
         style={{
           minHeight:"100vh",
           background:"#F5EBDD",

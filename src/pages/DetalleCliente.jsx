@@ -137,7 +137,7 @@ export default function DetalleCliente({
   return (
 
     <div
-
+      className="app-page app-page-detail"
       style={{
 
         minHeight:"100vh",

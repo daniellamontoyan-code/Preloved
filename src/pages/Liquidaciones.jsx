@@ -176,7 +176,7 @@ export default function Liquidaciones({
   return (
 
     <div
-
+      className="app-page"
       style={{
 
         minHeight:"100vh",

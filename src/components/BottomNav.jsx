@@ -6,7 +6,7 @@ const buttonStyle = {
 };
 
 export default function BottomNav({ onHome, onArticulos, onAgregar, onClientes, onLiquidaciones, onGastos, onEstadisticas }) {
-  return <nav aria-label="Navegación principal" style={{
+  return <nav className="app-bottom-nav" aria-label="Navegación principal" style={{
     position:"fixed", left:"50%", bottom:"18px", transform:"translateX(-50%)", width:"calc(100% - 32px)",
     maxWidth:"430px", height:"78px", background:"#FFFFFF", borderRadius:"28px", display:"grid",
     gridTemplateColumns:"repeat(7, minmax(0, 1fr))", justifyItems:"center", alignItems:"center",

@@ -5,6 +5,7 @@
   --ink: #383B3B;
   --muted: #594137;
   min-height: 100vh;
+  overflow-x: clip;
   color: var(--ink);
   background: #F5EBDD;
   font-family: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -297,6 +298,8 @@
   .catalog-hero h1 { max-width: 300px; font-size: 44px; }
   .catalog-hero-copy > p:not(.catalog-eyebrow) { max-width: 260px; font-size: 13px; }
   .catalog-hero-copy { max-width: 100%; }
+  .catalog-hero h1 { max-width: 100%; font-size: clamp(30px, 9vw, 42px); }
+  .catalog-hero h1 .catalog-hero-title-line + .catalog-hero-title-line { font-size: clamp(19px, 5.8vw, 25px); }
   .catalog-hero-copy > p:not(.catalog-eyebrow) { max-width: 100%; }
   .catalog-hero-mascot { right: 4%; bottom: 8px; width: 132px; max-height: 132px; opacity: .98; }
   .catalog-hero-details { max-width: 245px; gap: 7px; }
@@ -306,7 +309,8 @@
   .catalog-layout { display: block; }
   .catalog-toolbar { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 9px; margin-bottom: 17px; }
   .catalog-search { height: 46px; padding: 0 11px; }
-  .catalog-search input { font-size: 12px; }
+  .catalog-search input { font-size: 16px; }
+  .catalog-price-input input { font-size: 16px; }
   .catalog-toolbar .catalog-count { grid-column: 1 / -1; }
   .catalog-mobile-filter-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 46px; padding: 0 12px; border: 1px solid #eee2e4; border-radius: 12px; color: var(--cherry); background: white; font-size: 12px; font-weight: 750; }
   .catalog-mobile-filter-toggle > span { display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 50%; color: white; background: var(--cherry); font-size: 10px; }

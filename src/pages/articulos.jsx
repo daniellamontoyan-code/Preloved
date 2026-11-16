@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChevronLeft, Wifi, WifiOff } from "lucide-react";
 
 import ProductCard from "../components/ProductCard";
@@ -43,12 +43,20 @@ export default function Articulos({
   const [soloIncompletos, setSoloIncompletos] = useState(false);
 
   const [articuloSeleccionado, setArticuloSeleccionado] = useState(null);
+  const posicionListaRef = useRef(0);
+  const debeRestaurarPosicionRef = useRef(false);
 
   const [showAddArticle, setShowAddArticle] = useState(false);
   const [showSale, setShowSale] = useState(null);
   const [modoFeria, setModoFeria] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
   const [pendientes, setPendientes] = useState(getPendingSales(ownerId).length);
+
+  useLayoutEffect(() => {
+    if (articuloSeleccionado || !debeRestaurarPosicionRef.current) return;
+    debeRestaurarPosicionRef.current = false;
+    requestAnimationFrame(() => window.scrollTo({ top: posicionListaRef.current, behavior: "auto" }));
+  }, [articuloSeleccionado]);
 
 
 
@@ -208,7 +216,7 @@ export default function Articulos({
   return (
 
     <div
-
+      className="app-page app-page-articles"
       style={{
 
         minHeight:"100vh",
@@ -231,9 +239,7 @@ export default function Articulos({
 
 
       <div
-
         style={{
-
           display:"flex",
 
           alignItems:"center",
@@ -437,7 +443,7 @@ export default function Articulos({
 
 
       <div
-
+        className="app-article-grid"
         style={{
 
           display:"flex",
@@ -472,7 +478,8 @@ export default function Articulos({
                 onQuickSale={setShowSale}
 
                 onClick={(producto)=>{
-
+                  posicionListaRef.current = window.scrollY || document.documentElement.scrollTop;
+                  debeRestaurarPosicionRef.current = true;
                   setArticuloSeleccionado(producto);
 
                 }}
