@@ -254,8 +254,10 @@
 .catalog-sidebar-heading h3,.catalog-filter-group h4 { color: var(--cherry); font-family: "League Spartan", sans-serif; font-size: 15px; font-weight: 800; }
 .catalog-product { border-radius: 18px 18px 20px 17px; box-shadow: 3px 4px 0 rgba(139,30,45,.08); }
 .catalog-product:hover { box-shadow: 5px 8px 0 rgba(139,30,45,.13); }
-.catalog-product.photo-pending { opacity: 0; pointer-events: none; }
-.catalog-product.photo-ready { opacity: 1; transition: opacity .18s ease; }
+.catalog-product.photo-pending { opacity: 1; pointer-events: auto; }
+.catalog-product.photo-ready { opacity: 1; }
+.catalog-product-photo::before { content:"🍒"; position:absolute; z-index:0; inset:0; display:grid; place-items:center; color:var(--cherry); font-size:28px; }
+.catalog-product-photo img { position:relative; z-index:1; }
 .catalog-product-photo { background: #FFC9E3; }
 .catalog-size-tag { border: 1px solid var(--cherry); color: var(--cherry); background: var(--butter); }
 .catalog-product-category {
