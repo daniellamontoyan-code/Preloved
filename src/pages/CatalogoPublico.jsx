@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Check, Minus, Plus, Search, Send, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Minus, Plus, Search, Send, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import { getPublicCatalog } from "../lib/catalog";
 import { signArticleImages } from "../lib/storage";
 import "./CatalogoPublico.css";
@@ -68,6 +68,7 @@ const previewArticles = [
 export default function CatalogoPublico() {
   const [articles, setArticles] = useState(readCachedCatalog);
   const [photoUrls, setPhotoUrls] = useState({});
+  const [extraPhotoUrls, setExtraPhotoUrls] = useState({});
   const [loadedPhotos, setLoadedPhotos] = useState({});
   const [unavailablePhotos, setUnavailablePhotos] = useState({});
   const [loading, setLoading] = useState(true);
@@ -83,6 +84,7 @@ export default function CatalogoPublico() {
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
   const [termsOpen, setTermsOpen] = useState(false);
   const [dismissedDropKey, setDismissedDropKey] = useState("");
   const [copied, setCopied] = useState(false);
@@ -116,6 +118,7 @@ export default function CatalogoPublico() {
     if (isDemoPreview) {
       setArticles(previewArticles.filter(item => item.foto));
       setPhotoUrls({});
+      setExtraPhotoUrls({});
       setLoadedPhotos({});
       setUnavailablePhotos({});
       setLoading(false);
@@ -127,6 +130,7 @@ export default function CatalogoPublico() {
       const nextArticles = (result.articles || []).filter(item => typeof item.foto === "string" && item.foto.trim());
       setArticles(nextArticles);
       setPhotoUrls({});
+      setExtraPhotoUrls({});
       setLoadedPhotos({});
       setUnavailablePhotos({});
       photoRetryIdsRef.current.clear();
@@ -224,7 +228,7 @@ export default function CatalogoPublico() {
     if (!photosToSign.length) return;
     let active = true;
     const signWithRetries = async () => {
-      const batchSize = 24;
+      const batchSize = 64;
       for (let offset = 0; offset < photosToSign.length && active; offset += batchSize) {
         let pending = photosToSign.slice(offset, offset + batchSize);
         for (let attempt = 0; pending.length && attempt < 3; attempt += 1) {
@@ -232,12 +236,15 @@ export default function CatalogoPublico() {
             const signed = await signArticleImages(pending);
             if (!active) return;
             const urls = {};
+            const extras = {};
             const unresolved = [];
             signed.forEach(item => {
               if (typeof item.foto === "string" && /^https?:\/\//i.test(item.foto)) urls[item.id] = item.foto;
               else unresolved.push(item);
+              if (Array.isArray(item.fotos) && item.fotos.length) extras[item.id] = item.fotos;
             });
             if (Object.keys(urls).length) setPhotoUrls(current => ({ ...current, ...urls }));
+            if (Object.keys(extras).length) setExtraPhotoUrls(current => ({ ...current, ...extras }));
             pending = unresolved;
           } catch (error) {
             console.error("No se pudieron firmar algunas fotos; se volverá a intentar:", error);
@@ -262,7 +269,6 @@ export default function CatalogoPublico() {
     if (retryStatus === "refreshing") return;
     if (retryStatus === "retried") {
       setUnavailablePhotos(current => ({ ...current, [articleId]: true }));
-      if (String(selectedArticle?.id) === String(articleId)) setSelectedArticle(null);
       return;
     }
     photoRetryIdsRef.current.set(String(articleId), "refreshing");
@@ -277,6 +283,7 @@ export default function CatalogoPublico() {
         photoRetryIdsRef.current.set(String(articleId), "retried");
         setLoadedPhotos(current => ({ ...current, [articleId]: false }));
         setPhotoUrls(current => ({ ...current, [articleId]: signed.foto }));
+        if (Array.isArray(signed.fotos)) setExtraPhotoUrls(current => ({ ...current, [articleId]: signed.fotos }));
         return;
       }
     } catch (error) {
@@ -284,7 +291,6 @@ export default function CatalogoPublico() {
     }
     photoRetryIdsRef.current.set(String(articleId), "retried");
     setUnavailablePhotos(current => ({ ...current, [articleId]: true }));
-    if (String(selectedArticle?.id) === String(articleId)) setSelectedArticle(null);
   }
 
   function addToCart(article) {
@@ -420,7 +426,7 @@ export default function CatalogoPublico() {
               const inCart = cart.some(item => String(item.id) === String(article.id));
               return (
                 <article className={`catalog-product${loadedPhotos[article.id] ? " photo-ready" : " photo-pending"}`} key={article.id}>
-                  <button className="catalog-product-open" type="button" onClick={() => setSelectedArticle(article)} aria-label={`Ver detalles de ${article.descripcion}`}>
+                  <button className="catalog-product-open" type="button" onClick={() => { setSelectedPhotoIndex(0); setSelectedArticle(article); }} aria-label={`Ver detalles de ${article.descripcion}`}>
                     <div className="catalog-product-photo">
                       {photoUrls[article.id] && <img src={photoUrls[article.id]} alt={article.descripcion} loading={index < 4 ? "eager" : "lazy"} fetchPriority={index < 4 ? "high" : "auto"} decoding="async" onLoad={() => markPhotoLoaded(article.id)} onError={() => retryPhotoBeforeHiding(article.id)}/>}
                       {wasRecentlyChanged(article) && <span className="catalog-new-tag">¡Nuevo!</span>}
@@ -449,7 +455,24 @@ export default function CatalogoPublico() {
         <section className="catalog-detail-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-detail-title" onClick={event => event.stopPropagation()}>
           <button className="catalog-close catalog-detail-close" onClick={() => setSelectedArticle(null)} aria-label="Cerrar detalles"><X size={21}/></button>
           <div className="catalog-detail-photo">
-            {photoUrls[selectedArticle.id] && <img src={photoUrls[selectedArticle.id]} alt={selectedArticle.descripcion} onLoad={() => markPhotoLoaded(selectedArticle.id)} onError={() => retryPhotoBeforeHiding(selectedArticle.id)}/>}
+            {(() => {
+              const id = selectedArticle.id;
+              const gallery = [
+                ...(photoUrls[id] && !unavailablePhotos[id] ? [photoUrls[id]] : []),
+                ...(extraPhotoUrls[id] || []),
+              ];
+              const currentIndex = Math.min(selectedPhotoIndex, Math.max(0, gallery.length - 1));
+              return gallery.length
+                ? <>
+                  <img src={gallery[currentIndex]} alt={`${selectedArticle.descripcion} · foto ${currentIndex + 1} de ${gallery.length}`} onLoad={() => markPhotoLoaded(id)} onError={() => { const failingUrl = gallery[currentIndex]; if (failingUrl === photoUrls[id]) retryPhotoBeforeHiding(id); else setExtraPhotoUrls(current => ({ ...current, [id]: (current[id] || []).filter(url => url !== failingUrl) })); }}/>
+                  {gallery.length > 1 && <>
+                    <button type="button" className="catalog-gallery-arrow previous" aria-label="Foto anterior" onClick={() => setSelectedPhotoIndex(index => (index - 1 + gallery.length) % gallery.length)}><ChevronLeft size={24}/></button>
+                    <button type="button" className="catalog-gallery-arrow next" aria-label="Foto siguiente" onClick={() => setSelectedPhotoIndex(index => (index + 1) % gallery.length)}><ChevronRight size={24}/></button>
+                    <span className="catalog-gallery-count">{currentIndex + 1} / {gallery.length}</span>
+                  </>}
+                </>
+                : <div className="catalog-photo-placeholder" role="img" aria-label="La foto no está disponible"><span>🍒</span><small>La foto no cargó; aquí puedes ver los detalles</small></div>;
+            })()}
             {selectedArticle.talla && <span className="catalog-size-tag">Talla {selectedArticle.talla}</span>}
           </div>
           <div className="catalog-detail-copy">

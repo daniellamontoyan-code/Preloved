@@ -21,7 +21,7 @@ async function compressArticleImage(file) {
 
   // Enough resolution for the catalog grid and a full-screen phone detail view,
   // while keeping uploads much smaller than the phone's original image.
-  const maxSide = 1200;
+  const maxSide = 1000;
   const scale = Math.min(1, maxSide / Math.max(image.naturalWidth, image.naturalHeight));
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(image.naturalWidth * scale);
@@ -38,7 +38,7 @@ async function compressArticleImage(file) {
         ? resolve(result)
         : reject(new Error("No se pudo comprimir la foto.")),
       "image/jpeg",
-      0.72,
+      0.7,
     );
   });
 
@@ -148,7 +148,9 @@ export async function signExpenseEvidence(expenses) {
 }
 
 export async function signArticleImages(articles) {
-  const paths = [...new Set((articles || []).map(item => item.foto).filter(Boolean).filter(path => !/^https?:\/\//i.test(path)))];
+  const allPaths = (articles || []).flatMap(item => [item.foto, ...(Array.isArray(item.fotos) ? item.fotos : [])])
+    .filter(path => typeof path === "string" && path && !/^https?:\/\//i.test(path));
+  const paths = [...new Set(allPaths)];
   if (!paths.length) return articles || [];
   const { data, error } = await supabase.storage.from("articulos").createSignedUrls(paths, 86400);
   if (error) {
@@ -156,9 +158,23 @@ export async function signArticleImages(articles) {
     return articles || [];
   }
   const signedByPath = new Map((data || []).map(item => [item.path, item.signedUrl]));
-  return (articles || []).map(item => item.foto && signedByPath.has(item.foto)
-    ? { ...item, foto_path: item.foto, foto: signedByPath.get(item.foto) }
-    : item);
+  return (articles || []).map(item => {
+    const primaryPath = item.foto_path || item.foto;
+    const extraPaths = Array.isArray(item.fotos) ? item.fotos : [];
+    const primaryUrl = typeof primaryPath === "string" && /^https?:\/\//i.test(primaryPath)
+      ? primaryPath
+      : signedByPath.get(primaryPath) || item.foto;
+    const signedExtras = extraPaths.map(path => typeof path === "string" && /^https?:\/\//i.test(path)
+      ? path
+      : signedByPath.get(path)).filter(Boolean);
+    return {
+      ...item,
+      foto_path: primaryPath,
+      foto: primaryUrl,
+      fotos_paths: extraPaths.filter(path => typeof path === "string" && !/^https?:\/\//i.test(path)),
+      fotos: signedExtras,
+    };
+  });
 }
 
 export async function clearPrivatePhotoCache() {

@@ -29,8 +29,10 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
   const [foto, setFoto] = useState(null);
   const [preview, setPreview] = useState(article?.foto || null);
+  const [fotosNuevas, setFotosNuevas] = useState([]);
   const cameraInputRef = useRef(null);
   const galleryInputRef = useRef(null);
+  const extraPhotosInputRef = useRef(null);
 
   const [descripcion, setDescripcion] = useState(article?.descripcion || "");
   const [categoria, setCategoria] = useState(article?.categoria || "");
@@ -143,16 +145,34 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
 
   function seleccionarFoto(e){
+    const archivos = Array.from(e.target.files || []).filter(file => file.type.startsWith("image/"));
+    if (!archivos.length) return;
+    setFoto(archivos[0]);
+    setPreview(URL.createObjectURL(archivos[0]));
+    if (publicarWeb && archivos.length > 1) agregarFotosExtra(archivos.slice(1), true);
+    e.target.value = "";
+  }
 
-    const archivo = e.target.files[0];
+  function agregarFotosExtra(archivos, mainPhotoWillBeSet = false) {
+    const existentes = article?.fotos || [];
+    const yaHay = (foto || article?.foto || mainPhotoWillBeSet ? 1 : 0) + existentes.length + fotosNuevas.length;
+    const cupos = Math.max(0, 4 - yaHay);
+    const seleccionadas = Array.from(archivos || []).filter(file => file.type.startsWith("image/")).slice(0, cupos);
+    if (!seleccionadas.length) {
+      if (Array.from(archivos || []).length) alert("Cada prenda puede tener hasta 4 fotos en total.");
+      return;
+    }
+    const nuevas = seleccionadas.map(file => ({ file, preview: URL.createObjectURL(file) }));
+    setFotosNuevas(current => [...current, ...nuevas]);
+    if (seleccionadas.length < Array.from(archivos || []).length) alert("Se agregaron las fotos que cabían. El máximo es 4 por prenda.");
+  }
 
-    if(!archivo) return;
-
-
-    setFoto(archivo);
-
-    setPreview(URL.createObjectURL(archivo));
-
+  function quitarFotoNueva(index) {
+    setFotosNuevas(current => {
+      const quitar = current[index];
+      if (quitar?.preview) URL.revokeObjectURL(quitar.preview);
+      return current.filter((_, currentIndex) => currentIndex !== index);
+    });
   }
 
 
@@ -175,6 +195,16 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       return;
     }
 
+    if (publicarWeb && !categoria) {
+      alert("Elige una categoría para publicar la prenda en el catálogo web.");
+      return;
+    }
+
+    if (publicarWeb && !(foto || article?.foto)) {
+      alert("Agrega al menos una foto para publicar en el catálogo web.");
+      return;
+    }
+
     if (publicarFeria && (!Number(precio) || Number(precio) <= 0)) {
       alert("Ingresa un precio válido para la feria.");
       return;
@@ -189,9 +219,9 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
     setLoading(true);
 
-    let subcategoriaFinal = subcategoria === "Otra" ? subcategoriaOtra.trim() : subcategoria;
+    let subcategoriaFinal = publicarWeb && subcategoria === "Otra" ? subcategoriaOtra.trim() : subcategoria;
 
-    if (subcategoria === "Otra" && subcategoriaFinal) {
+    if (publicarWeb && subcategoria === "Otra" && subcategoriaFinal) {
       const result = await createSharedArticleSubcategory(categoria, subcategoriaFinal);
       if (result.error) {
         alert(result.error);
@@ -224,6 +254,24 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
     }
 
+    const fotosNuevasSubidas = [];
+    if (publicarWeb && fotosNuevas.length) {
+      for (const item of fotosNuevas) {
+        const path = await uploadArticleImage(item.file);
+        if (!path) {
+          alert("No se pudo subir una de las fotos extra. Inténtalo nuevamente.");
+          setLoading(false);
+          return;
+        }
+        fotosNuevasSubidas.push(path);
+      }
+    }
+
+    const fotosExistentes = article?.fotos_paths || [];
+    const fotosFinales = publicarWeb
+      ? [...fotosExistentes, ...fotosNuevasSubidas].slice(0, 3)
+      : fotosExistentes;
+
 
 
     const datosArticulo = {
@@ -231,13 +279,13 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       codigo,
       descripcion,
 
-      categoria,
-      subcategoria: subcategoriaFinal,
-      talla,
-      medidas: categoria === "Ropa" && publicarWeb
-        ? JSON.stringify({ campos:medidasCampos, notas:medidas.trim() })
-        : "",
-      publico_objetivo: publicoObjetivo,
+      categoria: publicarWeb ? categoria : (article?.categoria || ""),
+      subcategoria: publicarWeb ? subcategoriaFinal : (article?.subcategoria || ""),
+      talla: publicarWeb ? talla : (article?.talla || ""),
+      medidas: publicarWeb
+        ? (categoria === "Ropa" ? JSON.stringify({ campos:medidasCampos, notas:medidas.trim() }) : "")
+        : (article?.medidas || ""),
+      publico_objetivo: publicarWeb ? publicoObjetivo : (article?.publico_objetivo || ""),
 
       cliente,
 
@@ -247,11 +295,12 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       publicar_web:publicarWeb,
 
       foto:urlFoto,
+      fotos:fotosFinales,
 
     };
 
     const articulo = article
-      ? await updateArticle(article.id, { ...datosArticulo, foto: urlFoto || article.foto })
+      ? await updateArticle(article.id, { ...datosArticulo, foto: urlFoto || article.foto_path || article.foto })
       : await createArticle(datosArticulo);
 
 
@@ -419,7 +468,8 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           </div>
 
           <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" onChange={seleccionarFoto} style={{ display:"none" }} />
-          <input ref={galleryInputRef} type="file" accept="image/*" onChange={seleccionarFoto} style={{ display:"none" }} />
+          <input ref={galleryInputRef} type="file" accept="image/*" multiple={publicarWeb} onChange={seleccionarFoto} style={{ display:"none" }} />
+          <input ref={extraPhotosInputRef} type="file" accept="image/*" multiple onChange={event => { agregarFotosExtra(event.target.files); event.target.value = ""; }} style={{ display:"none" }} />
           <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
             <button type="button" onClick={() => cameraInputRef.current?.click()} style={{ height:46, border:0, borderRadius:15, background:"#FFC9E3", color:"#8B1E2D", fontWeight:800, display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
               <Camera size={18}/> Tomar foto
@@ -428,6 +478,18 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
               <ImagePlus size={18}/> Elegir de galería
             </button>
           </div>
+
+          {publicarWeb && <div style={{ marginBottom:20 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:10 }}>
+              <strong style={{ color:"#8B1E2D" }}>Fotos del catálogo · {Math.min(4, (foto || article?.foto ? 1 : 0) + (article?.fotos || []).length + fotosNuevas.length)}/4</strong>
+              {(foto || article?.foto) && (article?.fotos || []).length + fotosNuevas.length < 3 && <button type="button" onClick={() => extraPhotosInputRef.current?.click()} style={{ border:0, borderRadius:14, padding:"9px 12px", background:"#FFC9E3", color:"#8B1E2D", fontWeight:800 }}><Plus size={16} style={{ verticalAlign:"middle" }}/> Agregar fotos</button>}
+            </div>
+            {(article?.fotos || []).length + fotosNuevas.length > 0 && <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
+              {(article?.fotos || []).map((url, index) => <img key={`existing-${index}`} src={url} alt={`Foto adicional ${index + 2}`} style={{ width:64, height:64, objectFit:"cover", borderRadius:12, border:"2px solid #f2c6d6", flex:"0 0 auto"}}/>)}
+              {fotosNuevas.map((item, index) => <div key={item.preview} style={{ position:"relative", flex:"0 0 auto" }}><img src={item.preview} alt={`Foto adicional ${index + 2}`} style={{ width:64, height:64, objectFit:"cover", borderRadius:12, border:"2px solid #f2c6d6" }}/><button type="button" onClick={() => quitarFotoNueva(index)} aria-label="Quitar foto" style={{ position:"absolute", top:-6, right:-6, border:0, borderRadius:99, background:"#8B1E2D", color:"white", width:23, height:23, display:"grid", placeItems:"center" }}><X size={14}/></button></div>)}
+            </div>}
+            <small style={{ color:"#777783" }}>Puedes elegir varias fotos de una vez. Se comprimen antes de subir para cargar más rápido.</small>
+          </div>}
 
 
 
@@ -442,11 +504,37 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           style={inputStyle}
         />
 
+        <div style={channelBox}>
+          <strong style={{display:"block", marginBottom:8}}>¿Dónde estará disponible?</strong>
+          <label style={channelOption}>
+            <input type="checkbox" checked={publicarFeria} onChange={e=>setPublicarFeria(e.target.checked)} />
+            Feria
+          </label>
+          <label style={channelOption}>
+            <input type="checkbox" checked={publicarWeb} onChange={e=>setPublicarWeb(e.target.checked)} />
+            Catálogo web
+          </label>
+          <span style={{display:"block", marginTop:8, fontSize:12, color:"#777783"}}>
+            {publicarWeb ? "Para la web podrás completar categoría, talla y detalles de la prenda." : "Para feria basta con nombre, precio y cliente; la foto sigue siendo opcional."}
+          </span>
+        </div>
+
+
+
+        <select value={cliente} onChange={(e)=>setCliente(e.target.value)} style={inputStyle}>
+          <option value="">Sin cliente</option>
+          {clientes.map(item => <option key={item.id} value={item.id}>{item.nombre}{item.compartido ? " · Ambas" : ""}</option>)}
+        </select>
+        <button onClick={()=>setShowNewClient(true)} style={createButton}>
+          <Plus size={18}/> Crear cliente
+        </button>
 
 
 
 
 
+
+{publicarWeb && (
         <select
           value={categoria}
           onChange={(e)=>{
@@ -471,8 +559,9 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
             .map((nombre) => <option key={nombre} value={nombre}>{nombre}</option>)}
 
         </select>
+        )}
 
-        {categoria === "Otros" && (
+        {publicarWeb && categoria === "Otros" && (
           <div style={{ display:"flex", gap:8, marginTop:-6, marginBottom:14 }}>
             <input
               placeholder="Nombre de nueva categoría"
@@ -492,7 +581,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           </div>
         )}
 
-        {categoria && (
+        {publicarWeb && categoria && (
           <>
             <select
               value={subcategoria}
@@ -533,26 +622,16 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           </>
         )}
 
+{publicarWeb && (
         <input
           placeholder="Talla (S, M, 38, única) · opcional"
           value={talla}
           onChange={(e)=>setTalla(e.target.value)}
           style={inputStyle}
         />
+        )}
 
-        {categoria === "Ropa" && publicarWeb && <div style={{ marginBottom:14, padding:14, border:"1px solid #F3D3E0", borderRadius:16, background:"#FFF8FB" }}>
-          <strong style={{ display:"block", color:"#8B1E2D", marginBottom:4 }}>Medidas para catálogo web (cm)</strong>
-          <span style={{ display:"block", color:"#777783", fontSize:13, marginBottom:11 }}>Completa las que tengas; aparecerán en el detalle de la prenda.</span>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, minmax(0, 1fr))", gap:9 }}>
-            {camposMedidas.map(campo => <label key={campo} style={{ color:"#594137", fontSize:13, fontWeight:700 }}>
-              {campo}
-              <input type="number" min="0" step="0.5" inputMode="decimal" placeholder="cm" value={medidasCampos[campo] || ""} onChange={event => setMedidasCampos(current => ({ ...current, [campo]:event.target.value }))} style={{ ...inputStyle, width:"100%", boxSizing:"border-box", marginTop:5, marginBottom:0, padding:"12px 13px", minHeight:46, fontSize:15 }} />
-            </label>)}
-          </div>
-          <input placeholder="Otra medida o detalle (opcional)" value={medidas} onChange={event => setMedidas(event.target.value)} style={{ ...inputStyle, marginTop:10, marginBottom:0 }} />
-        </div>}
-
-        <div style={{ position: "relative", marginBottom: "14px" }}>
+        {publicarWeb && <div style={{ position: "relative", marginBottom: "14px" }}>
           <button
             type="button"
             aria-label="Elegir género"
@@ -579,7 +658,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
               {publicoObjetivo && <button type="button" onClick={() => { setPublicoObjetivo(""); setGeneroMenuOpen(false); }} style={{ width: "100%", minHeight: "34px", border: 0, color: "#777", background: "transparent" }}>Quitar género</button>}
             </div>
           )}
-        </div>
+        </div>}
 
 
 
@@ -587,50 +666,6 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
 
 
-        <select
-          value={cliente}
-          onChange={(e)=>setCliente(e.target.value)}
-          style={inputStyle}
-        >
-
-          <option value="">
-            Sin cliente
-          </option>
-
-
-          {
-            clientes.map((item)=>(
-
-              <option
-                key={item.id}
-                value={item.id}
-              >
-
-                {item.nombre}{item.compartido ? " · Ambas" : ""}
-
-              </option>
-
-            ))
-          }
-
-
-        </select>
-
-
-
-
-
-
-        <button
-          onClick={()=>setShowNewClient(true)}
-          style={createButton}
-        >
-
-          <Plus size={18}/>
-
-          Crear cliente
-
-        </button>
 
 
 
@@ -638,17 +673,20 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
 
 
 
-        <div style={channelBox}>
-          <strong style={{display:"block", marginBottom:8}}>¿Dónde estará disponible?</strong>
-          <label style={channelOption}>
-            <input type="checkbox" checked={publicarFeria} onChange={e=>setPublicarFeria(e.target.checked)} />
-            Feria
-          </label>
-          <label style={channelOption}>
-            <input type="checkbox" checked={publicarWeb} onChange={e=>setPublicarWeb(e.target.checked)} />
-            Catálogo web
-          </label>
-        </div>
+
+
+
+        {publicarWeb && categoria === "Ropa" && <div style={{ marginBottom:14, padding:14, border:"1px solid #F3D3E0", borderRadius:16, background:"#FFF8FB" }}>
+          <strong style={{ display:"block", color:"#8B1E2D", marginBottom:4 }}>Medidas para catálogo web (cm)</strong>
+          <span style={{ display:"block", color:"#777783", fontSize:13, marginBottom:11 }}>Completa las que tengas; aparecerán en el detalle de la prenda.</span>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, minmax(0, 1fr))", gap:9 }}>
+            {camposMedidas.map(campo => <label key={campo} style={{ color:"#594137", fontSize:13, fontWeight:700 }}>
+              {campo}
+              <input type="number" min="0" step="0.5" inputMode="decimal" placeholder="cm" value={medidasCampos[campo] || ""} onChange={event => setMedidasCampos(current => ({ ...current, [campo]:event.target.value }))} style={{ ...inputStyle, width:"100%", boxSizing:"border-box", marginTop:5, marginBottom:0, padding:"12px 13px", minHeight:46, fontSize:15 }} />
+            </label>)}
+          </div>
+          <input placeholder="Otra medida o detalle (opcional)" value={medidas} onChange={event => setMedidas(event.target.value)} style={{ ...inputStyle, marginTop:10, marginBottom:0 }} />
+        </div>}
 
         {publicarFeria && <input
           aria-label="Precio de feria"

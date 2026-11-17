@@ -409,6 +409,7 @@ export async function createArticle(article){
         codigo,
 
         foto:article.foto || null,
+        fotos:article.fotos || [],
 
         estado:"Disponible",
 
@@ -463,6 +464,7 @@ export async function updateArticle(id, article) {
       publicar_feria: article.publicar_feria !== false,
       publicar_web: article.publicar_web !== false,
       foto: article.foto || null,
+      fotos: article.fotos || [],
     })
     .eq("id", id)
     .eq("owner_id", ownerId)
