@@ -115,6 +115,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const dayGrossSales = selectedSales.reduce((sum, item) => sum + salePrice(item), 0);
     const dayBusinessCommission = Math.max(0, dayGrossSales - dayClientShare);
     const availableNow = articulosActualizados.filter(item => String(item.estado || "").trim().toLowerCase() === "disponible").length;
+    const soldAllTime = sold.length;
     const byChannel = ["Feria", "Web", "Sin canal"].map(name => {
       const items = periodSales.filter(item => channelName(item) === name);
       return { name, count:items.length, revenue:items.reduce((sum, item) => sum + salePrice(item), 0) };
@@ -144,7 +145,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const peakHour = Math.max(...hourCounts);
     const peakHours = peakHour ? hourCounts.map((count, hour) => ({ hour, count })).filter(item => item.count === peakHour) : [];
     const sharedClientSales = periodSales.filter(item => mapaClientes.get(String(item.cliente))?.compartido === true);
-    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, dayExpenseShare, dayGrossSales, dayBusinessCommission, dayNet:dayCommission - dayExpenseShare, dayExpenseTotal:dayExpenses.reduce((sum, expense) => sum + Number(expense.monto || 0), 0), daySaleCount:selectedSales.length, availableNow };
+    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, dayExpenseShare, dayGrossSales, dayBusinessCommission, dayNet:dayCommission - dayExpenseShare, dayExpenseTotal:dayExpenses.reduce((sum, expense) => sum + Number(expense.monto || 0), 0), daySaleCount:selectedSales.length, availableNow, soldAllTime, inventoryCount:articulosActualizados.length };
   }, [articulosActualizados, clientes, gastos, mapaClientes, nombreUsuario, rango, diaSeleccionado]);
 
   const topCategory = metricas.categories[0];
@@ -167,7 +168,9 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
 
     {rango === "day" && <label style={{ ...card, display:"flex", alignItems:"center", gap:10, marginBottom:13, color:"#8B1E2D", fontWeight:750 }}><CalendarDays size={19}/> Elige el día<input aria-label="Día del análisis" type="date" value={diaSeleccionado} onChange={event => setDiaSeleccionado(event.target.value)} style={{ marginLeft:"auto", minWidth:0, border:"1px solid #EAD5DA", borderRadius:11, padding:"9px 10px", color:"#594137", background:"#FFF" }}/></label>}
 
-    <section style={{ ...card, display:"flex", alignItems:"center", gap:10 }}><Shirt size={19} color="#8B1E2D"/><span style={{ flex:1, color:"#594137", fontWeight:700 }}>Prendas disponibles ahora</span><strong style={{ color:"#8B1E2D", fontSize:22 }}>{metricas.availableNow}</strong></section>
+    <section style={{ ...card, display:"grid", gridTemplateColumns:"repeat(3, minmax(0, 1fr))", gap:8 }}>
+      {[{ label:"Registradas", value:metricas.inventoryCount }, { label:"Vendidas", value:metricas.soldAllTime }, { label:"Disponibles", value:metricas.availableNow }].map(item => <div key={item.label} style={{ textAlign:"center", padding:"4px 2px" }}><strong style={{ display:"block", color:"#8B1E2D", fontSize:22 }}>{item.value}</strong><span style={{ color:"#777783", fontSize:11 }}>{item.label}</span></div>)}
+    </section>
 
     {rango === "day" && <section style={{ ...card, border:"1px solid #FF6B9E", background:"#FFF5F8" }}>
       <h2 style={sectionHeading}>Tu ganancia neta, paso a paso</h2>
