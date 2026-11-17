@@ -421,6 +421,7 @@ export default function CatalogoPublico() {
             <h2 id="catalog-detail-title">{selectedArticle.descripcion}</h2>
             {selectedArticle.codigo && <p className="catalog-detail-code">Código {selectedArticle.codigo}</p>}
             {selectedArticle.talla && <p className="catalog-detail-size">Talla <strong>{selectedArticle.talla}</strong></p>}
+            {selectedArticle.medidas && <p className="catalog-detail-size">Medidas <strong>{selectedArticle.medidas}</strong></p>}
             <strong className="catalog-detail-price">S/ {Number(selectedArticle.precio || 0).toFixed(2)}</strong>
             <button className="catalog-detail-add" onClick={() => { addToCart(selectedArticle); setSelectedArticle(null); }}><ShoppingBag size={18}/> Agregar al carrito</button>
             <p className="catalog-detail-note">Pieza única de segunda mano. La disponibilidad y el precio se confirman por Instagram.</p>

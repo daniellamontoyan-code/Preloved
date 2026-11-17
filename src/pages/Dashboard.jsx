@@ -15,10 +15,7 @@ import Gastos from "./Gastos";
 import Estadisticas from "./Estadisticas";
 
 import {
-  getArticlesCount,
-  getSoldArticlesCount,
   getSalesTotal,
-  getPaymentSummary,
   getArticles,
 } from "../lib/articles";
 import { supabase } from "../lib/supabase";
@@ -35,10 +32,7 @@ export default function Dashboard({ user }){
     await supabase.auth.signOut();
   }
 
-  const [totalArticulos,setTotalArticulos] = useState(0);
-  const [vendidos,setVendidos] = useState(0);
   const [ventas,setVentas] = useState(0);
-  const [pagos,setPagos] = useState({});
   const [articulos,setArticulos] = useState([]);
 
   const [showAddArticle,setShowAddArticle] = useState(false);
@@ -55,17 +49,8 @@ export default function Dashboard({ user }){
 
 
   async function cargarDatos(){
-
-    const total = await getArticlesCount();
-    const vendidosData = await getSoldArticlesCount();
-    const ventasData = await getSalesTotal();
-    const pagosData = await getPaymentSummary();
-    const articulosData = await getArticles();
-
-    setTotalArticulos(total);
-    setVendidos(vendidosData);
+    const [ventasData, articulosData] = await Promise.all([getSalesTotal(), getArticles()]);
     setVentas(ventasData);
-    setPagos(pagosData);
     setArticulos(articulosData || []);
 
   }
@@ -314,52 +299,6 @@ export default function Dashboard({ user }){
 
 
 
-  const categorias=[
-
-    {
-      nombre:"Ropa",
-      color:"linear-gradient(135deg,#8B1E2D,#8B1E2D)"
-    },
-
-    {
-      nombre:"Calzado",
-      color:"linear-gradient(135deg,#8B1E2D,#FF6B9E)"
-    },
-
-    {
-      nombre:"Bolsos",
-      color:"linear-gradient(135deg,#FF6B9E,#FF6B9E)"
-    },
-
-    {
-      nombre:"Accesorios",
-      color:"linear-gradient(135deg,#8B1E2D,#E11D48)"
-    },
-
-    {
-      nombre:"Otros",
-      color:"linear-gradient(135deg,#B42348,#FF6B9E)"
-    }
-
-  ];
-
-  const tiposArticulo = [...new Map(articulos
-    .filter(item => item.subcategoria)
-    .map(item => [`${item.categoria || ""}:${item.subcategoria}`, { categoria: item.categoria || "", subcategoria: item.subcategoria }]))
-    .values()]
-    .sort((a, b) => a.subcategoria.localeCompare(b.subcategoria, "es"));
-
-  function abrirArticulos({ canal = "Todos", categoria = "", subcategoria = "" } = {}) {
-    setCanalSeleccionado(canal);
-    setCategoriaSeleccionada(categoria);
-    setSubcategoriaSeleccionada(subcategoria);
-    setShowArticulos(true);
-  }
-
-
-
-
-
   return (
 
     <div
@@ -542,58 +481,9 @@ export default function Dashboard({ user }){
 
 
 
-        <div
-          className="dashboard-summary-grid"
-
-          style={{
-
-            display:"grid",
-
-            gridTemplateColumns:"1fr 1fr",
-
-            gap:"16px",
-
-            marginTop:"35px"
-
-          }}
-
-        >
-
-          <SummaryCard
-
-            value={totalArticulos}
-
-            title="Artículos"
-
-          />
-
-          <SummaryCard
-
-            value={vendidos}
-
-            title="Vendidos"
-
-          />
-
+        <div style={{marginTop:"35px"}}>
+          <SummaryCard value={`S/. ${ventas.toFixed(2)}`} title="Ventas" />
         </div>
-
-
-
-
-        <div style={{marginTop:"16px"}}>
-
-          <SummaryCard
-
-            value={`S/. ${ventas.toFixed(2)}`}
-
-            title="Ventas"
-
-          />
-
-        </div>
-
-
-
 
 
         <div style={{marginTop:"30px"}}>
@@ -612,241 +502,18 @@ export default function Dashboard({ user }){
 
 
 
-        <div style={{marginTop:"35px"}}>
-
-          <SectionTitle
-
-            title="Métodos de pago"
-
-          />
-
-          <div
-
-            style={{
-
-              background:"#FFFFFF",
-
-              borderRadius:"18px",
-
-              padding:"12px 18px",
-
-              marginTop:"12px",
-
-              boxShadow:"0 8px 20px rgba(0,0,0,.04)"
-
-            }}
-
-          >
-
-            {
-              Object.entries(pagos).map(([metodo,monto],index)=>(
-
-                <div
-
-                  key={metodo}
-
-                  style={{
-
-                    display:"flex",
-
-                    justifyContent:"space-between",
-
-                    padding:"10px 0",
-
-                    borderBottom:
-
-                    index !== Object.entries(pagos).length-1
-
-                    ? "1px solid #F3F4F6"
-
-                    : "none",
-
-                    fontWeight:"700"
-
-                  }}
-
-                >
-
-                  <span>{metodo}</span>
-
-                  <span style={{color:"#8B1E2D"}}>
-
-                    S/. {monto.toFixed(2)}
-
-                  </span>
-
-
-                </div>
-
-              ))
-            }
-
-          </div>
-
-        </div>
-
-
-
-
-
         <div style={{marginTop:"34px"}}>
-          <SectionTitle title="Explorar artículos" />
-          <p style={{ margin:"8px 0 12px", color:"#777783", fontSize:13, fontWeight:600 }}>Filtra por dónde los ofreces</p>
-          <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
-            {["Todos", "Feria", "Web"].map(canal => (
-              <button key={canal} onClick={() => abrirArticulos({ canal })} style={{ flex:"0 0 auto", border:0, borderRadius:999, padding:"11px 17px", background:canalSeleccionado === canal ? "#8B1E2D" : "#FFFFFF", color:canalSeleccionado === canal ? "#FFFFFF" : "#555563", fontWeight:800, boxShadow:"0 5px 16px rgba(0,0,0,.05)" }}>
-                {canal === "Web" ? "Página web" : canal}
-              </button>
-            ))}
-          </div>
-          {tiposArticulo.length > 0 && <>
-            <p style={{ margin:"18px 0 10px", color:"#777783", fontSize:13, fontWeight:600 }}>Tipos de prenda, accesorio o calzado</p>
-            <div style={{ display:"flex", gap:9, overflowX:"auto", paddingBottom:4 }}>
-              {tiposArticulo.map(tipo => (
-                <button key={`${tipo.categoria}:${tipo.subcategoria}`} onClick={() => abrirArticulos({ canal:canalSeleccionado, categoria:tipo.categoria, subcategoria:tipo.subcategoria })} style={{ flex:"0 0 auto", border:"1px solid #EAD5DA", borderRadius:15, padding:"11px 14px", background:"#FFFFFF", color:"#77152B", fontWeight:700, boxShadow:"0 5px 16px rgba(0,0,0,.04)" }}>
-                  {tipo.subcategoria}{tipo.categoria ? <span style={{ color:"#999", fontSize:11, marginLeft:5 }}>{tipo.categoria}</span> : null}
-                </button>
-              ))}
-            </div>
-          </>}
-        </div>
-
-        <div style={{marginTop:"32px"}}>
-
           <SectionTitle
-
-            title="Categorías"
-
-            action="Ver todo"
-
+            title="Artículos"
+            action="Ver todos"
             onClick={()=>{
-
               setCategoriaSeleccionada("");
-
+              setCanalSeleccionado("Todos");
+              setSubcategoriaSeleccionada("");
               setShowArticulos(true);
-
             }}
-
           />
-
-
-
-          <div
-
-            style={{
-
-              display:"flex",
-
-              flexDirection:"column",
-
-              gap:"14px",
-
-              marginTop:"18px"
-
-            }}
-
-          >
-
-            {
-              categorias.map(cat=>(
-
-                <button
-
-                  key={cat.nombre}
-
-                  onClick={()=>{
-
-                    setCategoriaSeleccionada(cat.nombre);
-
-                    setShowArticulos(true);
-
-                  }}
-
-                  style={{
-
-                    width:"100%",
-
-                    height:"64px",
-
-                    border:"none",
-
-                    borderRadius:"22px",
-
-                    background:"#FFFFFF",
-
-                    padding:"0 20px",
-
-                    display:"flex",
-
-                    justifyContent:"space-between",
-
-                    alignItems:"center",
-
-                    boxShadow:"0 10px 30px rgba(0,0,0,.05)"
-
-                  }}
-
-                >
-
-                  <span
-
-                    style={{
-
-                      fontSize:"17px",
-
-                      fontWeight:"700"
-
-                    }}
-
-                  >
-
-                    {cat.nombre}
-
-                  </span>
-
-
-                  <span
-
-                    style={{
-
-                      width:"36px",
-
-                      height:"36px",
-
-                      borderRadius:"50%",
-
-                      background:cat.color,
-
-                      color:"#FFFFFF",
-
-                      display:"flex",
-
-                      justifyContent:"center",
-
-                      alignItems:"center",
-
-                      fontSize:"22px",
-
-                      fontWeight:"800"
-
-                    }}
-
-                  >
-
-                    →
-
-                  </span>
-
-
-                </button>
-
-              ))
-            }
-
-          </div>
-
         </div>
-
 
       </div>
 

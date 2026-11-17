@@ -1,11 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, ChevronLeft, Clock3, RefreshCw, Shirt, Store, Users, Wallet } from "lucide-react";
+import { BarChart3, CalendarDays, ChevronLeft, Clock3, RefreshCw, Shirt, Store, Users, Wallet } from "lucide-react";
 import BottomNav from "../components/BottomNav";
 import { getArticles } from "../lib/articles";
 import { getClients } from "../lib/clients";
 import { commissionShares } from "../lib/commission";
+import { getExpenses } from "../lib/gastos";
 
 const money = value => `S/ ${Number(value || 0).toFixed(2)}`;
+const localDay = value => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+};
+const today = () => localDay(new Date());
 const salePrice = article => Number(article.precio_venta || 0);
 const saleDate = article => {
   const value = article.fecha_venta;
@@ -23,15 +30,18 @@ const channelName = article => {
 
 export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh, onBack, onHome, onArticulos, onClientes, onLiquidaciones, onGastos, onAgregar, onEstadisticas }) {
   const [rango, setRango] = useState("30");
+  const [diaSeleccionado, setDiaSeleccionado] = useState(today);
   const [articulosActualizados, setArticulosActualizados] = useState(articulos);
   const [clientes, setClientes] = useState([]);
+  const [gastos, setGastos] = useState([]);
   const [actualizando, setActualizando] = useState(false);
 
   async function actualizar() {
     setActualizando(true);
-    const [items, customers] = await Promise.all([getArticles(), getClients()]);
+    const [items, customers, expenses] = await Promise.all([getArticles(), getClients(), getExpenses()]);
     setArticulosActualizados(items);
     setClientes(customers);
+    setGastos(expenses);
     await onRefresh?.();
     setActualizando(false);
   }
@@ -47,14 +57,16 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
   const mapaClientes = useMemo(() => new Map(clientes.map(cliente => [String(cliente.id), cliente])), [clientes]);
   const metricas = useMemo(() => {
     const now = new Date();
-    const days = rango === "all" ? null : Number(rango);
+    const days = ["all", "day"].includes(rango) ? null : Number(rango);
     const cutoff = days ? new Date(now.getTime() - days * 86400000) : null;
     const sold = articulosActualizados.filter(item => ["vendido", "liquidado"].includes(String(item.estado || "").trim().toLowerCase()));
     const periodSales = sold.filter(item => {
+      if (rango === "day") return localDay(saleDate(item)) === diaSeleccionado;
       if (!cutoff) return true;
       const date = saleDate(item);
       return date && date >= cutoff;
     });
+    const selectedSales = periodSales;
     const revenue = periodSales.reduce((sum, item) => sum + salePrice(item), 0);
     // Shared clients split Pitucas commission 50/50; personal clients belong
     // entirely to the signed-in member.
@@ -72,6 +84,37 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       const shares = commissionShares(commission, entry.shared, nombreUsuario);
       return sum + (nombreUsuario?.toLowerCase().includes("mafer") ? shares.mafer : shares.dani);
     }, 0);
+    const selectedSalesByClient = new Map();
+    for (const item of selectedSales) {
+      const clientId = String(item.cliente || "");
+      const client = mapaClientes.get(clientId);
+      if (!clientId || !client) continue;
+      const entry = selectedSalesByClient.get(clientId) || { total:0, percentage:Number(client.porcentaje_comision || 0), shared:client.compartido === true };
+      entry.total += salePrice(item);
+      selectedSalesByClient.set(clientId, entry);
+    }
+    const dayCommission = [...selectedSalesByClient.values()].reduce((sum, entry) => {
+      const commission = entry.total * (entry.percentage / 100);
+      const shares = commissionShares(commission, entry.shared, nombreUsuario);
+      return sum + (nombreUsuario?.toLowerCase().includes("mafer") ? shares.mafer : shares.dani);
+    }, 0);
+    const dayClientShare = selectedSales.reduce((sum, item) => {
+      const client = mapaClientes.get(String(item.cliente || ""));
+      if (!client) return sum;
+      const clientCommission = salePrice(item) * Number(client.porcentaje_comision || 0) / 100;
+      return sum + Math.max(0, salePrice(item) - clientCommission);
+    }, 0);
+    const currentMember = nombreUsuario?.toLowerCase().includes("mafer") ? "mafer" : "dani";
+    const dayExpenses = gastos.filter(expense => expense.fecha === diaSeleccionado);
+    const dayExpenseShare = dayExpenses.reduce((sum, expense) => {
+      if (expense.compartido) return sum + Number(expense.monto || 0) / 2;
+      return String(expense.pagado_por_nombre || "").trim().toLowerCase() === currentMember
+        ? sum + Number(expense.monto || 0)
+        : sum;
+    }, 0);
+    const dayGrossSales = selectedSales.reduce((sum, item) => sum + salePrice(item), 0);
+    const dayBusinessCommission = Math.max(0, dayGrossSales - dayClientShare);
+    const availableNow = articulosActualizados.filter(item => String(item.estado || "").trim().toLowerCase() === "disponible").length;
     const byChannel = ["Feria", "Web", "Sin canal"].map(name => {
       const items = periodSales.filter(item => channelName(item) === name);
       return { name, count:items.length, revenue:items.reduce((sum, item) => sum + salePrice(item), 0) };
@@ -101,8 +144,8 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const peakHour = Math.max(...hourCounts);
     const peakHours = peakHour ? hourCounts.map((count, hour) => ({ hour, count })).filter(item => item.count === peakHour) : [];
     const sharedClientSales = periodSales.filter(item => mapaClientes.get(String(item.cliente))?.compartido === true);
-    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales };
-  }, [articulosActualizados, clientes, mapaClientes, nombreUsuario, rango]);
+    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, dayExpenseShare, dayGrossSales, dayBusinessCommission, dayNet:dayCommission - dayExpenseShare, dayExpenseTotal:dayExpenses.reduce((sum, expense) => sum + Number(expense.monto || 0), 0), daySaleCount:selectedSales.length, availableNow };
+  }, [articulosActualizados, clientes, gastos, mapaClientes, nombreUsuario, rango, diaSeleccionado]);
 
   const topCategory = metricas.categories[0];
   const average = metricas.sold.length ? metricas.revenue / metricas.sold.length : 0;
@@ -119,8 +162,27 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     </header>
 
     <div style={{ display:"flex", gap:8, marginBottom:17 }}>
-      {[{ id:"7", label:"7 días" }, { id:"30", label:"30 días" }, { id:"all", label:"Todo" }].map(option => <button key={option.id} onClick={() => setRango(option.id)} style={{ border:0, borderRadius:999, padding:"10px 15px", background:rango === option.id ? "#8B1E2D" : "#FFFFFF", color:rango === option.id ? "#FFFFFF" : "#594137", fontWeight:750 }}>{option.label}</button>)}
+      {[{ id:"day", label:"Día" }, { id:"7", label:"7 días" }, { id:"30", label:"30 días" }, { id:"all", label:"Todo" }].map(option => <button key={option.id} onClick={() => setRango(option.id)} style={{ border:0, borderRadius:999, padding:"10px 15px", background:rango === option.id ? "#8B1E2D" : "#FFFFFF", color:rango === option.id ? "#FFFFFF" : "#594137", fontWeight:750 }}>{option.label}</button>)}
     </div>
+
+    {rango === "day" && <label style={{ ...card, display:"flex", alignItems:"center", gap:10, marginBottom:13, color:"#8B1E2D", fontWeight:750 }}><CalendarDays size={19}/> Elige el día<input aria-label="Día del análisis" type="date" value={diaSeleccionado} onChange={event => setDiaSeleccionado(event.target.value)} style={{ marginLeft:"auto", minWidth:0, border:"1px solid #EAD5DA", borderRadius:11, padding:"9px 10px", color:"#594137", background:"#FFF" }}/></label>}
+
+    <section style={{ ...card, display:"flex", alignItems:"center", gap:10 }}><Shirt size={19} color="#8B1E2D"/><span style={{ flex:1, color:"#594137", fontWeight:700 }}>Prendas disponibles ahora</span><strong style={{ color:"#8B1E2D", fontSize:22 }}>{metricas.availableNow}</strong></section>
+
+    {rango === "day" && <section style={{ ...card, border:"1px solid #FF6B9E", background:"#FFF5F8" }}>
+      <h2 style={sectionHeading}>Tu ganancia neta, paso a paso</h2>
+      <p style={{ ...subValue, marginBottom:12 }}>En simple: primero se aparta la parte de quienes dejaron prendas. Lo que queda es la comisión de Pitucas; si el cliente es compartido, esa comisión se reparte entre Dani y Mafer. Después descontamos tu parte de los gastos de ese día.</p>
+      <div style={analysisRow}><span>Ventas del día (referencia)</span><strong>{money(metricas.dayGrossSales)}</strong></div>
+      <div style={analysisRow}><span>Parte de quienes dejaron prendas</span><strong>− {money(metricas.dayClientShare)}</strong></div>
+      <div style={analysisRow}><span>Comisión total de Pitucas</span><strong>{money(metricas.dayBusinessCommission)}</strong></div>
+      <div style={analysisRow}><span>Tu comisión, después del reparto</span><strong>{money(metricas.dayCommission)}</strong></div>
+      <div style={analysisRow}><span>Gastos registrados ese día</span><strong>{money(metricas.dayExpenseTotal)} <small style={{ color:"#777783", fontWeight:500 }}>(tu parte: {money(metricas.dayExpenseShare)})</small></strong></div>
+      <div style={{ ...analysisRow, marginTop:4, paddingTop:12, borderTop:"2px solid #F3D3E0", color:"#8B1E2D", fontSize:17 }}><strong>Te quedó neto</strong><strong>{money(metricas.dayNet)}</strong></div>
+      <p style={{ ...subValue, marginBottom:0 }}>Las liquidaciones a quienes dejaron prendas son su parte de la venta: no se vuelven a restar aquí porque ya está separada arriba. Los gastos compartidos, como el stand, se cuentan mitad para cada una.</p>
+      <div style={{ display:"flex", gap:10, marginTop:13, flexWrap:"wrap" }}>
+        <span style={smallBadge}>{metricas.daySaleCount} prenda{metricas.daySaleCount === 1 ? "" : "s"} vendida{metricas.daySaleCount === 1 ? "" : "s"} ese día</span>
+      </div>
+    </section>}
 
     <section style={{ background:"#8B1E2D", color:"white", borderRadius:22, padding:20, marginBottom:13 }}>
       <div style={{ display:"flex", alignItems:"center", gap:9, opacity:.9, fontWeight:700 }}><Wallet size={18}/> Ventas registradas</div>
@@ -182,5 +244,7 @@ const bigValue = { display:"block", color:"#8B1E2D", fontSize:23, marginTop:10 }
 const subValue = { marginTop:5, color:"#777783", fontSize:12, lineHeight:1.4 };
 const sectionHeading = { margin:"0 0 8px", display:"flex", alignItems:"center", gap:8, color:"#383B3B", fontSize:16 };
 const rowStyle = { display:"flex", alignItems:"center", gap:10, padding:"10px 0", borderBottom:"1px solid #F3E8E1", fontSize:14 };
+const analysisRow = { display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:12, padding:"7px 0", color:"#594137", fontSize:13 };
+const smallBadge = { display:"inline-flex", padding:"7px 10px", borderRadius:999, color:"#8B1E2D", background:"#FFC9E3", fontSize:11, fontWeight:750 };
 const emptyText = { padding:"17px 0 4px", textAlign:"center", color:"#777783", fontSize:13 };
 const iconButton = { width:42, height:42, display:"grid", placeItems:"center", border:0, borderRadius:"50%", background:"#FFFFFF", color:"#8B1E2D", cursor:"pointer" };

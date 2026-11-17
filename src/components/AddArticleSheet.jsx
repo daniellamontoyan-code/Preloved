@@ -43,6 +43,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [subcategoria, setSubcategoria] = useState(!existingSubcategory ? "" : hasSuggestedSubcategory ? existingSubcategory : "Otra");
   const [subcategoriaOtra, setSubcategoriaOtra] = useState(hasSuggestedSubcategory ? "" : existingSubcategory);
   const [talla, setTalla] = useState(article?.talla || "");
+  const [medidas, setMedidas] = useState(article?.medidas || "");
   const [publicoObjetivo, setPublicoObjetivo] = useState(article?.publico_objetivo || "");
   const [generoMenuOpen, setGeneroMenuOpen] = useState(false);
   const [cliente, setCliente] = useState(String(article?.cliente?.id || article?.cliente || ""));
@@ -219,6 +220,7 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       categoria,
       subcategoria: subcategoriaFinal,
       talla,
+      medidas: categoria === "Ropa" ? medidas.trim() : "",
       publico_objetivo: publicoObjetivo,
 
       cliente,
@@ -521,6 +523,13 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           onChange={(e)=>setTalla(e.target.value)}
           style={inputStyle}
         />
+
+        {categoria === "Ropa" && <input
+          placeholder="Medidas en cm (opcional) · ej. busto 48, largo 62"
+          value={medidas}
+          onChange={(e)=>setMedidas(e.target.value)}
+          style={inputStyle}
+        />}
 
         <div style={{ position: "relative", marginBottom: "14px" }}>
           <button
