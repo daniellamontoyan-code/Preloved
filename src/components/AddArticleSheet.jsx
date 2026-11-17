@@ -43,7 +43,14 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [subcategoria, setSubcategoria] = useState(!existingSubcategory ? "" : hasSuggestedSubcategory ? existingSubcategory : "Otra");
   const [subcategoriaOtra, setSubcategoriaOtra] = useState(hasSuggestedSubcategory ? "" : existingSubcategory);
   const [talla, setTalla] = useState(article?.talla || "");
-  const [medidas, setMedidas] = useState(article?.medidas || "");
+  const [medidas, setMedidas] = useState(() => {
+    try { return JSON.parse(article?.medidas || "{}").notas || ""; }
+    catch { return article?.medidas || ""; }
+  });
+  const [medidasCampos, setMedidasCampos] = useState(() => {
+    try { return JSON.parse(article?.medidas || "{}").campos || {}; }
+    catch { return {}; }
+  });
   const [publicoObjetivo, setPublicoObjetivo] = useState(article?.publico_objetivo || "");
   const [generoMenuOpen, setGeneroMenuOpen] = useState(false);
   const [cliente, setCliente] = useState(String(article?.cliente?.id || article?.cliente || ""));
@@ -53,6 +60,13 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
   const [publicarWeb, setPublicarWeb] = useState(article?.publicar_web ?? true);
 
   const [loading, setLoading] = useState(false);
+
+  const nombreSubcategoria = (subcategoria === "Otra" ? subcategoriaOtra : subcategoria).toLocaleLowerCase("es");
+  const camposMedidas = /pantal|short|falda|jean|denim/.test(nombreSubcategoria)
+    ? ["Cintura", "Cadera", "Tiro", "Largo"]
+    : /vestid|enterizo|overol/.test(nombreSubcategoria)
+      ? ["Busto", "Cintura", "Cadera", "Largo"]
+      : ["Busto", "Hombros", "Cintura", "Largo", "Manga"];
 
 
 
@@ -220,7 +234,9 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
       categoria,
       subcategoria: subcategoriaFinal,
       talla,
-      medidas: categoria === "Ropa" ? medidas.trim() : "",
+      medidas: categoria === "Ropa" && publicarWeb
+        ? JSON.stringify({ campos:medidasCampos, notas:medidas.trim() })
+        : "",
       publico_objetivo: publicoObjetivo,
 
       cliente,
@@ -524,12 +540,17 @@ export default function AddArticleSheet({ onClose, article = null, onSaved }) {
           style={inputStyle}
         />
 
-        {categoria === "Ropa" && <input
-          placeholder="Medidas en cm (opcional) · ej. busto 48, largo 62"
-          value={medidas}
-          onChange={(e)=>setMedidas(e.target.value)}
-          style={inputStyle}
-        />}
+        {categoria === "Ropa" && publicarWeb && <div style={{ marginBottom:14, padding:14, border:"1px solid #F3D3E0", borderRadius:16, background:"#FFF8FB" }}>
+          <strong style={{ display:"block", color:"#8B1E2D", marginBottom:4 }}>Medidas para catálogo web (cm)</strong>
+          <span style={{ display:"block", color:"#777783", fontSize:13, marginBottom:11 }}>Completa las que tengas; aparecerán en el detalle de la prenda.</span>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(2, minmax(0, 1fr))", gap:9 }}>
+            {camposMedidas.map(campo => <label key={campo} style={{ color:"#594137", fontSize:13, fontWeight:700 }}>
+              {campo}
+              <input type="number" min="0" step="0.5" inputMode="decimal" placeholder="cm" value={medidasCampos[campo] || ""} onChange={event => setMedidasCampos(current => ({ ...current, [campo]:event.target.value }))} style={{ ...inputStyle, width:"100%", boxSizing:"border-box", marginTop:5, marginBottom:0, padding:"12px 13px", minHeight:46, fontSize:15 }} />
+            </label>)}
+          </div>
+          <input placeholder="Otra medida o detalle (opcional)" value={medidas} onChange={event => setMedidas(event.target.value)} style={{ ...inputStyle, marginTop:10, marginBottom:0 }} />
+        </div>}
 
         <div style={{ position: "relative", marginBottom: "14px" }}>
           <button

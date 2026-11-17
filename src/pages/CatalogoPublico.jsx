@@ -33,6 +33,29 @@ function limaDateKey(date) {
 function isThursdayInLima(date) {
   return new Intl.DateTimeFormat("en-US", { timeZone: "America/Lima", weekday: "short" }).format(date) === "Thu";
 }
+function normalizeFilterValue(value) {
+  return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("es");
+}
+function uniqueFilterValues(items, field) {
+  const values = new Map();
+  for (const item of items) {
+    const label = String(item[field] || "").trim();
+    const key = normalizeFilterValue(label);
+    if (key && !values.has(key)) values.set(key, label);
+  }
+  return [...values.values()].sort((a, b) => a.localeCompare(b, "es"));
+}
+function formatMeasures(value) {
+  if (!value) return "";
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object") return String(value);
+    const fields = Object.entries(parsed.campos || {}).filter(([, amount]) => String(amount).trim())
+      .map(([name, amount]) => `${name}: ${amount} cm`);
+    if (parsed.notas?.trim()) fields.push(parsed.notas.trim());
+    return fields.join(" · ") || String(value);
+  } catch { return String(value); }
+}
 const previewArticles = [
   { id:"demo-1", descripcion:"Top tejido cereza", categoria:"Ropa", subcategoria:"Polos y tops", talla:"S", publico_objetivo:"Mujer", precio:35, codigo:"PR-0001", estado:"Disponible" },
   { id:"demo-2", descripcion:"Jean recto azul", categoria:"Ropa", subcategoria:"Pantalones", talla:"28", publico_objetivo:"Unisex", precio:55, codigo:"PR-0002", estado:"Disponible" },
@@ -120,23 +143,36 @@ export default function CatalogoPublico() {
     }
   }
 
-  const categories = useMemo(() => [
-    "Todo",
-    ...new Set(articles.map(item => item.categoria).filter(Boolean)),
-  ], [articles]);
-  const categoryArticles = useMemo(() => articles
-    .filter(item => category === "Todo" || item.categoria === category), [articles, category]);
-  const subcategories = useMemo(() => [...new Set(categoryArticles
-    .map(item => item.subcategoria)
-    .filter(Boolean))].sort((a, b) => a.localeCompare(b, "es")), [categoryArticles]);
+  const filterableArticles = useMemo(() => articles.filter(item => photoUrls[item.id] && !unavailablePhotos[item.id]), [articles, photoUrls, unavailablePhotos]);
+  const categoryOptions = useMemo(() => uniqueFilterValues(filterableArticles, "categoria"), [filterableArticles]);
+  const categories = ["Todo", ...categoryOptions];
+  const categoryArticles = useMemo(() => filterableArticles
+    .filter(item => category === "Todo" || normalizeFilterValue(item.categoria) === normalizeFilterValue(category)), [filterableArticles, category]);
+  const subcategories = useMemo(() => uniqueFilterValues(categoryArticles, "subcategoria"), [categoryArticles]);
   const audienceArticles = useMemo(() => categoryArticles
-    .filter(item => subcategory === "Todas" || item.subcategoria === subcategory), [categoryArticles, subcategory]);
-  const audiences = useMemo(() => [...new Set(audienceArticles.map(item => item.publico_objetivo).filter(Boolean))]
-    .sort((a, b) => a.localeCompare(b, "es")), [audienceArticles]);
+    .filter(item => subcategory === "Todas" || normalizeFilterValue(item.subcategoria) === normalizeFilterValue(subcategory)), [categoryArticles, subcategory]);
+  const audiences = useMemo(() => uniqueFilterValues(audienceArticles, "publico_objetivo"), [audienceArticles]);
   const sizeSource = useMemo(() => audienceArticles
-    .filter(item => audience === "Todos" || item.publico_objetivo === audience), [audienceArticles, audience]);
-  const sizes = useMemo(() => [...new Set(sizeSource.map(item => item.talla).filter(Boolean))]
+    .filter(item => audience === "Todos" || normalizeFilterValue(item.publico_objetivo) === normalizeFilterValue(audience)), [audienceArticles, audience]);
+  const sizes = useMemo(() => uniqueFilterValues(sizeSource, "talla")
     .sort((a, b) => String(a).localeCompare(String(b), "es", { numeric: true })), [sizeSource]);
+  useEffect(() => {
+    if (category !== "Todo" && !categoryOptions.some(value => normalizeFilterValue(value) === normalizeFilterValue(category))) {
+      setCategory("Todo");
+      setSubcategory("Todas");
+      setAudience("Todos");
+      setSize("Todas");
+      return;
+    }
+    if (subcategory !== "Todas" && !subcategories.some(value => normalizeFilterValue(value) === normalizeFilterValue(subcategory))) {
+      setSubcategory("Todas");
+      setAudience("Todos");
+      setSize("Todas");
+      return;
+    }
+    if (audience !== "Todos" && !audiences.some(value => normalizeFilterValue(value) === normalizeFilterValue(audience))) setAudience("Todos");
+    if (size !== "Todas" && !sizes.some(value => normalizeFilterValue(value) === normalizeFilterValue(size))) setSize("Todas");
+  }, [category, categoryOptions, subcategory, subcategories, audience, audiences, size, sizes]);
   const activeFilterCount = Number(category !== "Todo") + Number(subcategory !== "Todas") + Number(size !== "Todas") + Number(audience !== "Todos") + Number(priceMin !== "" || priceMax !== "");
   const limaToday = limaDateKey(new Date());
   const dropItems = articles.filter(item => {
@@ -171,10 +207,10 @@ export default function CatalogoPublico() {
     const term = search.trim().toLocaleLowerCase("es");
     const matchesSearch = !term || [item.descripcion, item.codigo, item.categoria, item.subcategoria, item.talla, item.publico_objetivo]
       .filter(Boolean).some(value => String(value).toLocaleLowerCase("es").includes(term));
-    const matchesCategory = category === "Todo" || item.categoria === category;
-    const matchesSubcategory = subcategory === "Todas" || item.subcategoria === subcategory;
-    const matchesSize = size === "Todas" || item.talla === size;
-    const matchesAudience = audience === "Todos" || item.publico_objetivo === audience;
+    const matchesCategory = category === "Todo" || normalizeFilterValue(item.categoria) === normalizeFilterValue(category);
+    const matchesSubcategory = subcategory === "Todas" || normalizeFilterValue(item.subcategoria) === normalizeFilterValue(subcategory);
+    const matchesSize = size === "Todas" || normalizeFilterValue(item.talla) === normalizeFilterValue(size);
+    const matchesAudience = audience === "Todos" || normalizeFilterValue(item.publico_objetivo) === normalizeFilterValue(audience);
     const price = Number(item.precio || 0);
     const matchesMinPrice = priceMin === "" || price >= Number(priceMin);
     const matchesMaxPrice = priceMax === "" || price <= Number(priceMax);
@@ -335,24 +371,24 @@ export default function CatalogoPublico() {
                 {["Todos", ...audiences].map(value => <button key={value} className={audience === value ? "selected" : ""} onClick={() => { setAudience(value); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{audience === value ? "✓" : ""}</span></button>)}
               </div>
             </section>}
-            <section className="catalog-filter-group" aria-label="Filtrar por categoría">
+            {categoryOptions.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por categoría">
               <h4>Categoría</h4>
               <div className="catalog-filter-options">
                 {categories.map(value => <button key={value} className={category === value ? "selected" : ""} onClick={() => { setCategory(value); setSubcategory("Todas"); setAudience("Todos"); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{category === value ? "✓" : ""}</span></button>)}
               </div>
-            </section>
+            </section>}
             {subcategories.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por subcategoría">
               <h4>Subcategoría</h4>
               <div className="catalog-filter-options">
                 {["Todas", ...subcategories].map(value => <button key={value} className={subcategory === value ? "selected" : ""} onClick={() => { setSubcategory(value); setAudience("Todos"); setSize("Todas"); }}><span>{value}</span><span className="catalog-filter-check">{subcategory === value ? "✓" : ""}</span></button>)}
               </div>
             </section>}
-            <section className="catalog-filter-group" aria-label="Filtrar por talla">
+            {sizes.length > 0 && <section className="catalog-filter-group" aria-label="Filtrar por talla">
               <h4>Talla</h4>
               <div className="catalog-size-options">
                 { ["Todas", ...sizes].map(value => <button key={value} className={size === value ? "selected" : ""} onClick={() => setSize(value)}>{value}</button>)}
               </div>
-            </section>
+            </section>}
             <section className="catalog-filter-group" aria-label="Filtrar por precio">
               <h4>Precio</h4>
               <div className="catalog-price-fields">
@@ -421,7 +457,7 @@ export default function CatalogoPublico() {
             <h2 id="catalog-detail-title">{selectedArticle.descripcion}</h2>
             {selectedArticle.codigo && <p className="catalog-detail-code">Código {selectedArticle.codigo}</p>}
             {selectedArticle.talla && <p className="catalog-detail-size">Talla <strong>{selectedArticle.talla}</strong></p>}
-            {selectedArticle.medidas && <p className="catalog-detail-size">Medidas <strong>{selectedArticle.medidas}</strong></p>}
+            {selectedArticle.medidas && <p className="catalog-detail-size">Medidas <strong>{formatMeasures(selectedArticle.medidas)}</strong></p>}
             <strong className="catalog-detail-price">S/ {Number(selectedArticle.precio || 0).toFixed(2)}</strong>
             <button className="catalog-detail-add" onClick={() => { addToCart(selectedArticle); setSelectedArticle(null); }}><ShoppingBag size={18}/> Agregar al carrito</button>
             <p className="catalog-detail-note">Pieza única de segunda mano. La disponibilidad y el precio se confirman por Instagram.</p>

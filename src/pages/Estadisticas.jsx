@@ -105,14 +105,22 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       return sum + Math.max(0, salePrice(item) - clientCommission);
     }, 0);
     const currentMember = nombreUsuario?.toLowerCase().includes("mafer") ? "mafer" : "dani";
-    const dayExpenses = gastos.filter(expense => expense.fecha === diaSeleccionado);
-    const sharedDayExpenses = dayExpenses.filter(expense => expense.compartido);
-    const sharedDayExpenseTotal = sharedDayExpenses.reduce((sum, expense) => sum + Number(expense.monto || 0), 0);
-    const sharedDayExpenseShare = sharedDayExpenseTotal / 2;
-    const personalDayExpenseShare = dayExpenses
+    // A settlement only records reimbursement between Dani and Mafer. It never
+    // removes the original business expense from the selected analysis period.
+    const periodExpenses = gastos.filter(expense => {
+      if (!expense.fecha) return false;
+      if (rango === "day") return expense.fecha === diaSeleccionado;
+      if (!cutoff) return true;
+      const date = new Date(`${expense.fecha}T12:00:00`);
+      return !Number.isNaN(date.getTime()) && date >= cutoff;
+    });
+    const sharedExpenseTotal = periodExpenses.filter(expense => expense.compartido)
+      .reduce((sum, expense) => sum + Number(expense.monto || 0), 0);
+    const sharedExpenseShare = sharedExpenseTotal / 2;
+    const personalExpenseShare = periodExpenses
       .filter(expense => !expense.compartido && String(expense.pagado_por_nombre || "").trim().toLowerCase() === currentMember)
       .reduce((sum, expense) => sum + Number(expense.monto || 0), 0);
-    const dayExpenseShare = sharedDayExpenseShare + personalDayExpenseShare;
+    const expenseShare = sharedExpenseShare + personalExpenseShare;
     const dayGrossSales = selectedSales.reduce((sum, item) => sum + salePrice(item), 0);
     const dayBusinessCommission = Math.max(0, dayGrossSales - dayClientShare);
     const availableNow = articulosActualizados.filter(item => String(item.estado || "").trim().toLowerCase() === "disponible").length;
@@ -146,7 +154,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const peakHour = Math.max(...hourCounts);
     const peakHours = peakHour ? hourCounts.map((count, hour) => ({ hour, count })).filter(item => item.count === peakHour) : [];
     const sharedClientSales = periodSales.filter(item => mapaClientes.get(String(item.cliente))?.compartido === true);
-    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, dayExpenseShare, sharedDayExpenseTotal, sharedDayExpenseShare, personalDayExpenseShare, dayGrossSales, dayBusinessCommission, dayNet:dayCommission - dayExpenseShare, daySaleCount:selectedSales.length, availableNow, soldAllTime, inventoryCount:articulosActualizados.length };
+    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, expenseShare, sharedExpenseTotal, sharedExpenseShare, personalExpenseShare, dayGrossSales, dayBusinessCommission, net:personalCommission - expenseShare, daySaleCount:selectedSales.length, availableNow, soldAllTime, inventoryCount:articulosActualizados.length };
   }, [articulosActualizados, clientes, gastos, mapaClientes, nombreUsuario, rango, diaSeleccionado]);
 
   const topCategory = metricas.categories[0];
@@ -155,6 +163,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     ? metricas.peakHours.map(({ hour }) => `${String(hour).padStart(2, "0")}:00`).join(" · ")
     : "Sin horas registradas";
   const sellerName = nombreUsuario?.toLowerCase().includes("mafer") ? "Mafer" : "Dani";
+  const periodoTexto = rango === "day" ? "el día seleccionado" : rango === "7" ? "los últimos 7 días" : rango === "30" ? "los últimos 30 días" : "todo el tiempo";
 
   return <main className="app-page" style={{ minHeight:"100vh", background:"#F5EBDD", padding:"54px 18px 125px", maxWidth:470, margin:"0 auto", color:"#383B3B" }}>
     <header style={{ display:"flex", alignItems:"center", gap:12, marginBottom:22 }}>
@@ -173,23 +182,25 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       {[{ label:"Registradas", value:metricas.inventoryCount }, { label:"Vendidas", value:metricas.soldAllTime }, { label:"Disponibles", value:metricas.availableNow }].map(item => <div key={item.label} style={{ textAlign:"center", padding:"4px 2px" }}><strong style={{ display:"block", color:"#8B1E2D", fontSize:22 }}>{item.value}</strong><span style={{ color:"#777783", fontSize:11 }}>{item.label}</span></div>)}
     </section>
 
-    {rango === "day" && <section style={{ ...card, border:"1px solid #FF6B9E", background:"#FFF5F8" }}>
+    <section style={{ ...card, border:"1px solid #FF6B9E", background:"#FFF5F8" }}>
       <h2 style={sectionHeading}>Tu ganancia neta, paso a paso</h2>
-      <p style={{ ...subValue, marginBottom:12 }}>En simple: primero se aparta la parte de quienes dejaron prendas. Lo que queda es la comisión de Pitucas; si el cliente es compartido, esa comisión se reparte entre Dani y Mafer. Después descontamos tu parte de los gastos de ese día.</p>
-      <div style={analysisRow}><span>Ventas del día (referencia)</span><strong>{money(metricas.dayGrossSales)}</strong></div>
-      <div style={analysisRow}><span>Parte de quienes dejaron prendas</span><strong>− {money(metricas.dayClientShare)}</strong></div>
-      <div style={analysisRow}><span>Comisión total de Pitucas</span><strong>{money(metricas.dayBusinessCommission)}</strong></div>
-      <div style={analysisRow}><span>Tu comisión, después del reparto</span><strong>{money(metricas.dayCommission)}</strong></div>
-      <div style={analysisRow}><span>Gastos compartidos (total)</span><strong>{money(metricas.sharedDayExpenseTotal)}</strong></div>
-      <div style={analysisRow}><span>Tu 50% de gastos compartidos</span><strong>− {money(metricas.sharedDayExpenseShare)}</strong></div>
-      <div style={analysisRow}><span>Gastos individuales pagados por ti</span><strong>− {money(metricas.personalDayExpenseShare)}</strong></div>
-      <div style={{ ...analysisRow, fontWeight:800 }}><span>Total de gastos descontados de tu parte</span><strong>− {money(metricas.dayExpenseShare)}</strong></div>
-      <div style={{ ...analysisRow, marginTop:4, paddingTop:12, borderTop:"2px solid #F3D3E0", color:"#8B1E2D", fontSize:17 }}><strong>Te quedó neto</strong><strong>{money(metricas.dayNet)}</strong></div>
-      <p style={{ ...subValue, marginBottom:0 }}>Las liquidaciones a quienes dejaron prendas son su parte de la venta: no se vuelven a restar aquí porque ya está separada arriba. Los gastos compartidos, como el stand, se cuentan mitad para cada una.</p>
+      <p style={{ ...subValue, marginBottom:12 }}>En simple: esta es tu comisión después de descontar tus gastos del periodo. Cada gasto compartido cuenta por la mitad para cada una, aunque ya se hayan pagado entre ustedes; saldar la deuda solo registra el reembolso.</p>
+      {rango === "day" ? <>
+        <div style={analysisRow}><span>Ventas del día (referencia)</span><strong>{money(metricas.dayGrossSales)}</strong></div>
+        <div style={analysisRow}><span>Parte de quienes dejaron prendas</span><strong>− {money(metricas.dayClientShare)}</strong></div>
+        <div style={analysisRow}><span>Comisión total de Pitucas</span><strong>{money(metricas.dayBusinessCommission)}</strong></div>
+        <div style={analysisRow}><span>Tu comisión, después del reparto</span><strong>{money(metricas.personalCommission)}</strong></div>
+      </> : <div style={analysisRow}><span>Tu comisión del periodo</span><strong>{money(metricas.personalCommission)}</strong></div>}
+      <div style={analysisRow}><span>Gastos compartidos (total)</span><strong>{money(metricas.sharedExpenseTotal)}</strong></div>
+      <div style={analysisRow}><span>Tu 50% de gastos compartidos</span><strong>− {money(metricas.sharedExpenseShare)}</strong></div>
+      <div style={analysisRow}><span>Gastos individuales pagados por ti</span><strong>− {money(metricas.personalExpenseShare)}</strong></div>
+      <div style={{ ...analysisRow, fontWeight:800 }}><span>Total de gastos descontados de tu parte</span><strong>− {money(metricas.expenseShare)}</strong></div>
+      <div style={{ ...analysisRow, marginTop:4, paddingTop:12, borderTop:"2px solid #F3D3E0", color:"#8B1E2D", fontSize:17 }}><strong>Te quedó neto</strong><strong>{money(metricas.net)}</strong></div>
+      <p style={{ ...subValue, marginBottom:0 }}>Las liquidaciones a quienes dejaron prendas ya están separadas de la comisión. Los gastos compartidos se cuentan 50/50 siempre; marcar una deuda como saldada no borra el gasto del análisis.</p>
       <div style={{ display:"flex", gap:10, marginTop:13, flexWrap:"wrap" }}>
-        <span style={smallBadge}>{metricas.daySaleCount} prenda{metricas.daySaleCount === 1 ? "" : "s"} vendida{metricas.daySaleCount === 1 ? "" : "s"} ese día</span>
+        <span style={smallBadge}>{metricas.daySaleCount} prenda{metricas.daySaleCount === 1 ? "" : "s"} vendida{metricas.daySaleCount === 1 ? "" : "s"} en {periodoTexto}</span>
       </div>
-    </section>}
+    </section>
 
     <section style={{ background:"#8B1E2D", color:"white", borderRadius:22, padding:20, marginBottom:13 }}>
       <div style={{ display:"flex", alignItems:"center", gap:9, opacity:.9, fontWeight:700 }}><Wallet size={18}/> Ventas registradas</div>

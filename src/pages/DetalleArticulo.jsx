@@ -6,6 +6,17 @@ import AddArticleSheet from "../components/AddArticleSheet";
 
 import { deleteArticle } from "../lib/articles";
 
+function formatMeasures(value) {
+  if (!value) return "";
+  try {
+    const parsed = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object") return String(value);
+    const fields = Object.entries(parsed.campos || {}).filter(([, amount]) => String(amount).trim())
+      .map(([name, amount]) => `${name}: ${amount} cm`);
+    if (parsed.notas?.trim()) fields.push(parsed.notas.trim());
+    return fields.join(" · ") || String(value);
+  } catch { return String(value); }
+}
 
 
 export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria = false }) {
@@ -266,7 +277,7 @@ export default function DetalleArticulo({ articulo, onBack, onUpdated, modoFeria
           )}
 
           {articuloActual.medidas && (
-            <InfoRow titulo="Medidas:" valor={articuloActual.medidas} />
+            <InfoRow titulo="Medidas:" valor={formatMeasures(articuloActual.medidas)} />
           )}
 
           {articuloActual.publico_objetivo && (

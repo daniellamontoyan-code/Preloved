@@ -145,7 +145,6 @@ export default function Dashboard({ user }){
         onEstadisticas={()=>{ setShowArticulos(false); setShowEstadisticas(true); }}
 
         onAgregar={()=>{
-
           setShowAddArticle(true);
 
         }}
@@ -243,7 +242,7 @@ export default function Dashboard({ user }){
         }}
 
         onAgregar={()=>{
-
+          setShowLiquidaciones(false);
           setShowAddArticle(true);
 
         }}
