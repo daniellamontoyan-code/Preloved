@@ -106,12 +106,13 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     }, 0);
     const currentMember = nombreUsuario?.toLowerCase().includes("mafer") ? "mafer" : "dani";
     const dayExpenses = gastos.filter(expense => expense.fecha === diaSeleccionado);
-    const dayExpenseShare = dayExpenses.reduce((sum, expense) => {
-      if (expense.compartido) return sum + Number(expense.monto || 0) / 2;
-      return String(expense.pagado_por_nombre || "").trim().toLowerCase() === currentMember
-        ? sum + Number(expense.monto || 0)
-        : sum;
-    }, 0);
+    const sharedDayExpenses = dayExpenses.filter(expense => expense.compartido);
+    const sharedDayExpenseTotal = sharedDayExpenses.reduce((sum, expense) => sum + Number(expense.monto || 0), 0);
+    const sharedDayExpenseShare = sharedDayExpenseTotal / 2;
+    const personalDayExpenseShare = dayExpenses
+      .filter(expense => !expense.compartido && String(expense.pagado_por_nombre || "").trim().toLowerCase() === currentMember)
+      .reduce((sum, expense) => sum + Number(expense.monto || 0), 0);
+    const dayExpenseShare = sharedDayExpenseShare + personalDayExpenseShare;
     const dayGrossSales = selectedSales.reduce((sum, item) => sum + salePrice(item), 0);
     const dayBusinessCommission = Math.max(0, dayGrossSales - dayClientShare);
     const availableNow = articulosActualizados.filter(item => String(item.estado || "").trim().toLowerCase() === "disponible").length;
@@ -145,7 +146,7 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
     const peakHour = Math.max(...hourCounts);
     const peakHours = peakHour ? hourCounts.map((count, hour) => ({ hour, count })).filter(item => item.count === peakHour) : [];
     const sharedClientSales = periodSales.filter(item => mapaClientes.get(String(item.cliente))?.compartido === true);
-    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, dayExpenseShare, dayGrossSales, dayBusinessCommission, dayNet:dayCommission - dayExpenseShare, dayExpenseTotal:dayExpenses.reduce((sum, expense) => sum + Number(expense.monto || 0), 0), daySaleCount:selectedSales.length, availableNow, soldAllTime, inventoryCount:articulosActualizados.length };
+    return { sold:periodSales, revenue, personalCommission, byChannel, categories, subcategories, peakHours, sharedClientSales, dayCommission, dayClientShare, dayExpenseShare, sharedDayExpenseTotal, sharedDayExpenseShare, personalDayExpenseShare, dayGrossSales, dayBusinessCommission, dayNet:dayCommission - dayExpenseShare, daySaleCount:selectedSales.length, availableNow, soldAllTime, inventoryCount:articulosActualizados.length };
   }, [articulosActualizados, clientes, gastos, mapaClientes, nombreUsuario, rango, diaSeleccionado]);
 
   const topCategory = metricas.categories[0];
@@ -179,7 +180,10 @@ export default function Estadisticas({ articulos = [], nombreUsuario, onRefresh,
       <div style={analysisRow}><span>Parte de quienes dejaron prendas</span><strong>− {money(metricas.dayClientShare)}</strong></div>
       <div style={analysisRow}><span>Comisión total de Pitucas</span><strong>{money(metricas.dayBusinessCommission)}</strong></div>
       <div style={analysisRow}><span>Tu comisión, después del reparto</span><strong>{money(metricas.dayCommission)}</strong></div>
-      <div style={analysisRow}><span>Gastos registrados ese día</span><strong>{money(metricas.dayExpenseTotal)} <small style={{ color:"#777783", fontWeight:500 }}>(tu parte: {money(metricas.dayExpenseShare)})</small></strong></div>
+      <div style={analysisRow}><span>Gastos compartidos (total)</span><strong>{money(metricas.sharedDayExpenseTotal)}</strong></div>
+      <div style={analysisRow}><span>Tu 50% de gastos compartidos</span><strong>− {money(metricas.sharedDayExpenseShare)}</strong></div>
+      <div style={analysisRow}><span>Gastos individuales pagados por ti</span><strong>− {money(metricas.personalDayExpenseShare)}</strong></div>
+      <div style={{ ...analysisRow, fontWeight:800 }}><span>Total de gastos descontados de tu parte</span><strong>− {money(metricas.dayExpenseShare)}</strong></div>
       <div style={{ ...analysisRow, marginTop:4, paddingTop:12, borderTop:"2px solid #F3D3E0", color:"#8B1E2D", fontSize:17 }}><strong>Te quedó neto</strong><strong>{money(metricas.dayNet)}</strong></div>
       <p style={{ ...subValue, marginBottom:0 }}>Las liquidaciones a quienes dejaron prendas son su parte de la venta: no se vuelven a restar aquí porque ya está separada arriba. Los gastos compartidos, como el stand, se cuentan mitad para cada una.</p>
       <div style={{ display:"flex", gap:10, marginTop:13, flexWrap:"wrap" }}>
