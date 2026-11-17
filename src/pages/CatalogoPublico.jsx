@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Minus, Plus, Search, Send, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
+import { ArrowUpRight, Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Search, Send, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import { getPublicCatalog } from "../lib/catalog";
 import { signArticleImages } from "../lib/storage";
 import "./CatalogoPublico.css";
@@ -85,14 +85,35 @@ export default function CatalogoPublico() {
   const [cartOpen, setCartOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = useState(0);
+  const [productLinkCopied, setProductLinkCopied] = useState(false);
   const [termsOpen, setTermsOpen] = useState(false);
   const [dismissedDropKey, setDismissedDropKey] = useState("");
   const [copied, setCopied] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [displayCount, setDisplayCount] = useState(24);
   const photoRetryIdsRef = useRef(new Map());
+  const productHistoryEntryRef = useRef(false);
 
   useEffect(() => { loadCatalog(); }, []);
+
+  useEffect(() => {
+    const syncProductFromUrl = () => {
+      const sku = new URLSearchParams(window.location.search).get("sku");
+      if (!sku) {
+        productHistoryEntryRef.current = false;
+        setSelectedArticle(null);
+        return;
+      }
+      const match = articles.find(item => String(item.codigo || "").toLocaleLowerCase("es") === sku.toLocaleLowerCase("es"));
+      if (match) {
+        setSelectedPhotoIndex(0);
+        setSelectedArticle(current => current?.id === match.id ? current : match);
+      }
+    };
+    syncProductFromUrl();
+    window.addEventListener("popstate", syncProductFromUrl);
+    return () => window.removeEventListener("popstate", syncProductFromUrl);
+  }, [articles]);
 
   useEffect(() => {
     if (!selectedArticle && !cartOpen && !termsOpen) return undefined;
@@ -100,7 +121,7 @@ export default function CatalogoPublico() {
     document.body.style.overflow = "hidden";
     const closeOnEscape = event => {
       if (event.key === "Escape") {
-        setSelectedArticle(null);
+        closeArticle();
         setCartOpen(false);
         setTermsOpen(false);
       }
@@ -144,6 +165,58 @@ export default function CatalogoPublico() {
       // does not make the whole storefront look empty.
     } finally {
       setLoading(false);
+    }
+  }
+
+  function openArticle(article) {
+    setSelectedPhotoIndex(0);
+    setSelectedArticle(article);
+    setProductLinkCopied(false);
+    if (!article.codigo) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("sku", article.codigo);
+    window.history.pushState({ ...(window.history.state || {}), catalogProductSku: article.codigo }, "", url);
+    productHistoryEntryRef.current = true;
+  }
+
+  function closeArticle() {
+    setSelectedArticle(null);
+    setProductLinkCopied(false);
+    if (productHistoryEntryRef.current) {
+      productHistoryEntryRef.current = false;
+      window.history.back();
+      return;
+    }
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("sku")) return;
+    url.searchParams.delete("sku");
+    window.history.replaceState(window.history.state, "", url);
+  }
+
+  async function copyProductLink(article) {
+    if (!article?.codigo) return;
+    const url = new URL(window.location.pathname, window.location.origin);
+    url.searchParams.set("sku", article.codigo);
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url.toString());
+      } else {
+        const input = document.createElement("textarea");
+        input.value = url.toString();
+        input.setAttribute("readonly", "");
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        const copied = document.execCommand("copy");
+        input.remove();
+        if (!copied) throw new Error("El navegador no permitió copiar el enlace.");
+      }
+      setProductLinkCopied(true);
+      window.setTimeout(() => setProductLinkCopied(false), 2200);
+    } catch (error) {
+      console.error("No se pudo copiar el enlace del producto:", error);
+      alert("No se pudo copiar el enlace. Puedes copiarlo desde la barra del navegador.");
     }
   }
 
@@ -426,7 +499,7 @@ export default function CatalogoPublico() {
               const inCart = cart.some(item => String(item.id) === String(article.id));
               return (
                 <article className={`catalog-product${loadedPhotos[article.id] ? " photo-ready" : " photo-pending"}`} key={article.id}>
-                  <button className="catalog-product-open" type="button" onClick={() => { setSelectedPhotoIndex(0); setSelectedArticle(article); }} aria-label={`Ver detalles de ${article.descripcion}`}>
+                  <button className="catalog-product-open" type="button" onClick={() => openArticle(article)} aria-label={`Ver detalles de ${article.descripcion}`}>
                     <div className="catalog-product-photo">
                       {photoUrls[article.id] && <img src={photoUrls[article.id]} alt={article.descripcion} loading={index < 4 ? "eager" : "lazy"} fetchPriority={index < 4 ? "high" : "auto"} decoding="async" onLoad={() => markPhotoLoaded(article.id)} onError={() => retryPhotoBeforeHiding(article.id)}/>}
                       {wasRecentlyChanged(article) && <span className="catalog-new-tag">¡Nuevo!</span>}
@@ -451,9 +524,9 @@ export default function CatalogoPublico() {
 
       <footer className="catalog-footer"><span>Pitucas Pero Misias 💕</span><span>Moda para todos · Compra, vende, repeat.</span><button className="catalog-terms-link" onClick={() => setTermsOpen(true)}>Términos y condiciones</button><a href={instagramUrl} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a></footer>
 
-      {selectedArticle && <div className="catalog-detail-overlay" onClick={() => setSelectedArticle(null)}>
+      {selectedArticle && <div className="catalog-detail-overlay" onClick={closeArticle}>
         <section className="catalog-detail-panel" role="dialog" aria-modal="true" aria-labelledby="catalog-detail-title" onClick={event => event.stopPropagation()}>
-          <button className="catalog-close catalog-detail-close" onClick={() => setSelectedArticle(null)} aria-label="Cerrar detalles"><X size={21}/></button>
+          <button className="catalog-close catalog-detail-close" onClick={closeArticle} aria-label="Cerrar detalles"><X size={21}/></button>
           <div className="catalog-detail-photo">
             {(() => {
               const id = selectedArticle.id;
@@ -481,8 +554,9 @@ export default function CatalogoPublico() {
             {selectedArticle.codigo && <p className="catalog-detail-code">Código {selectedArticle.codigo}</p>}
             {selectedArticle.talla && <p className="catalog-detail-size">Talla <strong>{selectedArticle.talla}</strong></p>}
             {selectedArticle.medidas && <p className="catalog-detail-size">Medidas <strong>{formatMeasures(selectedArticle.medidas)}</strong></p>}
+            {selectedArticle.codigo && <button type="button" className="catalog-detail-share" onClick={() => copyProductLink(selectedArticle)}><Copy size={17}/>{productLinkCopied ? "Enlace copiado" : "Copiar enlace de esta prenda"}</button>}
             <strong className="catalog-detail-price">S/ {Number(selectedArticle.precio || 0).toFixed(2)}</strong>
-            <button className="catalog-detail-add" onClick={() => { addToCart(selectedArticle); setSelectedArticle(null); }}><ShoppingBag size={18}/> Agregar al carrito</button>
+            <button className="catalog-detail-add" onClick={() => { addToCart(selectedArticle); closeArticle(); }}><ShoppingBag size={18}/> Agregar al carrito</button>
             <p className="catalog-detail-note">Pieza única de segunda mano. La disponibilidad y el precio se confirman por Instagram.</p>
           </div>
         </section>

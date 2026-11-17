@@ -145,6 +145,8 @@
 .catalog-detail-copy .catalog-product-category { margin-bottom: 10px; font-size: 11px; }
 .catalog-detail-copy h2 { margin: 0; color: var(--ink); font-family: "Lilita One", sans-serif; font-size: clamp(26px, 3vw, 36px); font-weight: 500; line-height: 1.12; }
 .catalog-detail-code { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
+.catalog-detail-share { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; margin-top: 18px; border: 1px solid #e9b7c7; border-radius: 12px; color: var(--cherry); background: #fffaf4; font-size: 13px; font-weight: 750; cursor: pointer; transition: background .16s ease, border-color .16s ease; }
+.catalog-detail-share:hover { border-color: var(--cherry); background: #fff0f4; }
 .catalog-detail-size { margin: 22px 0 0; color: #76636a; font-size: 13px; }
 .catalog-detail-size strong { margin-left: 6px; color: var(--ink); }
 .catalog-detail-price { margin-top: 24px; color: var(--cherry); font-size: 24px; }
